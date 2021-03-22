@@ -1,18 +1,13 @@
 package com.example.miacisshogi
 
 import android.content.Context
-import android.graphics.BitmapFactory
-import android.hardware.camera2.CameraManager
 import android.os.Bundle
-import android.widget.Button
-import android.widget.ImageView
+import android.util.Log
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import com.example.pytorchmobile.ImageNetClasses
 import org.pytorch.IValue
 import org.pytorch.Module
 import org.pytorch.Tensor
-import org.pytorch.torchvision.TensorImageUtils
 import java.io.File
 import java.io.FileOutputStream
 
@@ -40,27 +35,33 @@ class SubActivity2 : AppCompatActivity() {
             }
         }
 
-        /// モデルと画像をロード
-        val bitmap = BitmapFactory.decodeStream(assets.open("image.jpg"))
-        val module = Module.load(assetFilePath(this, "resnet.pt"))
+        // モデルをロード
+        val module = Module.load(assetFilePath(this, "shogi_cat_bl10_ch256_cpu.model"))
 
-        /// 推論
-        val inputTensor = TensorImageUtils.bitmapToFloat32Tensor(
-            bitmap,
-            TensorImageUtils.TORCHVISION_NORM_MEAN_RGB, TensorImageUtils.TORCHVISION_NORM_STD_RGB
-        )
+        // 入力のshapeは
+        val shape = longArrayOf(1, 42, 9, 9)
+        val arr = Array(42 * 9 * 9) { 1.0f }
+        val a = arr.toFloatArray()
 
-        /// 結果
-        val outputTensor = module.forward(IValue.from(inputTensor)).toTensor()
-        val scores = outputTensor.dataAsFloatArray
+        // tensorのshapeを表示
+        Log.d("SubActivity2", shape.joinToString(" ") { it.toString() })
 
-        /// scoreを格納する変数
+        val tensor = Tensor.fromBlob(a, shape)
+
+        // 結果
+        val output = module.forward(IValue.from(tensor))
+        val tuple = output.toTuple()
+        val policy = tuple[0].toTensor()
+        val value = tuple[1].toTensor()
+        val scores = policy.dataAsFloatArray
+
+        // scoreを格納する変数
         var maxScore: Float = 0F
         var maxScoreIdx = -1
         var maxSecondScore: Float = 0F
         var maxSecondScoreIdx = -1
 
-        /// scoreが高いものを上から2個とる
+        // scoreが高いものを上から2個とる
         for (i in scores.indices) {
             if (scores[i] > maxScore) {
                 maxSecondScore = maxScore
@@ -70,20 +71,13 @@ class SubActivity2 : AppCompatActivity() {
             }
         }
 
-        val imageView = findViewById<ImageView>(R.id.imageView)
-        imageView.setImageBitmap(bitmap)
-
-        ///　インデックスから分類したクラス名を取得
-        val className = ImageNetClasses().IMAGENET_CLASSES[maxScoreIdx]
-        val className2 = ImageNetClasses().IMAGENET_CLASSES[maxSecondScoreIdx]
-
         val result1Score = findViewById<TextView>(R.id.result1Score)
         val result1Class = findViewById<TextView>(R.id.result1Class)
         val result2Score = findViewById<TextView>(R.id.result2Score)
         val result2Class = findViewById<TextView>(R.id.result2Class)
-        result1Score.text = "score: $maxScore"
-        result1Class.text = "分類結果:$className"
-        result2Score.text = "score:$maxSecondScore"
-        result2Class.text = "分類結果:$className2"
+        result1Score.text = "最大score: $maxScore"
+        result1Class.text = "最大index:$maxScoreIdx"
+        result2Score.text = "2番目score:$maxSecondScore"
+        result2Class.text = "2番目index:$maxSecondScoreIdx"
     }
 }
