@@ -17,6 +17,7 @@
             </intent-filter>
         </activity>
         <activity android:name=".SubActivity1" />
+        <activity android:name=".SubActivity2" />
     </application>
 
 </manifest>
