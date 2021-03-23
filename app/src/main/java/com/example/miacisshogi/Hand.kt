@@ -56,14 +56,17 @@ class Hand {
 
     //capture(Piece型)を受け取って持ち駒を増減する
     fun add(p: Int) {
-        hand_ += 1 shl PieceToHandShift[kind(p)]; }
+        hand_ += 1 shl PieceToHandShift[kind(p)];
+    }
 
     fun sub(p: Int) {
-        hand_ -= 1 shl PieceToHandShift[kind(p)]; }
+        hand_ -= 1 shl PieceToHandShift[kind(p)];
+    }
 
     //初期化のとき使う
     fun set(p: Int, num: Int) {
-        hand_ += num shl PieceToHandShift[kind(p)]; }
+        hand_ += num shl PieceToHandShift[kind(p)];
+    }
 
 //    //「lhsのどの種類の枚数もrhs以上であり、かつ少なくとも一種類はrhsより多い」かどうかを判定
 //    bool superior(const Hand rhs) const {

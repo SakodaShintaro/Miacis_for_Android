@@ -1,5 +1,6 @@
 package com.example.miacisshogi
 
+import android.util.Log
 import kotlin.jvm.internal.Ref
 import kotlin.random.Random
 
@@ -92,6 +93,8 @@ class Position {
 
     //一手進める・戻す関数
     fun doMove(move: Move) {
+        Log.d("doMove", move.toPrettyStr())
+
         //動かす前の状態を残しておく
         stack_.add(StateInfo(this))
 
@@ -182,7 +185,7 @@ class Position {
         //hashの手番要素を更新
         hash_value_ = board_hash_ xor hand_hash_
         //1bit目を0にする
-        hash_value_ = hash_value_ and (1).inv().toLong()
+        hash_value_ = hash_value_ and (1).toLong().inv()
         //手番が先手だったら1bitは0のまま,後手だったら1bit目は1になる
         hash_value_ = hash_value_ or color_.toLong()
 
@@ -190,7 +193,80 @@ class Position {
         already_generated_moves_ = false
     }
 
-    fun undo() {}
+    fun undo() {
+        val last_move = kifu_.last()
+        kifu_.removeLast()
+
+        //手番を戻す(このタイミングでいいかな?)
+        color_ =  if(color_ == BLACK) WHITE else BLACK
+
+        val to = last_move.to().ordinal
+        val from = last_move.from().ordinal
+
+        //動かした駒を消す
+        board_[to] = EMPTY;
+
+        //盤の状態を戻す
+        if (last_move.isDrop()) { //打つ手
+
+            //持ち駒を増やす
+            hand_[color_].add(kind(last_move.subject()));
+
+            //ハッシュ値の巻き戻し
+            //戻す前のHandHashとXOR
+            hand_hash_ = hand_hash_ xor handHashSeed[color_][kind(last_move.subject())][hand_[color_].num(kind(last_move.subject())) - 1];
+            //戻す前の分をXORして消す
+            board_hash_ = board_hash_ xor hashSeed[last_move.subject()][to];
+            //戻した後のHandHashとXOR
+            hand_hash_ = hand_hash_ xor handHashSeed[color_][kind(last_move.subject())][hand_[color_].num(kind(last_move.subject()))];
+        } else { //盤上の駒を動かす手
+            //取る手だったらtoに取った駒を戻し、持ち駒を減らす
+            if (last_move.capture() != EMPTY) {
+                board_[to] = last_move.capture();
+                hand_[color_].sub(kind(last_move.capture()));
+
+                //ハッシュ値の巻き戻し
+                //取る前の分のハッシュをXOR
+                board_hash_ = board_hash_ xor hashSeed[last_move.capture()][to];
+                //増える前の持ち駒の分
+                hand_hash_ = hand_hash_ xor handHashSeed[color_][last_move.capture() and PIECE_KIND_MASK][hand_[color_].num(kind(last_move.capture()))];
+                //増えた後の持ち駒の分XORして消す
+                hand_hash_ = hand_hash_ xor handHashSeed[color_][last_move.capture() and PIECE_KIND_MASK][hand_[color_].num(kind(last_move.capture())) + 1];
+            }
+
+            //動いた駒をfromに戻す
+            board_[from] = last_move.subject();
+
+            //ハッシュ値の巻き戻し
+            //移動前の分をXOR
+            board_hash_ = board_hash_ xor hashSeed[last_move.subject()][from];
+            //移動後の分をXORして消す
+            if (last_move.isPromote()) {
+                board_hash_ = board_hash_ xor hashSeed[promote(last_move.subject())][to]
+            } else {
+                board_hash_ = board_hash_ xor hashSeed[last_move.subject()][to];
+            }
+        }
+
+        //玉を動かす手ならking_sq_に反映
+        if (kind(last_move.subject()) == KING) king_sq_[color_] = last_move.from();
+
+        //ハッシュの更新
+        hash_value_ = board_hash_ xor  hand_hash_;
+        //一番右のbitを0にする
+        hash_value_ = hash_value_ and (1).toLong().inv();
+        //一番右のbitが先手番だったら0のまま、後手番だったら1になる
+        hash_value_ = hash_value_ or (color_).toLong();
+
+        //手数
+        turn_number_--;
+
+        //Stack更新
+        stack_.removeLast()
+
+        //合法手生成のフラグを降ろす
+        already_generated_moves_ = false;
+    }
 
     //合法性に関する関数
     fun isLegalMove(move: Move): Boolean {
@@ -250,7 +326,7 @@ class Position {
 
     //合法手生成
     fun generateAllMoves(): ArrayList<Move> {
-        var move_buf = ArrayList<Move>()
+        val move_buf = ArrayList<Move>()
         for (sq in SquareList) {
             if (board_[sq.ordinal] == EMPTY) {
                 //ここに打つ手が可能
@@ -346,8 +422,8 @@ class Position {
     //--------------------
     //    内部メソッド
     //--------------------
-    private fun addSquare(sq: Square, list: ArrayList<Square>) {
-        if (board_[sq.ordinal] == EMPTY) {
+    private fun addSquare(sq: Square, color: Int, list: ArrayList<Square>) {
+        if (board_[sq.ordinal] == WALL || pieceToColor(board_[sq.ordinal]) == color) {
             return
         }
         list.add(sq)
@@ -360,7 +436,7 @@ class Position {
             if (board_[currSquare.ordinal] == EMPTY) {
                 //継続
                 list.add(currSquare)
-                currSquare = SquareListWithWALL[currSquare.ordinal + DIR_U]
+                currSquare = SquareListWithWALL[currSquare.ordinal + dir]
             } else if (board_[currSquare.ordinal] == WALL || pieceToColor(board_[currSquare.ordinal]) == color) {
                 //壁や自分側の駒の位置には突っ込めない
                 break
@@ -378,62 +454,62 @@ class Position {
         val list = ArrayList<Square>()
         when (piece) {
             BLACK_PAWN -> {
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_U], list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_U], BLACK, list)
             }
             BLACK_LANCE -> {
                 list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_U))
             }
             BLACK_KNIGHT -> {
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_RUU], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_LUU], list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_RUU], BLACK, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_LUU], BLACK, list)
             }
             BLACK_SILVER -> {
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_U], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_RU], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_RD], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_LD], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_LU], list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_U], BLACK, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_RU], BLACK, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_RD], BLACK, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_LD], BLACK, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_LU], BLACK, list)
             }
             BLACK_GOLD,
             BLACK_PAWN_PROMOTE,
             BLACK_LANCE_PROMOTE,
             BLACK_KNIGHT_PROMOTE,
             BLACK_SILVER_PROMOTE -> {
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_U], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_RU], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_R], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_D], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_L], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_LU], list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_U], BLACK, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_RU], BLACK, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_R], BLACK, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_D], BLACK, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_L], BLACK, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_LU], BLACK, list)
             }
             WHITE_PAWN -> {
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_D], list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_D], WHITE, list)
             }
             WHITE_LANCE -> {
                 list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_D))
             }
             WHITE_KNIGHT -> {
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_RDD], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_LDD], list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_RDD], WHITE, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_LDD], WHITE, list)
             }
             WHITE_SILVER -> {
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_D], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_LD], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_LU], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_RU], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_RD], list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_D], WHITE, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_LD], WHITE, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_LU], WHITE, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_RU], WHITE, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_RD], WHITE, list)
             }
             WHITE_GOLD,
             WHITE_PAWN_PROMOTE,
             WHITE_LANCE_PROMOTE,
             WHITE_KNIGHT_PROMOTE,
             WHITE_SILVER_PROMOTE -> {
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_D], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_LD], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_L], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_U], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_R], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_RD], list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_D], WHITE, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_LD], WHITE, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_L], WHITE, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_U], WHITE, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_R], WHITE, list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_RD], WHITE, list)
             }
             BLACK_BISHOP,
             WHITE_BISHOP -> {
@@ -448,10 +524,10 @@ class Position {
                 list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_U))
                 list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_U))
                 list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_U))
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_U], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_R], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_D], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_L], list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_U], pieceToColor(piece), list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_R], pieceToColor(piece), list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_D], pieceToColor(piece), list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_L], pieceToColor(piece), list)
             }
             BLACK_ROOK,
             WHITE_ROOK -> {
@@ -466,21 +542,21 @@ class Position {
                 list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_R))
                 list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_D))
                 list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_L))
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_RU], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_RD], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_LD], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_LU], list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_RU], pieceToColor(piece), list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_RD], pieceToColor(piece), list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_LD], pieceToColor(piece), list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_LU], pieceToColor(piece), list)
             }
             BLACK_KING,
             WHITE_KING -> {
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_U], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_RU], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_R], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_RD], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_D], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_LD], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_L], list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_LU], list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_U], pieceToColor(piece), list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_RU], pieceToColor(piece), list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_R], pieceToColor(piece), list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_RD], pieceToColor(piece), list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_D], pieceToColor(piece), list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_LD], pieceToColor(piece), list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_L], pieceToColor(piece), list)
+                addSquare(SquareListWithWALL[sq.ordinal + DIR_LU], pieceToColor(piece), list)
             }
             else -> {
             }

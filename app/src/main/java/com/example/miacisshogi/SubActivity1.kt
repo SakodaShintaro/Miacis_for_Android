@@ -95,6 +95,13 @@ class SubActivity1 : AppCompatActivity() {
                 Log.d("TouchEvent", "from   :${validMove.from().ordinal}")
                 Log.d("TouchEvent", "to     :${validMove.to().ordinal}")
                 Log.d("TouchEvent", "subject:${validMove.subject()}")
+                Log.d("TouchEvent", "Move :${validMove.toPrettyStr()}")
+
+                if (!pos.isLegalMove(validMove)) {
+                    Log.d("TouchEvent", "Illegal Move!")
+                    holdPiece = EMPTY
+                    return true
+                }
 
                 // 局面の遷移
                 pos.doMove(validMove)

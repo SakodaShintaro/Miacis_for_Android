@@ -206,10 +206,10 @@ val InvSquare = arrayListOf(
 )
 
 val fileToString = arrayListOf(
-    "０", "１", "２", "３", "４", "５", "６", "７", "８", "９"
+    "０", "１", "２", "３", "４", "５", "６", "７", "８", "９", "A"
 )
 val rankToString = arrayListOf(
-    "零", "一", "二", "三", "四", "五", "六", "七", "八", "九"
+    "零", "一", "二", "三", "四", "五", "六", "七", "八", "九", "十"
 )
 
 val fileToSfenString = arrayListOf(

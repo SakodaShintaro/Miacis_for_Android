@@ -1,8 +1,6 @@
 package com.example.miacisshogi
 
-import android.util.Log
-
-// MoveConst 
+// MoveConst
 //0000 0000 0000 0000 0000 0000 0111 1111 to
 //0000 0000 0000 0000 0011 1111 1000 0000 from
 //0000 0000 0000 0000 0100 0000 0000 0000 drop
@@ -97,9 +95,9 @@ class Move(
         } else {
             result += "(" + SquareToFile[from().ordinal] + SquareToRank[from().ordinal] + ") "
         }
-        //    if (capture() != EMPTY) {
-        //        str << "capture:" << PieceToStr[capture()];
-        //    }
+        if (capture() != EMPTY) {
+            result += "capture:" + PieceToStr[capture()]
+        }
         return result
     }
 
@@ -125,8 +123,10 @@ class Move(
         return ((move_ and MOVE_CAPTURE_MASK) shr MOVE_CAPTURE_SHIFT); }
 
     //比較演算子
-    fun equals(rhs: Move): Boolean {
-        return move_ == rhs.move_
+    override fun equals(other: Any?): Boolean {
+        if (other === this) return true
+        if (other !is Move) return false
+        return move_ == other.move_
     }
 
     //ラベル系
@@ -171,7 +171,7 @@ class Move(
             direction += 10
         }
 
-        return (SquareToNum.get(to_sq.ordinal) + SQUARE_NUM * direction)
+        return (SquareToNum[to_sq.ordinal] + SQUARE_NUM * direction)
     }
 }
 
