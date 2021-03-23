@@ -1,5 +1,7 @@
 package com.example.miacisshogi
 
+import android.util.Log
+
 // MoveConst 
 //0000 0000 0000 0000 0000 0000 0111 1111 to
 //0000 0000 0000 0000 0011 1111 1000 0000 from
@@ -27,49 +29,28 @@ const val POLICY_DIM = SQUARE_NUM * POLICY_CHANNEL_NUM
 
 fun Boolean.toInt() = if (this) 1 else 0
 
-class Move() {
-    //コンストラクタ
+class Move(
+    to: Square = Square.WALLAA,
+    from: Square = Square.WALLAA,
+    isDrop: Boolean = false,
+    isPromote: Boolean = false,
+    subject: Int = 0,
+    capture: Int = 0) {
+    var move_: Int = 0
+
+    init {
+        move_ =
+            ((capture shl MOVE_CAPTURE_SHIFT)
+                    or (subject shl MOVE_SUBJECT_SHIFT)
+                    or (isPromote.toInt() shl MOVE_PROMOTE_SHIFT)
+                    or (isDrop.toInt() shl MOVE_DROP_SHIFT)
+                    or (from.ordinal shl MOVE_FROM_SHIFT)
+                    or (to.ordinal shl MOVE_TO_SHIFT))
+    }
+
+    //直接数値を指定するコンストラクタ
     constructor(x: Int) : this() {
         move_ = x
-    }
-
-    constructor(to: Square, from: Square) : this() {
-        move_ = (from.ordinal shl MOVE_FROM_SHIFT) or (to.ordinal shl MOVE_TO_SHIFT)
-    }
-
-    constructor(to: Square, from: Square, isDrop: Boolean) : this() {
-        move_ =
-            (isDrop.toInt() shl MOVE_DROP_SHIFT or from.ordinal shl MOVE_FROM_SHIFT or to.ordinal shl MOVE_TO_SHIFT)
-    }
-
-    constructor(to: Square, from: Square, isDrop: Boolean, isPromote: Boolean) : this() {
-        move_ =
-            (isPromote.toInt() shl MOVE_PROMOTE_SHIFT or isDrop.toInt() shl MOVE_DROP_SHIFT or from.ordinal shl MOVE_FROM_SHIFT or to.ordinal shl MOVE_TO_SHIFT)
-    }
-
-    constructor(
-        to: Square,
-        from: Square,
-        isDrop: Boolean,
-        isPromote: Boolean,
-        subject: Int
-    ) : this() {
-        move_ =
-            (subject shl MOVE_SUBJECT_SHIFT or isPromote.toInt() shl MOVE_PROMOTE_SHIFT or isDrop.toInt() shl MOVE_DROP_SHIFT or
-                    from.ordinal shl MOVE_FROM_SHIFT or to.ordinal shl MOVE_TO_SHIFT)
-    }
-
-    constructor(
-        to: Square,
-        from: Square,
-        isDrop: Boolean,
-        isPromote: Boolean,
-        subject: Int,
-        capture: Int
-    ) : this() {
-        move_ =
-            (capture shl MOVE_CAPTURE_SHIFT or subject shl MOVE_SUBJECT_SHIFT or isPromote.toInt() shl MOVE_PROMOTE_SHIFT or
-                    isDrop.toInt() shl MOVE_DROP_SHIFT or from.ordinal shl MOVE_FROM_SHIFT or to.ordinal shl MOVE_TO_SHIFT)
     }
 
     //sfen形式でのstring
@@ -82,14 +63,14 @@ class Move() {
         }
         if (isDrop()) {
             return PieceToSfenStrWithoutSpace[kind(subject())] + "*" +
-                    com.example.miacisshogi.fileToSfenString[SquareToFile[to().ordinal].ordinal] +
-                    com.example.miacisshogi.rankToSfenString[SquareToRank[to().ordinal].ordinal]
+                    fileToSfenString[SquareToFile[to().ordinal].ordinal] +
+                    rankToSfenString[SquareToRank[to().ordinal].ordinal]
         } else {
             var result = String()
-            result = com.example.miacisshogi.fileToSfenString[SquareToFile[from().ordinal].ordinal] +
-                     com.example.miacisshogi.rankToSfenString[SquareToRank[from().ordinal].ordinal] +
-                     com.example.miacisshogi.fileToSfenString[SquareToFile[to().ordinal].ordinal] +
-                     com.example.miacisshogi.rankToSfenString[SquareToRank[to().ordinal].ordinal]
+            result = fileToSfenString[SquareToFile[from().ordinal].ordinal] +
+                     rankToSfenString[SquareToRank[from().ordinal].ordinal] +
+                     fileToSfenString[SquareToFile[to().ordinal].ordinal] +
+                     rankToSfenString[SquareToRank[to().ordinal].ordinal]
             if (isPromote()) {
                 result += '+'
             }
@@ -192,8 +173,6 @@ class Move() {
 
         return (SquareToNum.get(to_sq.ordinal) + SQUARE_NUM * direction)
     }
-
-    var move_: Int = 0
 }
 
 //駒を打つ手

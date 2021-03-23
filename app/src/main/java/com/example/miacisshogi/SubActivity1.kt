@@ -3,7 +3,7 @@ package com.example.miacisshogi
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
-import android.view.View
+import android.view.MotionEvent.ACTION_DOWN
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -12,8 +12,9 @@ import androidx.appcompat.app.AppCompatActivity
 
 class SubActivity1 : AppCompatActivity() {
     lateinit var imageViews: ArrayList<ImageView>
-    lateinit var piece: ArrayList<Int>
     lateinit var pos: Position
+    var holdPiece: Int = EMPTY
+    var moveFrom: Square = Square.WALLAA
     private val marginRate = 0.05
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -21,8 +22,7 @@ class SubActivity1 : AppCompatActivity() {
         setContentView(R.layout.activity_sub1)
 
         //初期化
-        imageViews = ArrayList<ImageView>()
-        piece = ArrayList<Int>()
+        imageViews = ArrayList()
         pos = Position()
 
         //ここで9 x 9のImageViewを作り、置かれている駒に応じて適切な画像を選択して置く
@@ -51,13 +51,11 @@ class SubActivity1 : AppCompatActivity() {
                     imageView.x = (xOffset + j * squareWidth).toFloat()
                     imageView.y = (yOffset + i * squareHeight).toFloat()
                     imageView.layoutParams = params
-                    val piece = pos.on(SquareList[j * BOARD_WIDTH + i])
-                    imageView.setImageResource(piece2resourceID(piece))
-                    imageView.visibility = if (piece == EMPTY) View.INVISIBLE else View.VISIBLE
                 }
 
+                val piece = pos.on(xy2square(j, i))
+                imageView.setImageResource(piece2resourceID(piece))
                 imageViews.add(imageView)
-                piece.add(0)
             }
         }
     }
@@ -79,29 +77,62 @@ class SubActivity1 : AppCompatActivity() {
         ) {
             //画面外
             Log.d("TouchEvent", "X:$pointX,Y:$pointY out of board")
+        } else if (event.action != ACTION_DOWN) {
+            Log.d("TouchEvent", "${event.action}")
         } else {
             val sqX = ((pointX - xOffset) / squareWidth).toInt()
             val sqY = ((pointY - yOffset) / squareHeight).toInt()
-            val sq = sqY * 9 + sqX
-            piece[sq]++
-            piece[sq] %= 58
+            val sq = sqY * BOARD_WIDTH + sqX
+            if (holdPiece != EMPTY) {
 
-            imageViews[sq].setImageResource(
-                this.resources.getIdentifier(
-                    "sgl" + (piece[sq] + 1).toString(),
-                    "drawable",
-                    "com.example.miacisshogi"
+                // Moveを構成
+                val to = xy2square(sqX, sqY)
+                val move = Move(to, moveFrom)
+
+                // to, fromから完全な情報を集める
+                val validMove = pos.transformValidMove(move)
+
+                Log.d("TouchEvent", "from   :${validMove.from().ordinal}")
+                Log.d("TouchEvent", "to     :${validMove.to().ordinal}")
+                Log.d("TouchEvent", "subject:${validMove.subject()}")
+
+                // 局面の遷移
+                pos.doMove(validMove)
+
+                // 画像の更新
+                // 掴んだ駒を設置する
+                imageViews[sq].setImageResource(piece2resourceID(holdPiece))
+                holdPiece = EMPTY
+
+                //もとにあった位置から削除
+                if (moveFrom == Square.WALL00) {
+                    //持ち駒から
+                    //持ち駒を更新
+                    //持ち駒を再描画
+                } else {
+                    //盤上の駒を動かす
+                    val (x, y) = square2xy(moveFrom)
+                    imageViews[y * BOARD_WIDTH + x].setImageResource(piece2resourceID(EMPTY))
+                }
+
+            } else {
+                //駒を掴む
+                holdPiece = pos.on(xy2square(sqX, sqY))
+                moveFrom = xy2square(sqX, sqY)
+
+                Log.d(
+                    "TouchEvent",
+                    "catch X:$pointX,Y:$pointY sqX:$sqX, sqY:$sqY hold_piece:${holdPiece}"
                 )
-            )
-
-            Log.d("TouchEvent", "X:$pointX,Y:$pointY sqX:$sqX, sqY:$sqY piece[sq]:${piece[sq]}")
+            }
         }
 
         return true
     }
 
     fun piece2resourceID(piece: Int): Int {
-        return when(piece) {
+        return when (piece) {
+            EMPTY -> R.drawable.empty
             BLACK_PAWN -> R.drawable.sgl08
             BLACK_LANCE -> R.drawable.sgl07
             BLACK_KNIGHT -> R.drawable.sgl06
@@ -133,5 +164,13 @@ class SubActivity1 : AppCompatActivity() {
 
             else -> R.drawable.sgl18
         }
+    }
+
+    private fun xy2square(x: Int, y: Int): Square {
+        return SquareList[(BOARD_WIDTH - 1 - x) * BOARD_WIDTH + y]
+    }
+
+    private fun square2xy(sq: Square): Pair<Int, Int> {
+        return Pair(BOARD_WIDTH - SquareToFile[sq.ordinal].ordinal, SquareToRank[sq.ordinal].ordinal - 1)
     }
 }
