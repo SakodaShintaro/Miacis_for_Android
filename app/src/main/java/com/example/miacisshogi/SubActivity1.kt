@@ -12,12 +12,12 @@ import androidx.appcompat.app.AppCompatActivity
 
 
 class SubActivity1 : AppCompatActivity() {
-    lateinit var squareImageViews: ArrayList<ImageView>
-    lateinit var handImageViews: ArrayList<ArrayList<ImageView>>
-    lateinit var handTextViews: ArrayList<ArrayList<TextView>>
-    lateinit var pos: Position
-    var holdPiece: Int = EMPTY
-    var moveFrom: Square = Square.WALLAA
+    private lateinit var squareImageViews: ArrayList<ImageView>
+    private lateinit var handImageViews: ArrayList<ArrayList<ImageView>>
+    private lateinit var handTextViews: ArrayList<ArrayList<TextView>>
+    private lateinit var pos: Position
+    private var holdPiece: Int = EMPTY
+    private var moveFrom: Square = Square.WALLAA
     private val marginRate = 0.05
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -196,14 +196,10 @@ class SubActivity1 : AppCompatActivity() {
                 str += pos.hand_[c].num(p).toString()
                 str += " "
             }
-            Log.d(
-                "TouchEvent",
-                "hand ${str}"
-            )
         }
     }
 
-    fun piece2resourceID(piece: Int): Int {
+    private fun piece2resourceID(piece: Int): Int {
         return when (piece) {
             EMPTY -> R.drawable.empty
             BLACK_PAWN -> R.drawable.sgl08
