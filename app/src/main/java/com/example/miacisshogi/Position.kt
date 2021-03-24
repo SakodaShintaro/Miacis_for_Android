@@ -1,6 +1,5 @@
 package com.example.miacisshogi
 
-import android.util.Log
 import kotlin.jvm.internal.Ref
 import kotlin.random.Random
 
@@ -330,8 +329,41 @@ class Position {
     }
 
     //特徴量作成
-    fun makeFeature(): ArrayList<Float> {
-        return ArrayList<Float>()
+    fun makeFeature(): Array<Float> {
+        val features = Array<Float>(SQUARE_NUM * INPUT_CHANNEL_NUM) { 0.0f }
+
+        //盤上の駒の特徴量
+        for (i in 0 until PieceList.size) {
+            //いま考慮している駒
+            val t = if (color_ == BLACK) PieceList[i] else piece2oppositeColorPiece(PieceList[i])
+
+            //各マスについてそこにあるなら1,ないなら0とする
+            for (sq in SquareList) {
+                //後手のときは盤面を180度反転させる
+                val p = if (color_ == BLACK) board_[sq.ordinal] else board_[InvSquare[sq.ordinal].ordinal]
+                features[i * SQUARE_NUM + SquareToNum[sq.ordinal]] = if (t == p) 1.0f else 0.0f
+            }
+        }
+
+        //持ち駒の特徴量:最大枚数で割って正規化する
+        val colors = arrayListOf(
+            arrayListOf(BLACK, WHITE),
+            arrayListOf(WHITE, BLACK),
+        )
+        val HAND_PIECE_NUM = 7
+        val HAND_PIECES = arrayListOf(PAWN, LANCE, KNIGHT, SILVER, GOLD, BISHOP, ROOK)
+        val MAX_NUMS = arrayListOf(18.0f, 4.0f, 4.0f, 4.0f, 4.0f, 2.0f, 2.0f)
+        var i = PieceList.size
+        for (c in colors[color_]) {
+            for (j in 0 until HAND_PIECE_NUM) {
+                for (sq in SquareList) {
+                    features[i * SQUARE_NUM + SquareToNum[sq.ordinal]] = hand_[c].num(HAND_PIECES[j]) / MAX_NUMS[j]
+                }
+                i++
+            }
+        }
+
+        return features
     }
 
     //toとfromしか与えられない状態から完全なMoveに変換する関数

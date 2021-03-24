@@ -116,7 +116,7 @@ class SubActivity1 : AppCompatActivity() {
         //思考部分の初期化
         val button = findViewById<Button>(R.id.button_think)
         button.setOnClickListener {
-            val searcher = Search()
+            val searcher = Search(this)
             val bestMove = searcher.search(pos)
             val textView = findViewById<TextView>(R.id.think_result)
             textView.text = bestMove.toPrettyStr()
