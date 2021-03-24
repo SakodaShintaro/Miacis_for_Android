@@ -1,5 +1,6 @@
 package com.example.miacisshogi
 
+import android.app.AlertDialog
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
@@ -62,7 +63,8 @@ class SubActivity1 : AppCompatActivity() {
         }
 
         //手駒画像の初期化
-        val handFrameList = arrayListOf<FrameLayout>(findViewById(R.id.frame_hand_down), findViewById(R.id.frame_hand_up))
+        val handFrameList =
+            arrayListOf<FrameLayout>(findViewById(R.id.frame_hand_down), findViewById(R.id.frame_hand_up))
         handImageViews = ArrayList()
         handImageViews.add(ArrayList())
         handImageViews.add(ArrayList())
@@ -97,7 +99,7 @@ class SubActivity1 : AppCompatActivity() {
                     imageView.layoutParams = params
 
                     textView.x = (imageView.x + width * 0.85).toFloat()
-                    textView.y = if(c == BLACK) 0.0f else params.height - textView.textSize * 1.5f
+                    textView.y = if (c == BLACK) 0.0f else params.height - textView.textSize * 1.5f
                     textView.bringToFront()
                 }
                 imageView.setImageResource(piece2resourceID(coloredPiece(c, p)))
@@ -123,8 +125,7 @@ class SubActivity1 : AppCompatActivity() {
         val pointY = event.y
 
         if (pointX < xOffset || xOffset + boardWidth < pointX ||
-            pointY < yOffset || yOffset + boardHeight < pointY
-        ) {
+            pointY < yOffset || yOffset + boardHeight < pointY) {
             //画面外
             Log.d("TouchEvent", "X:$pointX,Y:$pointY out of board")
         } else if (event.action != ACTION_DOWN) {
@@ -132,8 +133,8 @@ class SubActivity1 : AppCompatActivity() {
         } else {
             val sqX = ((pointX - xOffset) / squareWidth).toInt()
             val sqY = ((pointY - yOffset) / squareHeight).toInt()
-            val sq = sqY * BOARD_WIDTH + sqX
             if (holdPiece != EMPTY) {
+                pos.print()
 
                 // Moveを構成
                 val to = xy2square(sqX, sqY)
@@ -145,33 +146,38 @@ class SubActivity1 : AppCompatActivity() {
                 Log.d("TouchEvent", "from   :${validMove.from().ordinal}")
                 Log.d("TouchEvent", "to     :${validMove.to().ordinal}")
                 Log.d("TouchEvent", "subject:${validMove.subject()}")
-                Log.d("TouchEvent", "Move :${validMove.toPrettyStr()}")
 
-                if (!pos.isLegalMove(validMove)) {
+                val promotiveMove = promotiveMove(validMove)
+
+                val moveList = pos.generateAllMoves()
+                for (m in moveList) {
+                    println("move :${m.toPrettyStr()}")
+                }
+
+                val isLegalNonPromotive = pos.isLegalMove(validMove)
+                val isLegalPromotive = pos.isLegalMove(promotiveMove)
+
+                if (!isLegalNonPromotive && !isLegalPromotive) {
+                    //両方非合法手だとダメ
                     Log.d("TouchEvent", "Illegal Move!")
                     holdPiece = EMPTY
                     return true
+                } else if (!isLegalNonPromotive && isLegalPromotive) {
+                    //歩、香車、桂馬は成らないと非合法であることがありえる
+                    doMove(promotiveMove)
+                } else if (isLegalNonPromotive && !isLegalPromotive) {
+                    doMove(validMove)
+                } else if (isLegalPromotive) {
+                    // 選択が発生する
+                    // BuilderからAlertDialogを作成
+                    val dialog = AlertDialog.Builder(this)
+                        .setTitle("成るか成らないか") // タイトル
+                        .setPositiveButton("成る") { dialog, which -> doMove(promotiveMove) }
+                        .setNegativeButton("成らない") { dialog, which -> doMove(validMove) }
+                        .setCancelable(false)
+                        .create()
+                    dialog.show()
                 }
-
-                // 局面の遷移
-                pos.doMove(validMove)
-
-                // 画像の更新
-                // 掴んだ駒を設置する
-                squareImageViews[sq].setImageResource(piece2resourceID(holdPiece))
-                holdPiece = EMPTY
-
-                //もとにあった位置から削除
-                if (moveFrom == Square.WALL00) {
-                    //持ち駒から
-                    //持ち駒を更新
-                    //持ち駒を再描画
-                } else {
-                    //盤上の駒を動かす
-                    val (x, y) = square2xy(moveFrom)
-                    squareImageViews[y * BOARD_WIDTH + x].setImageResource(piece2resourceID(EMPTY))
-                }
-                showHand()
             } else {
                 //駒を掴む
                 holdPiece = pos.on(xy2square(sqX, sqY))
@@ -185,6 +191,33 @@ class SubActivity1 : AppCompatActivity() {
         }
 
         return true
+    }
+
+    private fun doMove(move: Move) {
+        Log.d("doMove", "Move   :${move.toPrettyStr()}")
+
+        // 局面の遷移
+        pos.doMove(move)
+
+        // 画像の更新
+        // 掴んだ駒を設置する
+        val (toX, toY) = square2xy(move.to())
+        val sqTo = toY * BOARD_WIDTH + toX
+        val piece = if (move.isPromote()) promote(move.subject()) else move.subject()
+        squareImageViews[sqTo].setImageResource(piece2resourceID(piece))
+        holdPiece = EMPTY
+
+        //もとにあった位置から削除
+        if (moveFrom == Square.WALL00) {
+            //持ち駒から
+            //持ち駒を更新
+            //持ち駒を再描画
+        } else {
+            //盤上の駒を動かす
+            val (x, y) = square2xy(moveFrom)
+            squareImageViews[y * BOARD_WIDTH + x].setImageResource(piece2resourceID(EMPTY))
+        }
+        showHand()
     }
 
     private fun showHand() {

@@ -100,13 +100,14 @@ class Hand {
     }
 
     //表示
-//    void print() const {
-//        for (Piece p = PAWN; p <= ROOK; p++)
-//        if (num(p)) {
-//            std::cout << PieceToStr[p] << num(p) << " ";
-//        }
-//        std::cout << std::endl;
-//    }
+    fun print() {
+        for (p in PAWN..ROOK) {
+            if (num(p) > 0) {
+                print("${PieceToStr[p]}${num(p)}")
+            }
+            println()
+        }
+    }
 
     var hand_: Int
 }

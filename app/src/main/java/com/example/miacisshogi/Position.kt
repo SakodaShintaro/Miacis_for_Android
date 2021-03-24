@@ -1,6 +1,5 @@
 package com.example.miacisshogi
 
-import android.util.Log
 import kotlin.jvm.internal.Ref
 import kotlin.random.Random
 
@@ -89,7 +88,32 @@ class Position {
     }
 
     //内部の状態等を表示する関数
-    fun print() {}
+    fun print() {
+        //盤上
+        println("９８７６５４３２１")
+        println("------------------")
+        for (r in Rank.Rank1.ordinal..Rank.Rank9.ordinal) {
+            for (f in File.File9.ordinal..File.File1.ordinal) {
+                print(PieceToSfenStrWithSpace[board_[FRToSquare[f][r].ordinal]])
+            }
+            println("|${r}")
+        }
+
+        //持ち駒
+        println("持ち駒")
+        println("先手:")
+        hand_[BLACK].print()
+        println("後手:")
+        hand_[WHITE].print()
+
+        //その他
+        println("手番:${if (color_ == BLACK) "先手" else "後手"}")
+        println("手数:${turn_number_}")
+        if (!kifu_.isEmpty()) {
+            println("最後の手:${lastMove().toPrettyStr()}")
+        }
+        println("ハッシュ値:${hash_value_}")
+    }
 
     //一手進める・戻す関数
     fun doMove(move: Move) {
@@ -198,74 +222,80 @@ class Position {
         kifu_.removeLast()
 
         //手番を戻す(このタイミングでいいかな?)
-        color_ =  if(color_ == BLACK) WHITE else BLACK
+        color_ = if (color_ == BLACK) WHITE else BLACK
 
         val to = last_move.to().ordinal
         val from = last_move.from().ordinal
 
         //動かした駒を消す
-        board_[to] = EMPTY;
+        board_[to] = EMPTY
 
         //盤の状態を戻す
         if (last_move.isDrop()) { //打つ手
 
             //持ち駒を増やす
-            hand_[color_].add(kind(last_move.subject()));
+            hand_[color_].add(kind(last_move.subject()))
 
             //ハッシュ値の巻き戻し
             //戻す前のHandHashとXOR
-            hand_hash_ = hand_hash_ xor handHashSeed[color_][kind(last_move.subject())][hand_[color_].num(kind(last_move.subject())) - 1];
+            hand_hash_ =
+                hand_hash_ xor handHashSeed[color_][kind(last_move.subject())][hand_[color_].num(kind(last_move.subject())) - 1]
             //戻す前の分をXORして消す
-            board_hash_ = board_hash_ xor hashSeed[last_move.subject()][to];
+            board_hash_ = board_hash_ xor hashSeed[last_move.subject()][to]
             //戻した後のHandHashとXOR
-            hand_hash_ = hand_hash_ xor handHashSeed[color_][kind(last_move.subject())][hand_[color_].num(kind(last_move.subject()))];
+            hand_hash_ =
+                hand_hash_ xor handHashSeed[color_][kind(last_move.subject())][hand_[color_].num(kind(last_move.subject()))]
         } else { //盤上の駒を動かす手
             //取る手だったらtoに取った駒を戻し、持ち駒を減らす
             if (last_move.capture() != EMPTY) {
-                board_[to] = last_move.capture();
-                hand_[color_].sub(kind(last_move.capture()));
+                board_[to] = last_move.capture()
+                hand_[color_].sub(kind(last_move.capture()))
 
                 //ハッシュ値の巻き戻し
                 //取る前の分のハッシュをXOR
-                board_hash_ = board_hash_ xor hashSeed[last_move.capture()][to];
+                board_hash_ = board_hash_ xor hashSeed[last_move.capture()][to]
                 //増える前の持ち駒の分
-                hand_hash_ = hand_hash_ xor handHashSeed[color_][last_move.capture() and PIECE_KIND_MASK][hand_[color_].num(kind(last_move.capture()))];
+                hand_hash_ =
+                    hand_hash_ xor handHashSeed[color_][last_move.capture() and PIECE_KIND_MASK][hand_[color_].num(
+                        kind(last_move.capture()))]
                 //増えた後の持ち駒の分XORして消す
-                hand_hash_ = hand_hash_ xor handHashSeed[color_][last_move.capture() and PIECE_KIND_MASK][hand_[color_].num(kind(last_move.capture())) + 1];
+                hand_hash_ =
+                    hand_hash_ xor handHashSeed[color_][last_move.capture() and PIECE_KIND_MASK][hand_[color_].num(
+                        kind(last_move.capture())) + 1]
             }
 
             //動いた駒をfromに戻す
-            board_[from] = last_move.subject();
+            board_[from] = last_move.subject()
 
             //ハッシュ値の巻き戻し
             //移動前の分をXOR
-            board_hash_ = board_hash_ xor hashSeed[last_move.subject()][from];
+            board_hash_ = board_hash_ xor hashSeed[last_move.subject()][from]
             //移動後の分をXORして消す
             if (last_move.isPromote()) {
                 board_hash_ = board_hash_ xor hashSeed[promote(last_move.subject())][to]
             } else {
-                board_hash_ = board_hash_ xor hashSeed[last_move.subject()][to];
+                board_hash_ = board_hash_ xor hashSeed[last_move.subject()][to]
             }
         }
 
         //玉を動かす手ならking_sq_に反映
-        if (kind(last_move.subject()) == KING) king_sq_[color_] = last_move.from();
+        if (kind(last_move.subject()) == KING) king_sq_[color_] = last_move.from()
 
         //ハッシュの更新
-        hash_value_ = board_hash_ xor  hand_hash_;
+        hash_value_ = board_hash_ xor hand_hash_
         //一番右のbitを0にする
-        hash_value_ = hash_value_ and (1).toLong().inv();
+        hash_value_ = hash_value_ and (1).toLong().inv()
         //一番右のbitが先手番だったら0のまま、後手番だったら1になる
-        hash_value_ = hash_value_ or (color_).toLong();
+        hash_value_ = hash_value_ or (color_).toLong()
 
         //手数
-        turn_number_--;
+        turn_number_--
 
         //Stack更新
         stack_.removeLast()
 
         //合法手生成のフラグを降ろす
-        already_generated_moves_ = false;
+        already_generated_moves_ = false
     }
 
     //合法性に関する関数
@@ -326,7 +356,7 @@ class Position {
 
     //合法手生成
     fun generateAllMoves(): ArrayList<Move> {
-        val move_buf = ArrayList<Move>()
+        val moveList = ArrayList<Move>()
         for (sq in SquareList) {
             if (board_[sq.ordinal] == EMPTY) {
                 //ここに打つ手が可能
@@ -347,7 +377,7 @@ class Position {
                             }
                         }
                         if (ok) {
-                            pushMove(dropMove(sq, coloredPiece(color_, PAWN)), move_buf)
+                            pushMove(dropMove(sq, coloredPiece(color_, PAWN)), moveList)
                         }
                     }
                 }
@@ -357,7 +387,7 @@ class Position {
                 if (hand_[color_].num(LANCE) > 0) {
                     if (color_ == BLACK && SquareToRank[sq.ordinal] <= Rank.Rank8 ||
                         color_ == WHITE && SquareToRank[sq.ordinal] >= Rank.Rank2) {
-                        pushMove(dropMove(sq, coloredPiece(color_, LANCE)), move_buf)
+                        pushMove(dropMove(sq, coloredPiece(color_, LANCE)), moveList)
                     }
                 }
 
@@ -366,14 +396,14 @@ class Position {
                 if (hand_[color_].num(KNIGHT) > 0) {
                     if (color_ == BLACK && SquareToRank[sq.ordinal] <= Rank.Rank7 ||
                         color_ == WHITE && SquareToRank[sq.ordinal] >= Rank.Rank3) {
-                        pushMove(dropMove(sq, coloredPiece(color_, KNIGHT)), move_buf)
+                        pushMove(dropMove(sq, coloredPiece(color_, KNIGHT)), moveList)
                     }
                 }
 
                 //その他
                 for (p in arrayListOf(SILVER, GOLD, BISHOP, ROOK)) {
                     if (hand_[color_].num(p) > 0) {
-                        pushMove(dropMove(sq, coloredPiece(color_, p)), move_buf)
+                        pushMove(dropMove(sq, coloredPiece(color_, p)), moveList)
                     }
                 }
             } else if (pieceToColor(board_[sq.ordinal]) == color_) {
@@ -382,11 +412,11 @@ class Position {
                 for (to in toList) {
                     //成る手が可能だったら先に生成
                     val move = Move(to, sq, false, false, board_[sq.ordinal], board_[to.ordinal])
-                    pushMove(move, move_buf)
+                    pushMove(move, moveList)
                 }
             }
         }
-        return move_buf
+        return moveList
     }
 
     //sfenの入出力
@@ -658,7 +688,7 @@ class Position {
 
     //emptyの条件分けをいちいち書かないための補助関数
     fun lastMove(): Move {
-        return if (kifu_.size == 0) NULL_MOVE else kifu_.last();
+        return if (kifu_.size == 0) NULL_MOVE else kifu_.last()
     }
 
     //------------------
