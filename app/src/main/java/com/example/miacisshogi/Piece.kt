@@ -97,7 +97,7 @@ fun coloredPiece(c: Int, p: Int): Int {
     return if (c == BLACK) toBlack(p) else toWhite(p);
 }
 
-fun oppositeColor(p: Int): Int {
+fun piece2oppositeColorPiece(p: Int): Int {
     var result = p
     if (pieceToColor(p) == BLACK) {
         //BLACKのフラグを消して

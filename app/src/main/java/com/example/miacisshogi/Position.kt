@@ -1,5 +1,6 @@
 package com.example.miacisshogi
 
+import android.util.Log
 import kotlin.jvm.internal.Ref
 import kotlin.random.Random
 
@@ -410,7 +411,6 @@ class Position {
                 //この駒を動かす
                 val toList = movableSquareList(sq, board_[sq.ordinal])
                 for (to in toList) {
-                    //成る手が可能だったら先に生成
                     val move = Move(to, sq, false, false, board_[sq.ordinal], board_[to.ordinal])
                     pushMove(move, moveList)
                 }
@@ -551,9 +551,9 @@ class Position {
             BLACK_BISHOP_PROMOTE,
             WHITE_BISHOP_PROMOTE -> {
                 list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_RU))
-                list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_U))
-                list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_U))
-                list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_U))
+                list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_RD))
+                list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_LD))
+                list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_LU))
                 addSquare(SquareListWithWALL[sq.ordinal + DIR_U], pieceToColor(piece), list)
                 addSquare(SquareListWithWALL[sq.ordinal + DIR_R], pieceToColor(piece), list)
                 addSquare(SquareListWithWALL[sq.ordinal + DIR_D], pieceToColor(piece), list)
@@ -597,7 +597,7 @@ class Position {
     private fun isThereControl(color: Int, sq: Square): Boolean {
         //color側の利きがsqマスへあるかどうか
         //sqマスからcolorとは逆側の手番として利きを生成
-        val oppColor = oppositeColor(color)
+        val oppColor = color2oppositeColor(color)
         val pieceList = arrayListOf(
             PAWN,
             LANCE,
