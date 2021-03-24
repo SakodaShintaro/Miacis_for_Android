@@ -319,8 +319,8 @@ class Position {
 
     //この局面が詰み、千日手等で終わっているか確認する関数
     //終わっている場合は手番側から見た点数を引数に書き込んでtrueを返す
-    fun isFinish(score: Ref.FloatRef, check_repeat: Boolean = true): Boolean {
-        return false
+    fun isFinish(): Int {
+        return 1
     }
 
     //千日手の判定
