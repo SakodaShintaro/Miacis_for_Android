@@ -114,12 +114,20 @@ class SubActivity1 : AppCompatActivity() {
         showHand()
 
         //思考部分の初期化
-        val button = findViewById<Button>(R.id.button_think)
-        button.setOnClickListener {
+        findViewById<Button>(R.id.button_think).setOnClickListener {
             val searcher = Search(this)
             val bestMove = searcher.search(pos)
             val textView = findViewById<TextView>(R.id.think_result)
             textView.text = bestMove.toPrettyStr()
+        }
+        findViewById<Button>(R.id.button_think_and_do).setOnClickListener {
+            val searcher = Search(this)
+            val bestMove = searcher.search(pos)
+            val textView = findViewById<TextView>(R.id.think_result)
+            textView.text = bestMove.toPrettyStr()
+            holdPiece = bestMove.subject()
+            moveFrom = bestMove.from()
+            doMove(bestMove)
         }
     }
 

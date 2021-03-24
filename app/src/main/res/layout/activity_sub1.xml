@@ -63,9 +63,17 @@
         android:id="@+id/button_think"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
-        android:text="Button"
+        android:text="検討"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/frame_hand_down" />
+
+    <Button
+        android:id="@+id/button_think_and_do"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:text="思考して実行"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_think" />
 
     <TextView
         android:id="@+id/think_result"
