@@ -6,6 +6,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.ViewGroup
+import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
 import android.widget.TextView
@@ -111,6 +112,15 @@ class SubActivity1 : AppCompatActivity() {
         }
 
         showHand()
+
+        //思考部分の初期化
+        val button = findViewById<Button>(R.id.button_think)
+        button.setOnClickListener {
+            val searcher = Search()
+            val bestMove = searcher.search(pos)
+            val textView = findViewById<TextView>(R.id.think_result)
+            textView.text = bestMove.toPrettyStr()
+        }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {

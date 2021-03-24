@@ -60,7 +60,7 @@
     </FrameLayout>
 
     <Button
-        android:id="@+id/button"
+        android:id="@+id/button_think"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="Button"
@@ -68,12 +68,12 @@
         app:layout_constraintTop_toBottomOf="@+id/frame_hand_down" />
 
     <TextView
-        android:id="@+id/textView3"
+        android:id="@+id/think_result"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="TextView"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toStartOf="@+id/button"
+        app:layout_constraintEnd_toStartOf="@+id/button_think"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/frame_hand_down" />
 </androidx.constraintlayout.widget.ConstraintLayout >
