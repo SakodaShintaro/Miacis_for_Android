@@ -157,12 +157,12 @@ class SubActivity1 : AppCompatActivity() {
             }
 
             for (i in 0 until ROOK) {
-                if (pos.hand_[WHITE].num(i + 1) == 0) {
+                if (pos.hand_[WHITE].num(ROOK - i) == 0) {
                     continue
                 }
                 if (handImageViews[WHITE][i].x <= pointX && pointX <= handImageViews[WHITE][i].x + handImageViews[WHITE][i].width) {
                     //iが押された
-                    holdPiece = coloredPiece(WHITE, i + 1)
+                    holdPiece = coloredPiece(WHITE, ROOK - i)
                     moveFrom = Square.WALL00
                     handImageViews[WHITE][i].setBackgroundColor(backGroundColor)
                     Log.d("TouchEvent", "catch to drop ${holdPiece} ${moveFrom}")
@@ -178,12 +178,12 @@ class SubActivity1 : AppCompatActivity() {
             }
 
             for (i in 0 until ROOK) {
-                if (pos.hand_[BLACK].num(i + 1) == 0) {
+                if (pos.hand_[BLACK].num(ROOK - i) == 0) {
                     continue
                 }
                 if (handImageViews[BLACK][i].x <= pointX && pointX <= handImageViews[BLACK][i].x + handImageViews[BLACK][i].width) {
                     //iが押された
-                    holdPiece = coloredPiece(BLACK, i + 1)
+                    holdPiece = coloredPiece(BLACK, ROOK - i)
                     moveFrom = Square.WALL00
                     handImageViews[BLACK][i].setBackgroundColor(backGroundColor)
                     Log.d("TouchEvent", "catch to drop ${holdPiece} ${moveFrom}")
@@ -293,9 +293,9 @@ class SubActivity1 : AppCompatActivity() {
     private fun showHand() {
         for (c in BLACK..WHITE) {
             for (p in PAWN until KING) {
-                handImageViews[c][p - 1].setImageResource(piece2resourceID(coloredPiece(c, p)))
-                handImageViews[c][p - 1].setBackgroundColor(0x00000000)
-                handTextViews[c][p - 1].text = pos.hand_[c].num(p).toString()
+                handImageViews[c][ROOK - p].setImageResource(piece2resourceID(coloredPiece(c, p)))
+                handImageViews[c][ROOK - p].setBackgroundColor(0x00000000)
+                handTextViews[c][ROOK - p].text = pos.hand_[c].num(p).toString()
             }
         }
     }
@@ -339,7 +339,6 @@ class SubActivity1 : AppCompatActivity() {
     private fun resetHold() {
         if (moveFrom == Square.WALL00) {
             //持ち駒を指定していた
-            //squareImageViews[y * BOARD_WIDTH + x].setBackgroundColor(0x00000000)
             for (i in 0 until ROOK) {
                 val p = coloredPiece(pos.color(), i + 1)
                 if (p == holdPiece) {
