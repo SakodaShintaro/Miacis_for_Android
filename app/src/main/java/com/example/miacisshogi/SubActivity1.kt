@@ -20,6 +20,7 @@ class SubActivity1 : AppCompatActivity() {
     private var holdPiece: Int = EMPTY
     private var moveFrom: Square = Square.WALLAA
     private val marginRate = 0.05
+    private val backGroundColor = 0xffff0000.toInt()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -129,6 +130,7 @@ class SubActivity1 : AppCompatActivity() {
 
         //単純な押下以外はとりあえず無視
         if (event.action != ACTION_DOWN) {
+            //ここは指を離したときにも訪れてしまうのでresetHoldはしない
             return true
         }
 
@@ -140,6 +142,7 @@ class SubActivity1 : AppCompatActivity() {
             //上側(後手)の駒台
             //先手で触っていたら無視
             if (pos.color() == BLACK) {
+                resetHold()
                 return true
             }
 
@@ -151,6 +154,7 @@ class SubActivity1 : AppCompatActivity() {
                     //iが押された
                     holdPiece = coloredPiece(WHITE, i + 1)
                     moveFrom = Square.WALL00
+                    handImageViews[WHITE][i].setBackgroundColor(backGroundColor)
                     Log.d("TouchEvent", "catch to drop ${holdPiece} ${moveFrom}")
                     return true
                 }
@@ -159,6 +163,7 @@ class SubActivity1 : AppCompatActivity() {
             //下側(先手)の駒台
             //先手で触っていたら無視
             if (pos.color() == WHITE) {
+                resetHold()
                 return true
             }
 
@@ -170,12 +175,14 @@ class SubActivity1 : AppCompatActivity() {
                     //iが押された
                     holdPiece = coloredPiece(BLACK, i + 1)
                     moveFrom = Square.WALL00
+                    handImageViews[BLACK][i].setBackgroundColor(backGroundColor)
                     Log.d("TouchEvent", "catch to drop ${holdPiece} ${moveFrom}")
                     return true
                 }
             }
         } else if (pointX < xOffset || xOffset + boardWidth < pointX ||
             pointY < yOffset || yOffset + boardHeight < pointY) {
+            resetHold()
             //画面外
         } else {
             //盤の中
@@ -210,8 +217,8 @@ class SubActivity1 : AppCompatActivity() {
 
                 if (!isLegalNonPromotive && !isLegalPromotive) {
                     //両方非合法手だとダメ
+                    resetHold()
                     Log.d("TouchEvent", "Illegal Move!")
-                    holdPiece = EMPTY
                     return true
                 } else if (!isLegalNonPromotive && isLegalPromotive) {
                     //歩、香車、桂馬は成らないと非合法であることがありえる
@@ -229,10 +236,12 @@ class SubActivity1 : AppCompatActivity() {
                         .create()
                     dialog.show()
                 }
-            } else {
+            } else if(pos.on(xy2square(sqX, sqY)) != EMPTY && pieceToColor(pos.on(xy2square(sqX, sqY))) == pos.color()) {
                 //駒を掴む
                 holdPiece = pos.on(xy2square(sqX, sqY))
                 moveFrom = xy2square(sqX, sqY)
+                val sq = sqY * BOARD_WIDTH + sqX
+                squareImageViews[sq].setBackgroundColor(backGroundColor)
 
                 Log.d(
                     "TouchEvent",
@@ -256,29 +265,27 @@ class SubActivity1 : AppCompatActivity() {
         val sqTo = toY * BOARD_WIDTH + toX
         val piece = if (move.isPromote()) promote(move.subject()) else move.subject()
         squareImageViews[sqTo].setImageResource(piece2resourceID(piece))
-        holdPiece = EMPTY
 
         //もとにあった位置から削除
-        if (moveFrom == Square.WALL00) {
-            //持ち駒から
-            //持ち駒を更新
-            //持ち駒を再描画
-        } else {
-            //盤上の駒を動かす
+        if (moveFrom != Square.WALL00) {
             val (x, y) = square2xy(moveFrom)
             squareImageViews[y * BOARD_WIDTH + x].setImageResource(piece2resourceID(EMPTY))
+            squareImageViews[y * BOARD_WIDTH + x].setBackgroundColor(0x00000000)
         }
+
+        //持ち駒を再描画
         showHand()
+
+        //保持した情報を解放
+        resetHold()
     }
 
     private fun showHand() {
         for (c in BLACK..WHITE) {
-            var str = String()
             for (p in PAWN until KING) {
                 handImageViews[c][p - 1].setImageResource(piece2resourceID(coloredPiece(c, p)))
+                handImageViews[c][p - 1].setBackgroundColor(0x00000000)
                 handTextViews[c][p - 1].text = pos.hand_[c].num(p).toString()
-                str += pos.hand_[c].num(p).toString()
-                str += " "
             }
         }
     }
@@ -319,11 +326,35 @@ class SubActivity1 : AppCompatActivity() {
         }
     }
 
+    private fun resetHold() {
+        if (moveFrom == Square.WALL00) {
+            //持ち駒を指定していた
+            //squareImageViews[y * BOARD_WIDTH + x].setBackgroundColor(0x00000000)
+            for (i in 0 until ROOK) {
+                val p = coloredPiece(pos.color(), i + 1)
+                if (p == holdPiece) {
+                    handImageViews[pos.color()][i].setBackgroundColor(0x00000000)
+                }
+            }
+
+            } else if (moveFrom != Square.WALLAA) {
+            //盤上のどこかを指定していた
+            squareImageViews[square2sqid(moveFrom)].setBackgroundColor(0x00000000)
+        }
+
+        holdPiece = EMPTY
+    }
+
     private fun xy2square(x: Int, y: Int): Square {
         return SquareList[(BOARD_WIDTH - 1 - x) * BOARD_WIDTH + y]
     }
 
     private fun square2xy(sq: Square): Pair<Int, Int> {
         return Pair(BOARD_WIDTH - SquareToFile[sq.ordinal].ordinal, SquareToRank[sq.ordinal].ordinal - 1)
+    }
+
+    private fun square2sqid(sq: Square): Int {
+        val (x, y) = square2xy(sq)
+        return y * BOARD_WIDTH + x
     }
 }
