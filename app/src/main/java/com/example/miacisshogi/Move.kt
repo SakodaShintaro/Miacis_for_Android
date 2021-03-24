@@ -64,8 +64,7 @@ class Move(
                     fileToSfenString[SquareToFile[to().ordinal].ordinal] +
                     rankToSfenString[SquareToRank[to().ordinal].ordinal]
         } else {
-            var result = String()
-            result = fileToSfenString[SquareToFile[from().ordinal].ordinal] +
+            var result = fileToSfenString[SquareToFile[from().ordinal].ordinal] +
                      rankToSfenString[SquareToRank[from().ordinal].ordinal] +
                      fileToSfenString[SquareToFile[to().ordinal].ordinal] +
                      rankToSfenString[SquareToRank[to().ordinal].ordinal]
@@ -78,7 +77,10 @@ class Move(
 
     //見やすい日本語での表示
     fun toPrettyStr(): String {
-        if (move_ == MOVE_DECLARE) {
+        if (this == NULL_MOVE) {
+            return "投了"
+        }
+        if (this == DECLARE_MOVE) {
             return "入玉宣言"
         }
         var result: String = ""
