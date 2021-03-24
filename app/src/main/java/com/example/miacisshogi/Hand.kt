@@ -96,7 +96,8 @@ class Hand {
 
     //zeroクリア
     fun clear() {
-        hand_ = 0; }
+        hand_ = 0;
+    }
 
     //表示
 //    void print() const {

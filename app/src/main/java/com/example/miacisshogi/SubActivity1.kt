@@ -7,11 +7,14 @@ import android.view.MotionEvent.ACTION_DOWN
 import android.view.ViewGroup
 import android.widget.FrameLayout
 import android.widget.ImageView
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
 
 class SubActivity1 : AppCompatActivity() {
-    lateinit var imageViews: ArrayList<ImageView>
+    lateinit var squareImageViews: ArrayList<ImageView>
+    lateinit var handImageViews: ArrayList<ArrayList<ImageView>>
+    lateinit var handTextViews: ArrayList<ArrayList<TextView>>
     lateinit var pos: Position
     var holdPiece: Int = EMPTY
     var moveFrom: Square = Square.WALLAA
@@ -21,17 +24,16 @@ class SubActivity1 : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_sub1)
 
-        //初期化
-        imageViews = ArrayList()
+        //盤面の準備
         pos = Position()
 
+        //マス画像の初期化
         //ここで9 x 9のImageViewを作り、置かれている駒に応じて適切な画像を選択して置く
+        squareImageViews = ArrayList()
         val frame = findViewById<FrameLayout>(R.id.frame)
-
         for (i in 0..8) {
             for (j in 0..8) {
                 val imageView = ImageView(this)
-                imageView.setImageResource(R.drawable.sgl01)
                 imageView.x = (j).toFloat()
                 imageView.y = (i).toFloat()
                 imageView.scaleType = ImageView.ScaleType.FIT_CENTER
@@ -55,9 +57,57 @@ class SubActivity1 : AppCompatActivity() {
 
                 val piece = pos.on(xy2square(j, i))
                 imageView.setImageResource(piece2resourceID(piece))
-                imageViews.add(imageView)
+                squareImageViews.add(imageView)
             }
         }
+
+        //手駒画像の初期化
+        val handFrameList = arrayListOf<FrameLayout>(findViewById(R.id.frame_hand_down), findViewById(R.id.frame_hand_up))
+        handImageViews = ArrayList()
+        handImageViews.add(ArrayList())
+        handImageViews.add(ArrayList())
+        handTextViews = ArrayList()
+        handTextViews.add(ArrayList())
+        handTextViews.add(ArrayList())
+
+        for (c in BLACK..WHITE) {
+            println(c)
+            val handFrame = handFrameList[c]
+            for (p in PAWN until KING) {
+                val imageView = ImageView(this)
+                imageView.x = 0.0f
+                imageView.y = 0.0f
+                imageView.scaleType = ImageView.ScaleType.FIT_CENTER
+                handFrame.addView(imageView, 0, 0)
+
+                val textView = TextView(this)
+                textView.x = 0.0f
+                textView.y = 0.0f
+                textView.text = "x0"
+                textView.textSize = 20.0f
+                handFrame.addView(textView, 200, 200)
+
+                handFrame.viewTreeObserver.addOnGlobalLayoutListener {
+                    val frameWidth = handFrame.width
+                    val width = (frameWidth / ROOK * 0.75).toInt()
+                    val params: ViewGroup.LayoutParams = imageView.layoutParams
+                    params.width = width
+                    params.height = handFrame.height
+                    imageView.x = ((p - 1) * frameWidth / ROOK).toFloat()
+                    imageView.layoutParams = params
+
+                    textView.x = (imageView.x + width * 0.85).toFloat()
+                    textView.y = if(c == BLACK) 0.0f else params.height - textView.textSize * 1.5f
+                    textView.bringToFront()
+                }
+                imageView.setImageResource(piece2resourceID(coloredPiece(c, p)))
+                println("${coloredPiece(c, p)} ${piece2resourceID(coloredPiece(c, p))}")
+                handImageViews[c].add(imageView)
+                handTextViews[c].add(textView)
+            }
+        }
+
+        showHand()
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -67,7 +117,7 @@ class SubActivity1 : AppCompatActivity() {
         val boardHeight = boardWidth * 1.07
         val squareWidth = boardWidth / 9
         val squareHeight = boardHeight / 9
-        val yOffset = frame.height / 2 - boardHeight * 0.45
+        val yOffset = frame.height / 2 - boardHeight * 0.45 + frame.y
 
         val pointX = event.x
         val pointY = event.y
@@ -108,7 +158,7 @@ class SubActivity1 : AppCompatActivity() {
 
                 // 画像の更新
                 // 掴んだ駒を設置する
-                imageViews[sq].setImageResource(piece2resourceID(holdPiece))
+                squareImageViews[sq].setImageResource(piece2resourceID(holdPiece))
                 holdPiece = EMPTY
 
                 //もとにあった位置から削除
@@ -119,9 +169,9 @@ class SubActivity1 : AppCompatActivity() {
                 } else {
                     //盤上の駒を動かす
                     val (x, y) = square2xy(moveFrom)
-                    imageViews[y * BOARD_WIDTH + x].setImageResource(piece2resourceID(EMPTY))
+                    squareImageViews[y * BOARD_WIDTH + x].setImageResource(piece2resourceID(EMPTY))
                 }
-
+                showHand()
             } else {
                 //駒を掴む
                 holdPiece = pos.on(xy2square(sqX, sqY))
@@ -135,6 +185,22 @@ class SubActivity1 : AppCompatActivity() {
         }
 
         return true
+    }
+
+    private fun showHand() {
+        for (c in BLACK..WHITE) {
+            var str = String()
+            for (p in PAWN until KING) {
+                handImageViews[c][p - 1].setImageResource(piece2resourceID(coloredPiece(c, p)))
+                handTextViews[c][p - 1].text = pos.hand_[c].num(p).toString()
+                str += pos.hand_[c].num(p).toString()
+                str += " "
+            }
+            Log.d(
+                "TouchEvent",
+                "hand ${str}"
+            )
+        }
     }
 
     fun piece2resourceID(piece: Int): Int {

@@ -93,7 +93,7 @@ class Position {
 
     //一手進める・戻す関数
     fun doMove(move: Move) {
-        Log.d("doMove", move.toPrettyStr())
+//        Log.d("doMove", move.toPrettyStr())
 
         //動かす前の状態を残しておく
         stack_.add(StateInfo(this))
@@ -658,7 +658,8 @@ class Position {
 
     //emptyの条件分けをいちいち書かないための補助関数
     fun lastMove(): Move {
-        return if (kifu_.size == 0) NULL_MOVE else kifu_.last(); }
+        return if (kifu_.size == 0) NULL_MOVE else kifu_.last();
+    }
 
     //------------------
     //    クラス変数
