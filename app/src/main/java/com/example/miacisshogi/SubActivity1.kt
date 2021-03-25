@@ -6,11 +6,9 @@ import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
-import android.widget.Button
-import android.widget.FrameLayout
-import android.widget.ImageView
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+
 
 const val HUMAN = 0
 const val MIACIS = 1
@@ -40,7 +38,6 @@ class SubActivity1 : AppCompatActivity() {
         searcher = Search(this)
 
         //ターンの制御
-        println("intent = ${intent?.extras?.get(TURN_STR)}")
         when (intent?.extras?.get(TURN_STR)) {
             HUMAN_TURN_BLACK -> player = arrayOf(HUMAN, MIACIS)
             HUMAN_TURN_WHITE -> player = arrayOf(MIACIS, HUMAN)
@@ -126,6 +123,17 @@ class SubActivity1 : AppCompatActivity() {
         findViewById<Button>(R.id.button_init_pos).setOnClickListener {
             pos.init()
             showPosition()
+        }
+        findViewById<Button>(R.id.button_input_sfen).setOnClickListener {
+            val editText = EditText(this)
+            editText.hint = "sfen ~"
+            AlertDialog.Builder(this)
+                .setView(editText)
+                .setPositiveButton("OK") { dialog, which ->
+                    pos.fromStr(editText.text.toString())
+                    showPosition()
+                }
+                .show()
         }
     }
 

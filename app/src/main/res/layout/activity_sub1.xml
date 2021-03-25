@@ -84,6 +84,14 @@
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_think_and_do" />
 
+    <Button
+        android:id="@+id/button_input_sfen"
+        android:layout_width="130dp"
+        android:layout_height="wrap_content"
+        android:text="SFENを入力"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toBottomOf="@+id/button_init_pos" />
+
     <TextView
         android:id="@+id/think_result"
         android:layout_width="wrap_content"
