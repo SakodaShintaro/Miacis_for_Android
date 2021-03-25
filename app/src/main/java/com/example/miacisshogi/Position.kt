@@ -397,42 +397,31 @@ class Position {
                 //ここに打つ手が可能
 
                 //歩を打つ手
-                if (hand_[color_].num(PAWN) > 0) {
-                    //最奥の段は除外する
-                    if (color_ == BLACK && SquareToRank[sq.ordinal] <= Rank.Rank8 ||
-                        color_ == WHITE && SquareToRank[sq.ordinal] >= Rank.Rank2) {
-
-                        //2歩の除外
-                        var ok = true
-                        val file = SquareToFile[sq.ordinal].ordinal
-                        for (rank in Rank.Rank1.ordinal..Rank.Rank9.ordinal) {
-                            if (board_[FRToSquare[file][rank].ordinal] == coloredPiece(color_, PAWN)) {
-                                ok = false
-                                break
-                            }
+                if (hand_[color_].num(PAWN) > 0 && puttablePawnLanceKnight(sq, 1)) {
+                    //2歩の除外
+                    var ok = true
+                    val file = SquareToFile[sq.ordinal].ordinal
+                    for (rank in Rank.Rank1.ordinal..Rank.Rank9.ordinal) {
+                        if (board_[FRToSquare[file][rank].ordinal] == coloredPiece(color_, PAWN)) {
+                            ok = false
+                            break
                         }
-                        if (ok) {
-                            pushMove(dropMove(sq, coloredPiece(color_, PAWN)), moveList)
-                        }
+                    }
+                    if (ok) {
+                        pushMove(dropMove(sq, coloredPiece(color_, PAWN)), moveList)
                     }
                 }
 
                 //香車
                 //最奥の段は除外する
-                if (hand_[color_].num(LANCE) > 0) {
-                    if (color_ == BLACK && SquareToRank[sq.ordinal] <= Rank.Rank8 ||
-                        color_ == WHITE && SquareToRank[sq.ordinal] >= Rank.Rank2) {
-                        pushMove(dropMove(sq, coloredPiece(color_, LANCE)), moveList)
-                    }
+                if (hand_[color_].num(LANCE) > 0 && puttablePawnLanceKnight(sq, 1)) {
+                    pushMove(dropMove(sq, coloredPiece(color_, LANCE)), moveList)
                 }
 
                 //桂馬
                 //奥の2段は除外する
-                if (hand_[color_].num(KNIGHT) > 0) {
-                    if (color_ == BLACK && SquareToRank[sq.ordinal] <= Rank.Rank7 ||
-                        color_ == WHITE && SquareToRank[sq.ordinal] >= Rank.Rank3) {
-                        pushMove(dropMove(sq, coloredPiece(color_, KNIGHT)), moveList)
-                    }
+                if (hand_[color_].num(KNIGHT) > 0 && puttablePawnLanceKnight(sq, 2)) {
+                    pushMove(dropMove(sq, coloredPiece(color_, KNIGHT)), moveList)
                 }
 
                 //その他
@@ -451,6 +440,11 @@ class Position {
             }
         }
         return moveList
+    }
+
+    private fun puttablePawnLanceKnight(sq: Square, forbiddenWidth: Int): Boolean {
+        return color_ == BLACK && (SquareToRank[sq.ordinal].ordinal >= Rank.Rank9.ordinal + forbiddenWidth)
+                || color_ == WHITE && (SquareToRank[sq.ordinal].ordinal <= Rank.Rank9.ordinal - forbiddenWidth)
     }
 
     //sfenの入出力
