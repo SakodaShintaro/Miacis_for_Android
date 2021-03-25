@@ -305,10 +305,7 @@ class SubActivity1 : AppCompatActivity() {
         if (moveFrom == Square.WALL00) {
             //持ち駒を指定していた
             for (i in 0 until ROOK) {
-                val p = coloredPiece(pos.color(), i + 1)
-                if (p == holdPiece) {
-                    handImageViews[pos.color()][i].setBackgroundColor(0x00000000)
-                }
+                handImageViews[pos.color()][i].setBackgroundColor(0x00000000)
             }
 
         } else if (moveFrom != Square.WALLAA) {
@@ -335,12 +332,10 @@ class SubActivity1 : AppCompatActivity() {
                 handImageViews[c][ROOK - p].setBackgroundColor(backGroundTransparent)
 
                 val n = pos.hand_[c].num(p)
-                if (n > 0) {
-                    handImageViews[c][ROOK - p].setImageResource(piece2resourceID(coloredPiece(c, p)))
-                }
-                if (n > 1) {
-                    handTextViews[c][ROOK - p].text = n.toString()
-                }
+                handImageViews[c][ROOK - p].setImageResource(
+                    if (n == 0) piece2resourceID(EMPTY) else piece2resourceID(coloredPiece(c, p))
+                )
+                handTextViews[c][ROOK - p].text = if (n > 1) n.toString() else ""
             }
         }
 

@@ -443,7 +443,7 @@ class Position {
     }
 
     private fun puttablePawnLanceKnight(sq: Square, forbiddenWidth: Int): Boolean {
-        return color_ == BLACK && (SquareToRank[sq.ordinal].ordinal >= Rank.Rank9.ordinal + forbiddenWidth)
+        return color_ == BLACK && (SquareToRank[sq.ordinal].ordinal >= Rank.Rank1.ordinal + forbiddenWidth)
                 || color_ == WHITE && (SquareToRank[sq.ordinal].ordinal <= Rank.Rank9.ordinal - forbiddenWidth)
     }
 
@@ -848,7 +848,7 @@ class Position {
             val to = move.to().ordinal
             when (kind(board_[move.from().ordinal])) {
                 //香、桂は位置によっては成る手しか不可
-                LANCE -> {
+                PAWN, LANCE -> {
                     if (color_ == BLACK && SquareToRank[to] <= Rank.Rank1) return
                     if (color_ == WHITE && SquareToRank[to] >= Rank.Rank9) return
                 }
