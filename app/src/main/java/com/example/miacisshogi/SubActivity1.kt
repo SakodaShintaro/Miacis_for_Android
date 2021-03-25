@@ -15,8 +15,8 @@ import androidx.appcompat.app.AppCompatActivity
 
 class SubActivity1 : AppCompatActivity() {
     private lateinit var squareImageViews: ArrayList<ImageView>
-    private lateinit var handImageViews: ArrayList<ArrayList<ImageView>>
-    private lateinit var handTextViews: ArrayList<ArrayList<TextView>>
+    private lateinit var handImageViews: Array<ArrayList<ImageView>>
+    private lateinit var handTextViews: Array<ArrayList<TextView>>
     private lateinit var pos: Position
     private var holdPiece: Int = EMPTY
     private var moveFrom: Square = Square.WALLAA
@@ -39,8 +39,6 @@ class SubActivity1 : AppCompatActivity() {
         for (i in 0..8) {
             for (j in 0..8) {
                 val imageView = ImageView(this)
-                imageView.x = (j).toFloat()
-                imageView.y = (i).toFloat()
                 imageView.scaleType = ImageView.ScaleType.FIT_CENTER
                 frame.addView(imageView, 0, 0)
 
@@ -57,37 +55,24 @@ class SubActivity1 : AppCompatActivity() {
                     imageView.layoutParams.width = (squareWidth).toInt()
                     imageView.layoutParams.height = (squareHeight).toInt()
                 }
-
-                val piece = pos.on(xy2square(j, i))
-                imageView.setImageResource(piece2resourceID(piece))
                 squareImageViews.add(imageView)
             }
         }
 
         //手駒画像の初期化
-        val handFrameList =
-            arrayListOf<FrameLayout>(findViewById(R.id.frame_hand_down), findViewById(R.id.frame_hand_up))
-        handImageViews = ArrayList()
-        handImageViews.add(ArrayList())
-        handImageViews.add(ArrayList())
-        handTextViews = ArrayList()
-        handTextViews.add(ArrayList())
-        handTextViews.add(ArrayList())
+        val handFrameList = arrayOf<FrameLayout>(findViewById(R.id.frame_hand_down), findViewById(R.id.frame_hand_up))
+        handImageViews = Array(ColorNum) { ArrayList() }
+        handTextViews = Array(ColorNum) { ArrayList() }
 
         for (c in BLACK..WHITE) {
             println(c)
             val handFrame = handFrameList[c]
             for (p in PAWN until KING) {
                 val imageView = ImageView(this)
-                imageView.x = 0.0f
-                imageView.y = 0.0f
                 imageView.scaleType = ImageView.ScaleType.FIT_CENTER
                 handFrame.addView(imageView, 0, 0)
 
                 val textView = TextView(this)
-                textView.x = 0.0f
-                textView.y = 0.0f
-                textView.text = "x0"
                 textView.textSize = 20.0f
                 handFrame.addView(textView, 200, 200)
 
@@ -102,8 +87,6 @@ class SubActivity1 : AppCompatActivity() {
                     textView.y = if (c == BLACK) 0.0f else imageView.layoutParams.height - textView.textSize * 1.5f
                     textView.bringToFront()
                 }
-                imageView.setImageResource(piece2resourceID(coloredPiece(c, p)))
-                println("${coloredPiece(c, p)} ${piece2resourceID(coloredPiece(c, p))}")
                 handImageViews[c].add(imageView)
                 handTextViews[c].add(textView)
             }
