@@ -254,7 +254,11 @@ class SubActivity1 : AppCompatActivity() {
                         .create()
                     dialog.show()
                 }
-            } else if(pos.on(xy2square(sqX, sqY)) != EMPTY && pieceToColor(pos.on(xy2square(sqX, sqY))) == pos.color()) {
+            } else if (pos.on(xy2square(sqX, sqY)) != EMPTY && pieceToColor(
+                    pos.on(
+                        xy2square(
+                            sqX,
+                            sqY))) == pos.color()) {
                 //駒を掴む
                 holdPiece = pos.on(xy2square(sqX, sqY))
                 moveFrom = xy2square(sqX, sqY)
@@ -274,21 +278,23 @@ class SubActivity1 : AppCompatActivity() {
     private fun doMove(move: Move) {
         Log.d("doMove", "Move   :${move.toPrettyStr()}")
 
-        // 局面の遷移
-        pos.doMove(move)
+        if (pos.isLegalMove(move)) {
+            // 局面の遷移
+            pos.doMove(move)
 
-        // 画像の更新
-        // 掴んだ駒を設置する
-        val (toX, toY) = square2xy(move.to())
-        val sqTo = toY * BOARD_WIDTH + toX
-        val piece = if (move.isPromote()) promote(move.subject()) else move.subject()
-        squareImageViews[sqTo].setImageResource(piece2resourceID(piece))
+            // 画像の更新
+            // 掴んだ駒を設置する
+            val (toX, toY) = square2xy(move.to())
+            val sqTo = toY * BOARD_WIDTH + toX
+            val piece = if (move.isPromote()) promote(move.subject()) else move.subject()
+            squareImageViews[sqTo].setImageResource(piece2resourceID(piece))
 
-        //もとにあった位置から削除
-        if (moveFrom != Square.WALL00) {
-            val (x, y) = square2xy(moveFrom)
-            squareImageViews[y * BOARD_WIDTH + x].setImageResource(piece2resourceID(EMPTY))
-            squareImageViews[y * BOARD_WIDTH + x].setBackgroundColor(0x00000000)
+            //もとにあった位置から削除
+            if (moveFrom != Square.WALL00) {
+                val (x, y) = square2xy(moveFrom)
+                squareImageViews[y * BOARD_WIDTH + x].setImageResource(piece2resourceID(EMPTY))
+                squareImageViews[y * BOARD_WIDTH + x].setBackgroundColor(0x00000000)
+            }
         }
 
         //持ち駒を再描画
@@ -354,7 +360,7 @@ class SubActivity1 : AppCompatActivity() {
                 }
             }
 
-            } else if (moveFrom != Square.WALLAA) {
+        } else if (moveFrom != Square.WALLAA) {
             //盤上のどこかを指定していた
             squareImageViews[square2sqid(moveFrom)].setBackgroundColor(0x00000000)
         }
