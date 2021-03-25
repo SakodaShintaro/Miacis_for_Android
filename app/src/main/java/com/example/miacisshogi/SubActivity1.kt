@@ -130,16 +130,17 @@ class SubActivity1 : AppCompatActivity() {
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        val frame = findViewById<FrameLayout>(R.id.frame)
-        val xOffset = frame.width * marginRate
-        val boardWidth = frame.width - 2 * xOffset
+        val boardFrame = findViewById<FrameLayout>(R.id.frame)
+        val boardX = boardFrame.width * marginRate
+        val boardWidth = boardFrame.width - 2 * boardX
         val boardHeight = boardWidth * 1.07
         val squareWidth = boardWidth / 9
         val squareHeight = boardHeight / 9
-        val yOffset = frame.height / 2 - boardHeight * 0.45 + frame.y
+        val boardY = boardFrame.height / 2 - boardHeight * 0.45 + boardFrame.y
 
         val upHandFrame = findViewById<FrameLayout>(R.id.frame_hand_up)
         val downHandFrame = findViewById<FrameLayout>(R.id.frame_hand_down)
+        val handFrames = arrayOf(downHandFrame, upHandFrame)
         val heightRate = 1.5
 
         println("${upHandFrame.y} ${upHandFrame.height} ${downHandFrame.y} ${downHandFrame.height}")
@@ -154,80 +155,52 @@ class SubActivity1 : AppCompatActivity() {
         val pointY = event.y
         Log.d("TouchEvent", "X:$pointX,Y:$pointY")
 
-        if (upHandFrame.y <= pointY && pointY <= upHandFrame.y + upHandFrame.height * heightRate) {
-            //上側(後手)の駒台
-            //先手で触っていたら無視
-            if (pos.color() == BLACK) {
-                resetHold()
-                return true
-            }
-
-            for (i in 0 until ROOK) {
-                if (pos.hand_[WHITE].num(ROOK - i) == 0) {
-                    continue
-                }
-                if (handImageViews[WHITE][i].x <= pointX && pointX <= handImageViews[WHITE][i].x + handImageViews[WHITE][i].width) {
-                    //iが押された
-                    holdPiece = coloredPiece(WHITE, ROOK - i)
-                    moveFrom = Square.WALL00
-                    handImageViews[WHITE][i].setBackgroundColor(backGroundHoldColor)
-                    Log.d("TouchEvent", "catch to drop ${holdPiece} ${moveFrom}")
+        //駒台にタッチしているかどうかを判定
+        for (c in BLACK..WHITE) {
+            val handFrame = handFrames[c]
+            if (handFrame.y <= pointY && pointY <= handFrame.y + handFrame.height * heightRate) {
+                //手番と違う方の駒台に触っていたらリセット
+                if (pos.color() != c) {
+                    resetHold()
                     return true
                 }
-            }
-        } else if (downHandFrame.y <= pointY && pointY <= downHandFrame.y + downHandFrame.height * heightRate) {
-            //下側(先手)の駒台
-            //先手で触っていたら無視
-            if (pos.color() == WHITE) {
-                resetHold()
-                return true
-            }
 
-            for (i in 0 until ROOK) {
-                if (pos.hand_[BLACK].num(ROOK - i) == 0) {
-                    continue
-                }
-                if (handImageViews[BLACK][i].x <= pointX && pointX <= handImageViews[BLACK][i].x + handImageViews[BLACK][i].width) {
-                    //iが押された
-                    holdPiece = coloredPiece(BLACK, ROOK - i)
-                    moveFrom = Square.WALL00
-                    handImageViews[BLACK][i].setBackgroundColor(backGroundHoldColor)
-                    Log.d("TouchEvent", "catch to drop ${holdPiece} ${moveFrom}")
-                    return true
+                for (i in 0 until ROOK) {
+                    if (pos.hand_[c].num(ROOK - i) == 0) {
+                        continue
+                    }
+                    if (handImageViews[c][i].x <= pointX && pointX <= handImageViews[c][i].x + handImageViews[c][i].width) {
+                        //iが押された
+                        holdPiece = coloredPiece(c, ROOK - i)
+                        moveFrom = Square.WALL00
+                        handImageViews[c][i].setBackgroundColor(backGroundHoldColor)
+                        Log.d("TouchEvent", "catch to drop ${holdPiece} ${moveFrom}")
+                        return true
+                    }
                 }
             }
-        } else if (pointX < xOffset || xOffset + boardWidth < pointX ||
-            pointY < yOffset || yOffset + boardHeight < pointY) {
-            resetHold()
-            //画面外
-        } else {
-            //盤の中
-            val sqX = ((pointX - xOffset) / squareWidth).toInt()
-            val sqY = ((pointY - yOffset) / squareHeight).toInt()
+        }
+
+        //盤の中をタッチ
+        if (boardX <= pointX && pointX <= boardX + boardWidth ||
+            boardY <= pointY && pointY <= boardY + boardHeight) {
+            val sqX = ((pointX - boardX) / squareWidth).toInt()
+            val sqY = ((pointY - boardY) / squareHeight).toInt()
+            val to = xy2square(sqX, sqY)
+
             if (holdPiece != EMPTY) {
                 // Moveを構成
-                val to = xy2square(sqX, sqY)
-                val move = if (moveFrom == Square.WALL00) {
+                val incompleteMove = if (moveFrom == Square.WALL00) {
                     dropMove(to, holdPiece)
                 } else {
                     Move(to, moveFrom)
                 }
 
-                // to, fromから完全な情報を集める
-                val nonPromotiveMove = pos.transformValidMove(move)
-
-                Log.d("TouchEvent", "from   :${nonPromotiveMove.from().ordinal}")
-                Log.d("TouchEvent", "to     :${nonPromotiveMove.to().ordinal}")
-                Log.d("TouchEvent", "subject:${nonPromotiveMove.subject()}")
-                Log.d("TouchEvent", "move   :${nonPromotiveMove.toPrettyStr()}")
-
+                // to, fromから完全な情報を集めて成り、成らずの行動を生成
+                val nonPromotiveMove = pos.transformValidMove(incompleteMove)
                 val promotiveMove = promotiveMove(nonPromotiveMove)
 
-                val moveList = pos.generateAllMoves()
-                for (m in moveList) {
-                    println("move :${m.toPrettyStr()}")
-                }
-
+                //合法性を判定
                 val isLegalNonPromotive = pos.isLegalMove(nonPromotiveMove)
                 val isLegalPromotive = pos.isLegalMove(promotiveMove)
 
@@ -242,31 +215,20 @@ class SubActivity1 : AppCompatActivity() {
                 } else if (isLegalNonPromotive && !isLegalPromotive) {
                     doMove(nonPromotiveMove)
                 } else if (isLegalPromotive) {
-                    // 選択が発生する
-                    // BuilderからAlertDialogを作成
-                    val dialog = AlertDialog.Builder(this)
-                        .setTitle("成るか成らないか") // タイトル
+                    // 選択が発生するのでAlertDialogを作成
+                    AlertDialog.Builder(this)
+                        .setTitle("成るか成らないか")
                         .setPositiveButton("成る") { dialog, which -> doMove(promotiveMove) }
                         .setNegativeButton("成らない") { dialog, which -> doMove(nonPromotiveMove) }
                         .setCancelable(false)
                         .create()
-                    dialog.show()
+                        .show()
                 }
-            } else if (pos.on(xy2square(sqX, sqY)) != EMPTY && pieceToColor(
-                    pos.on(
-                        xy2square(
-                            sqX,
-                            sqY))) == pos.color()) {
+            } else if (pos.on(to) != EMPTY && pieceToColor(pos.on(to)) == pos.color()) {
                 //駒を掴む
                 holdPiece = pos.on(xy2square(sqX, sqY))
                 moveFrom = xy2square(sqX, sqY)
-                val sq = sqY * BOARD_WIDTH + sqX
-                squareImageViews[sq].setBackgroundColor(backGroundHoldColor)
-
-                Log.d(
-                    "TouchEvent",
-                    "catch X:$pointX,Y:$pointY sqX:$sqX, sqY:$sqY hold_piece:${holdPiece}"
-                )
+                squareImageViews[sqY * BOARD_WIDTH + sqX].setBackgroundColor(backGroundHoldColor)
             }
         }
 
