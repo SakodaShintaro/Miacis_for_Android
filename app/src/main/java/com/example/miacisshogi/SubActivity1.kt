@@ -24,6 +24,7 @@ class SubActivity1 : AppCompatActivity() {
     private val backGroundHoldColor = Color.rgb(0, 255, 0)
     private val backGroundMovedColor = Color.rgb(255, 128, 0)
     private val backGroundTransparent = 0x00000000
+    private lateinit var searcher: Search
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -31,6 +32,9 @@ class SubActivity1 : AppCompatActivity() {
 
         //盤面の準備
         pos = Position()
+
+        //探索部の準備
+        searcher = Search(this)
 
         //マス画像の初期化
         //ここで9 x 9のImageViewを作り、置かれている駒に応じて適切な画像を選択して置く
@@ -96,19 +100,16 @@ class SubActivity1 : AppCompatActivity() {
 
         //思考部分の初期化
         findViewById<Button>(R.id.button_think).setOnClickListener {
-            val searcher = Search(this)
             val bestMove = searcher.search(pos)
             val textView = findViewById<TextView>(R.id.think_result)
             textView.text = bestMove.toPrettyStr()
         }
         findViewById<Button>(R.id.button_think_and_do).setOnClickListener {
-            val searcher = Search(this)
-            val bestMove = searcher.search(pos)
-            val textView = findViewById<TextView>(R.id.think_result)
-            textView.text = bestMove.toPrettyStr()
-            holdPiece = bestMove.subject()
-            moveFrom = bestMove.from()
-            doMove(bestMove)
+            thinkAndDo()
+        }
+        findViewById<Button>(R.id.button_init_pos).setOnClickListener {
+            pos.init()
+            showPosition()
         }
     }
 
@@ -165,7 +166,7 @@ class SubActivity1 : AppCompatActivity() {
         }
 
         //盤の中をタッチ
-        if (boardX <= pointX && pointX <= boardX + boardWidth ||
+        if (boardX <= pointX && pointX <= boardX + boardWidth &&
             boardY <= pointY && pointY <= boardY + boardHeight) {
             val sqX = ((pointX - boardX) / squareWidth).toInt()
             val sqY = ((pointY - boardY) / squareHeight).toInt()
@@ -223,6 +224,12 @@ class SubActivity1 : AppCompatActivity() {
 
         if (pos.isLegalMove(move)) {
             pos.doMove(move)
+//            val bestMove = searcher.search(pos)
+//            val textView = findViewById<TextView>(R.id.think_result)
+//            textView.text = bestMove.toPrettyStr()
+//            holdPiece = bestMove.subject()
+//            moveFrom = bestMove.from()
+//            pos.doMove(bestMove)
         }
 
         //盤面を再描画
@@ -311,6 +318,15 @@ class SubActivity1 : AppCompatActivity() {
             val (lastX, lastY) = square2xy(lastMove.to())
             squareImageViews[lastY * BOARD_WIDTH + lastX].setBackgroundColor(backGroundMovedColor)
         }
+    }
+
+    private fun thinkAndDo() {
+        val bestMove = searcher.search(pos)
+        val textView = findViewById<TextView>(R.id.think_result)
+        textView.text = bestMove.toPrettyStr()
+        holdPiece = bestMove.subject()
+        moveFrom = bestMove.from()
+        doMove(bestMove)
     }
 
     private fun xy2square(x: Int, y: Int): Square {
