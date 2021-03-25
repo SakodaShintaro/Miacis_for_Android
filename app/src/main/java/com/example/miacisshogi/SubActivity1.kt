@@ -323,9 +323,15 @@ class SubActivity1 : AppCompatActivity() {
         //持ち駒の表示
         for (c in BLACK..WHITE) {
             for (p in PAWN until KING) {
-                handImageViews[c][ROOK - p].setImageResource(piece2resourceID(coloredPiece(c, p)))
                 handImageViews[c][ROOK - p].setBackgroundColor(backGroundTransparent)
-                handTextViews[c][ROOK - p].text = pos.hand_[c].num(p).toString()
+
+                val n = pos.hand_[c].num(p)
+                if (n > 0) {
+                    handImageViews[c][ROOK - p].setImageResource(piece2resourceID(coloredPiece(c, p)))
+                }
+                if (n > 1) {
+                    handTextViews[c][ROOK - p].text = n.toString()
+                }
             }
         }
 
