@@ -15,7 +15,9 @@ class Position {
         for (i in 0 until Square.SquareNum.ordinal) {
             board_[i] = WALL
         }
-        for (sq in SquareList) board_[sq.ordinal] = EMPTY
+        for (sq in SquareList) {
+            board_[sq.ordinal] = EMPTY
+        }
 
         //後手の駒
         board_[Square.SQ11.ordinal] = WHITE_LANCE
@@ -452,9 +454,160 @@ class Position {
     }
 
     //sfenの入出力
-    fun fromStr(sfen: String) {}
+    fun fromStr(sfen: String) {
+        //初期化
+        for (i in 0 until Square.SquareNum.ordinal) {
+            board_[i] = WALL
+        }
+        for (sq in SquareList) {
+            board_[sq.ordinal] = EMPTY
+        }
+
+        //コマごとの分岐を簡単に書くためmapを準備
+        val charToPiece = mapOf(
+            'P' to BLACK_PAWN, 'L' to BLACK_LANCE, 'N' to BLACK_KNIGHT, 'S' to BLACK_SILVER,
+            'G' to BLACK_GOLD, 'B' to BLACK_BISHOP, 'R' to BLACK_ROOK, 'K' to BLACK_KING,
+            'p' to WHITE_PAWN, 'l' to WHITE_LANCE, 'n' to WHITE_KNIGHT, 's' to WHITE_SILVER,
+            'g' to WHITE_GOLD, 'b' to WHITE_BISHOP, 'r' to WHITE_ROOK, 'k' to WHITE_KING,
+        )
+
+        //sfen文字列を走査するイテレータ(ダサいやり方な気がするけどパッと思いつくのはこれくらい)
+        var i = 0
+
+        //盤上の設定
+        var r = Rank.Rank1.ordinal
+        var f = File.File9.ordinal
+        while (i < sfen.length) {
+            if (sfen[i] == '/') {
+                //次の段へ移る
+                f = File.File9.ordinal
+                r++
+            } else if (sfen[i] == ' ') {
+                //手番の設定へ
+                break
+            } else if ('1' <= sfen[i] && sfen[i] <= '9') {
+                //空マス分飛ばす
+                f -= sfen[i] - '0'
+            } else if (sfen[i] == '+') {
+                //次の文字が示す駒を成らせてboard_に設置
+                board_[FRToSquare[f--][r].ordinal] = promote(charToPiece[sfen[++i]]!!)
+            } else {
+                //玉だったらking_sq_を設定
+                if (charToPiece[sfen[i]] == BLACK_KING) {
+                    king_sq_[BLACK] = FRToSquare[f][r]
+                } else if (charToPiece[sfen[i]] == WHITE_KING) {
+                    king_sq_[WHITE] = FRToSquare[f][r]
+                }
+                //文字が示す駒をboard_に設置
+                board_[FRToSquare[f--][r].ordinal] = charToPiece[sfen[i]]!!
+            }
+            i++
+        }
+
+        //手番の設定
+        color_ = if (sfen[++i] == 'b') BLACK else WHITE
+
+        //空白を飛ばす
+        i += 2
+
+        //持ち駒
+        hand_[BLACK].clear()
+        hand_[WHITE].clear()
+        var num = 1
+        while (sfen[i] != ' ') {
+            if (sfen[i] == '-') {
+                i++
+                break
+            }
+            if ('1' <= sfen[i] && sfen[i] <= '9') { //数字なら枚数の取得
+                if ('0' <= sfen[i + 1] && sfen[i + 1] <= '9') {
+                    //次の文字も数字の場合が一応あるはず(歩が10枚以上)
+                    num = 10 * sfen[i].toInt() + sfen[i + 1].toInt()
+                    i += 2
+                } else {
+                    //次が数字じゃないなら普通に取る
+                    num = sfen[i++].toInt()
+                }
+            } else { //駒なら持ち駒を変更
+                val piece = charToPiece[sfen[i++]]!!
+                hand_[pieceToColor(piece)].set(kind(piece), num)
+
+                //枚数を1に戻す
+                num = 1
+            }
+        }
+
+        //手数
+        turn_number_ = 0
+        while (++i < sfen.length) {
+            turn_number_ *= 10
+            turn_number_ += sfen[i] - '0'
+        }
+
+        //ハッシュ値の初期化
+        initHashValue()
+
+        already_generated_moves_ = false
+
+        //王手の確認
+        is_checked_ = isThereControl(color2oppositeColor(color_), king_sq_[color_])
+
+        stack_.clear()
+        kifu_.clear()
+    }
+
     fun toStr(): String {
-        return "todo impl"
+        var result = String()
+        for (r in Rank.Rank1.ordinal..Rank.Rank9.ordinal) {
+            var emptyNum = 0
+            for (f in File.File9.ordinal downTo File.File1.ordinal) {
+                if (board_[FRToSquare[f][r].ordinal] == EMPTY) {
+                    emptyNum++
+                } else {
+                    //まずこのマスまでの空白マスを処理
+                    result += if (emptyNum == 0) "" else emptyNum.toString()
+
+                    //駒を処理
+                    result += PieceToSfenStrWithoutSpace[board_[FRToSquare[f][r].ordinal]]
+
+                    //空白マスを初期化
+                    emptyNum = 0
+                }
+            }
+
+            //段最後の空白マスを処理
+            result += if (emptyNum == 0) "" else emptyNum.toString()
+
+            if (r < Rank.Rank9.ordinal) {
+                result += "/"
+            }
+        }
+
+        //手番
+        result += if (color_ == BLACK) " b " else " w "
+
+        //持ち駒
+        var all0 = true
+        for (c in BLACK..WHITE) {
+            for (p in ROOK downTo PAWN) {
+                if (hand_[c].num(p) == 1) {
+                    result += PieceToSfenStrWithoutSpace[coloredPiece(c, p)]
+                    all0 = false
+                } else if (hand_[c].num(p) >= 2) {
+                    result += hand_[c].num(p).toString()
+                    result += PieceToSfenStrWithoutSpace[coloredPiece(c, p)]
+                    all0 = false
+                }
+            }
+        }
+
+        if (all0) {
+            result += "-"
+        }
+
+        result += " $turn_number_"
+
+        return result
     }
 
     //ハッシュ

@@ -237,6 +237,7 @@ class SubActivity1 : AppCompatActivity() {
 
     private fun doMove(move: Move) {
         Log.d("doMove", "Move   :${move.toPrettyStr()}")
+        Log.d("doMove", "sfen   :${pos.toStr()}")
 
         if (pos.isLegalMove(move)) {
             pos.doMove(move)
