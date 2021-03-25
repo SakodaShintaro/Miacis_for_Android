@@ -4,21 +4,39 @@ import android.content.Intent
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.widget.Button
+import kotlin.random.Random
+
+const val TURN_STR = "turn"
+const val HUMAN_TURN_BLACK = 0
+const val HUMAN_TURN_WHITE = 1
+const val CONSIDERATION = 2
 
 class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
-        val button1 = findViewById<Button>(R.id.button1)
-        button1.setOnClickListener {
+        findViewById<Button>(R.id.button_consideration).setOnClickListener {
             val intent = Intent(this, SubActivity1::class.java)
+            intent.putExtra(TURN_STR, CONSIDERATION)
             startActivity(intent)
         }
 
-        val button2 = findViewById<Button>(R.id.button2)
-        button2.setOnClickListener {
-            val intent = Intent(this, SubActivity2::class.java)
+        findViewById<Button>(R.id.button_battle_as_black).setOnClickListener {
+            val intent = Intent(this, SubActivity1::class.java)
+            intent.putExtra(TURN_STR, HUMAN_TURN_BLACK)
+            startActivity(intent)
+        }
+
+        findViewById<Button>(R.id.button_battle_as_white).setOnClickListener {
+            val intent = Intent(this, SubActivity1::class.java)
+            intent.putExtra(TURN_STR, HUMAN_TURN_WHITE)
+            startActivity(intent)
+        }
+
+        findViewById<Button>(R.id.button_battle_as_white).setOnClickListener {
+            val intent = Intent(this, SubActivity1::class.java)
+            intent.putExtra(TURN_STR, Random.nextInt(HUMAN_TURN_BLACK, HUMAN_TURN_WHITE + 1))
             startActivity(intent)
         }
     }

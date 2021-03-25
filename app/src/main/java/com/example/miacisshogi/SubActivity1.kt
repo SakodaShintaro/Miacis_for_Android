@@ -12,6 +12,8 @@ import android.widget.ImageView
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 
+const val HUMAN = 0
+const val MIACIS = 1
 
 class SubActivity1 : AppCompatActivity() {
     private lateinit var squareImageViews: ArrayList<ImageView>
@@ -25,6 +27,7 @@ class SubActivity1 : AppCompatActivity() {
     private val backGroundMovedColor = Color.rgb(255, 128, 0)
     private val backGroundTransparent = 0x00000000
     private lateinit var searcher: Search
+    private lateinit var player: Array<Int>
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -35,6 +38,14 @@ class SubActivity1 : AppCompatActivity() {
 
         //探索部の準備
         searcher = Search(this)
+
+        //ターンの制御
+        println("intent = ${intent?.extras?.get(TURN_STR)}")
+        when (intent?.extras?.get(TURN_STR)) {
+            HUMAN_TURN_BLACK -> player = arrayOf(HUMAN, MIACIS)
+            HUMAN_TURN_WHITE -> player = arrayOf(MIACIS, HUMAN)
+            CONSIDERATION -> player = arrayOf(HUMAN, HUMAN)
+        }
 
         //マス画像の初期化
         //ここで9 x 9のImageViewを作り、置かれている駒に応じて適切な画像を選択して置く
@@ -98,7 +109,12 @@ class SubActivity1 : AppCompatActivity() {
         //盤面を描画
         showPosition()
 
-        //思考部分の初期化
+        // Miacisの手番なら実行
+        if (player[pos.color()] == MIACIS) {
+            thinkAndDo()
+        }
+
+        // ボタンの初期化
         findViewById<Button>(R.id.button_think).setOnClickListener {
             val bestMove = searcher.search(pos)
             val textView = findViewById<TextView>(R.id.think_result)
@@ -224,12 +240,13 @@ class SubActivity1 : AppCompatActivity() {
 
         if (pos.isLegalMove(move)) {
             pos.doMove(move)
-//            val bestMove = searcher.search(pos)
-//            val textView = findViewById<TextView>(R.id.think_result)
-//            textView.text = bestMove.toPrettyStr()
-//            holdPiece = bestMove.subject()
-//            moveFrom = bestMove.from()
-//            pos.doMove(bestMove)
+
+            while (player[pos.color()] == MIACIS) {
+                showPosition()
+                val bestMove = searcher.search(pos)
+                findViewById<TextView>(R.id.think_result).text = bestMove.toPrettyStr()
+                pos.doMove(bestMove)
+            }
         }
 
         //盤面を再描画

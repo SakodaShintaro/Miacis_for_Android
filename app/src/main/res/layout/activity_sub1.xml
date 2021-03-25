@@ -61,7 +61,7 @@
 
     <Button
         android:id="@+id/button_think"
-        android:layout_width="wrap_content"
+        android:layout_width="130dp"
         android:layout_height="wrap_content"
         android:text="検討"
         app:layout_constraintEnd_toEndOf="parent"
@@ -69,15 +69,16 @@
 
     <Button
         android:id="@+id/button_think_and_do"
-        android:layout_width="wrap_content"
+        android:layout_width="130dp"
         android:layout_height="wrap_content"
         android:text="思考して実行"
+        app:layout_constraintStart_toStartOf="@id/button_think"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_think" />
 
     <Button
         android:id="@+id/button_init_pos"
-        android:layout_width="wrap_content"
+        android:layout_width="130dp"
         android:layout_height="wrap_content"
         android:text="盤面を初期化"
         app:layout_constraintEnd_toEndOf="parent"
