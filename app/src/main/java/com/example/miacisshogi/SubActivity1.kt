@@ -1,11 +1,11 @@
 package com.example.miacisshogi
 
 import android.app.AlertDialog
+import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
-import android.view.ViewGroup
 import android.widget.Button
 import android.widget.FrameLayout
 import android.widget.ImageView
@@ -21,7 +21,9 @@ class SubActivity1 : AppCompatActivity() {
     private var holdPiece: Int = EMPTY
     private var moveFrom: Square = Square.WALLAA
     private val marginRate = 0.05
-    private val backGroundColor = 0xffff0000.toInt()
+    private val backGroundHoldColor = Color.rgb(0, 255, 0)
+    private val backGroundMovedColor = Color.rgb(255, 128, 0)
+    private val backGroundTransparent = 0x00000000
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -43,7 +45,6 @@ class SubActivity1 : AppCompatActivity() {
                 frame.addView(imageView, 0, 0)
 
                 frame.viewTreeObserver.addOnGlobalLayoutListener {
-                    val params: ViewGroup.LayoutParams = imageView.layoutParams
                     val xOffset = frame.width * marginRate
                     val boardWidth = frame.width - 2 * xOffset
                     val boardHeight = boardWidth * 1.07
@@ -51,11 +52,10 @@ class SubActivity1 : AppCompatActivity() {
                     val squareHeight = boardHeight / 9
                     val yOffset = frame.height / 2 - boardHeight * 0.5
 
-                    params.width = (squareWidth).toInt()
-                    params.height = (squareHeight).toInt()
                     imageView.x = (xOffset + j * squareWidth).toFloat()
                     imageView.y = (yOffset + i * squareHeight).toFloat()
-                    imageView.layoutParams = params
+                    imageView.layoutParams.width = (squareWidth).toInt()
+                    imageView.layoutParams.height = (squareHeight).toInt()
                 }
 
                 val piece = pos.on(xy2square(j, i))
@@ -94,14 +94,12 @@ class SubActivity1 : AppCompatActivity() {
                 handFrame.viewTreeObserver.addOnGlobalLayoutListener {
                     val frameWidth = handFrame.width
                     val width = (frameWidth / ROOK * 0.75).toInt()
-                    val params: ViewGroup.LayoutParams = imageView.layoutParams
-                    params.width = width
-                    params.height = handFrame.height
+                    imageView.layoutParams.width = width
+                    imageView.layoutParams.height = handFrame.height
                     imageView.x = ((p - 1) * frameWidth / ROOK).toFloat()
-                    imageView.layoutParams = params
 
                     textView.x = (imageView.x + width * 0.85).toFloat()
-                    textView.y = if (c == BLACK) 0.0f else params.height - textView.textSize * 1.5f
+                    textView.y = if (c == BLACK) 0.0f else imageView.layoutParams.height - textView.textSize * 1.5f
                     textView.bringToFront()
                 }
                 imageView.setImageResource(piece2resourceID(coloredPiece(c, p)))
@@ -111,7 +109,7 @@ class SubActivity1 : AppCompatActivity() {
             }
         }
 
-        showHand()
+        showPosition()
 
         //思考部分の初期化
         findViewById<Button>(R.id.button_think).setOnClickListener {
@@ -172,7 +170,7 @@ class SubActivity1 : AppCompatActivity() {
                     //iが押された
                     holdPiece = coloredPiece(WHITE, ROOK - i)
                     moveFrom = Square.WALL00
-                    handImageViews[WHITE][i].setBackgroundColor(backGroundColor)
+                    handImageViews[WHITE][i].setBackgroundColor(backGroundHoldColor)
                     Log.d("TouchEvent", "catch to drop ${holdPiece} ${moveFrom}")
                     return true
                 }
@@ -193,7 +191,7 @@ class SubActivity1 : AppCompatActivity() {
                     //iが押された
                     holdPiece = coloredPiece(BLACK, ROOK - i)
                     moveFrom = Square.WALL00
-                    handImageViews[BLACK][i].setBackgroundColor(backGroundColor)
+                    handImageViews[BLACK][i].setBackgroundColor(backGroundHoldColor)
                     Log.d("TouchEvent", "catch to drop ${holdPiece} ${moveFrom}")
                     return true
                 }
@@ -263,7 +261,7 @@ class SubActivity1 : AppCompatActivity() {
                 holdPiece = pos.on(xy2square(sqX, sqY))
                 moveFrom = xy2square(sqX, sqY)
                 val sq = sqY * BOARD_WIDTH + sqX
-                squareImageViews[sq].setBackgroundColor(backGroundColor)
+                squareImageViews[sq].setBackgroundColor(backGroundHoldColor)
 
                 Log.d(
                     "TouchEvent",
@@ -279,39 +277,14 @@ class SubActivity1 : AppCompatActivity() {
         Log.d("doMove", "Move   :${move.toPrettyStr()}")
 
         if (pos.isLegalMove(move)) {
-            // 局面の遷移
             pos.doMove(move)
-
-            // 画像の更新
-            // 掴んだ駒を設置する
-            val (toX, toY) = square2xy(move.to())
-            val sqTo = toY * BOARD_WIDTH + toX
-            val piece = if (move.isPromote()) promote(move.subject()) else move.subject()
-            squareImageViews[sqTo].setImageResource(piece2resourceID(piece))
-
-            //もとにあった位置から削除
-            if (moveFrom != Square.WALL00) {
-                val (x, y) = square2xy(moveFrom)
-                squareImageViews[y * BOARD_WIDTH + x].setImageResource(piece2resourceID(EMPTY))
-                squareImageViews[y * BOARD_WIDTH + x].setBackgroundColor(0x00000000)
-            }
         }
 
-        //持ち駒を再描画
-        showHand()
+        //盤面を再描画
+        showPosition()
 
         //保持した情報を解放
         resetHold()
-    }
-
-    private fun showHand() {
-        for (c in BLACK..WHITE) {
-            for (p in PAWN until KING) {
-                handImageViews[c][ROOK - p].setImageResource(piece2resourceID(coloredPiece(c, p)))
-                handImageViews[c][ROOK - p].setBackgroundColor(0x00000000)
-                handTextViews[c][ROOK - p].text = pos.hand_[c].num(p).toString()
-            }
-        }
     }
 
     private fun piece2resourceID(piece: Int): Int {
@@ -366,6 +339,33 @@ class SubActivity1 : AppCompatActivity() {
         }
 
         holdPiece = EMPTY
+    }
+
+    private fun showPosition() {
+        //盤上の表示
+        for (i in 0 until BOARD_WIDTH) {
+            for (j in 0 until BOARD_WIDTH) {
+                val sq = xy2square(j, i)
+                squareImageViews[i * BOARD_WIDTH + j].setImageResource(piece2resourceID(pos.on(sq)))
+                squareImageViews[i * BOARD_WIDTH + j].setBackgroundColor(backGroundTransparent)
+            }
+        }
+
+        //持ち駒の表示
+        for (c in BLACK..WHITE) {
+            for (p in PAWN until KING) {
+                handImageViews[c][ROOK - p].setImageResource(piece2resourceID(coloredPiece(c, p)))
+                handImageViews[c][ROOK - p].setBackgroundColor(backGroundTransparent)
+                handTextViews[c][ROOK - p].text = pos.hand_[c].num(p).toString()
+            }
+        }
+
+        //最終行動マスの背景色を変更
+        val lastMove = pos.lastMove()
+        if (lastMove != NULL_MOVE) {
+            val (lastX, lastY) = square2xy(lastMove.to())
+            squareImageViews[lastY * BOARD_WIDTH + lastX].setBackgroundColor(backGroundMovedColor)
+        }
     }
 
     private fun xy2square(x: Int, y: Int): Square {
