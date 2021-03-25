@@ -65,7 +65,6 @@ class SubActivity1 : AppCompatActivity() {
         handTextViews = Array(ColorNum) { ArrayList() }
 
         for (c in BLACK..WHITE) {
-            println(c)
             val handFrame = handFrameList[c]
             for (p in PAWN until KING) {
                 val imageView = ImageView(this)
@@ -92,6 +91,7 @@ class SubActivity1 : AppCompatActivity() {
             }
         }
 
+        //盤面を描画
         showPosition()
 
         //思考部分の初期化
