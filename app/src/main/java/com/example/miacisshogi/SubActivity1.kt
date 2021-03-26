@@ -350,7 +350,22 @@ class SubActivity1 : AppCompatActivity() {
     private fun thinkAndDo() {
         val bestMove = searcher.search(pos)
         val textView = findViewById<TextView>(R.id.think_result)
-        textView.text = bestMove.toPrettyStr()
+
+        val moveList = pos.generateAllMoves()
+
+        var str = String()
+        val policy = searcher.policy
+        val policyAndMove = policy.zip(moveList).sortedBy { pair -> -pair.first }
+
+        for (i in policy.indices) {
+            str += "%.4f ${policyAndMove[i].second.toPrettyStr()}\n".format(policyAndMove[i].first)
+
+            if (i >= 4) {
+                break
+            }
+        }
+        textView.text = str
+
         holdPiece = bestMove.subject()
         moveFrom = bestMove.from()
         doMove(bestMove)

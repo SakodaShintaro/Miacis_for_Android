@@ -51,7 +51,7 @@ class HashEntry {
     var turn_number = 0
 }
 
-class HashTable() {
+class HashTable {
     var root_index: Int = 0
     var table_ = Array(0) { HashEntry() }
     var used_num_ = 0
@@ -184,6 +184,8 @@ class Search(context: Context) {
     val draw_turn = 10
     val shape = longArrayOf(1, 42, 9, 9)
     val C_PUCT = 2.5f
+    lateinit var policy: Array<Float>
+    lateinit var value: Array<Float>
 
     init {
         // assetファイルからパスを取得する関数
@@ -217,18 +219,27 @@ class Search(context: Context) {
         // 結果
         val output = module.forward(IValue.from(tensor))
         val tuple = output.toTuple()
-        val policy = tuple[0].toTensor()
-        val value = tuple[1].toTensor()
-        val scores = policy.dataAsFloatArray
+        val raw_policy = tuple[0].toTensor().dataAsFloatArray
+        val raw_value = tuple[1].toTensor().dataAsFloatArray
 
+
+        // 合法手だけマスク
         val moveList = pos.generateAllMoves()
+        policy = Array(moveList.size) { it -> raw_policy[moveList[it].toLabel()] }
+        policy = softmax(policy, 1.0f)
+
+        // valueを取得
+        value = Array(BIN_SIZE) { 0.0f }
+        for (i in 0 until BIN_SIZE) {
+            value[i] = raw_value[i]
+        }
 
         // 最も確率が高いものを取得する
         var maxScore = -10000.0f
         var bestMove = NULL_MOVE
         for (move in moveList) {
-            if (scores[move.toLabel()] > maxScore) {
-                maxScore = scores[move.toLabel()]
+            if (raw_policy[move.toLabel()] > maxScore) {
+                maxScore = raw_policy[move.toLabel()]
                 bestMove = move
             }
         }

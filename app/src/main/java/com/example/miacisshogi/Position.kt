@@ -4,7 +4,7 @@ import kotlin.jvm.internal.Ref
 import kotlin.random.Random
 
 class Position {
-    init {
+    constructor() {
         init()
     }
 
