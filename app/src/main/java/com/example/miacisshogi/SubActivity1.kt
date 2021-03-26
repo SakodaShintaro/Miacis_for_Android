@@ -8,6 +8,12 @@ import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.github.mikephil.charting.charts.BarChart
+import com.github.mikephil.charting.components.XAxis
+import com.github.mikephil.charting.data.BarData
+import com.github.mikephil.charting.data.BarDataSet
+import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
 
 
 const val HUMAN = 0
@@ -360,15 +366,59 @@ class SubActivity1 : AppCompatActivity() {
         for (i in policy.indices) {
             str += "%.4f ${policyAndMove[i].second.toPrettyStr()}\n".format(policyAndMove[i].first)
 
-            if (i >= 4) {
+            if (i >= 2) {
                 break
             }
         }
         textView.text = str
 
+        showValue(searcher.value)
+
         holdPiece = bestMove.subject()
         moveFrom = bestMove.from()
         doMove(bestMove)
+    }
+
+    private fun showValue(value: Array<Float>) {
+        //対応するxの値を作成
+        val x = Array(BIN_SIZE) { MIN_SCORE + VALUE_WIDTH * (it + 0.5f) }
+
+        if (pos.color() == WHITE) {
+            value.reverse()
+        }
+
+        //Entryにデータ格納
+        val entryList = mutableListOf<BarEntry>()
+        for (i in x.indices) {
+            entryList.add(BarEntry(x[i], value[i]))
+        }
+
+        //BarDataSetのリスト
+        val barDataSet = BarDataSet(entryList, "value")
+        barDataSet.color = Color.BLUE
+        val barDataSets = mutableListOf<IBarDataSet>(barDataSet)
+
+        //BarDataにBarDataSet格納
+        val barData = BarData(barDataSets)
+        barData.barWidth = VALUE_WIDTH
+        barData.setDrawValues(false)
+
+        //BarChartにBarData格納
+        val barChart = findViewById<BarChart>(R.id.barChartExample)
+        barChart.data = barData
+        barChart.legend.isEnabled = false
+        barChart.description.isEnabled = false
+        barChart.setScaleEnabled(false)
+        barChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+        barChart.xAxis.axisMaximum = MAX_SCORE
+        barChart.xAxis.axisMinimum = MIN_SCORE
+        barChart.axisLeft.axisMaximum = 1.1f
+        barChart.axisLeft.axisMinimum = 0.0f
+        barChart.axisRight.axisMaximum = 1.1f
+        barChart.axisRight.axisMinimum = 0.0f
+
+        //barchart更新
+        barChart.invalidate()
     }
 
     private fun xy2square(x: Int, y: Int): Square {

@@ -17,7 +17,7 @@ const val NOT_EXPANDED = -1
 const val MIN_SCORE = -1.0f
 const val MAX_SCORE = 1.0f
 const val BIN_SIZE = 51
-const val VALUE_WIDTH = 1.0f / BIN_SIZE
+const val VALUE_WIDTH = (MAX_SCORE - MIN_SCORE) / BIN_SIZE
 
 fun valueToIndex(value: Float): Int {
     return min(((value - MIN_SCORE) / VALUE_WIDTH).toInt(), BIN_SIZE - 1)
@@ -233,6 +233,7 @@ class Search(context: Context) {
         for (i in 0 until BIN_SIZE) {
             value[i] = raw_value[i]
         }
+        value = softmax(value, 1.0f)
 
         // 最も確率が高いものを取得する
         var maxScore = -10000.0f
