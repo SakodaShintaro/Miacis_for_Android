@@ -252,15 +252,35 @@ class SubActivity1 : AppCompatActivity() {
     private fun doMove(move: Move) {
         Log.d("doMove", "Move   :${move.toPrettyStr()}")
         Log.d("doMove", "sfen   :${pos.toStr()}")
+        Log.d("doMove", "hash   :${pos.hash_value_}")
 
         if (pos.isLegalMove(move)) {
             pos.doMove(move)
 
-            while (player[pos.color()] == MIACIS) {
+            if (player[pos.color()] == MIACIS && pos.isFinish() == pos.NOT_FINISHED) {
                 showPosition()
                 val bestMove = searcher.search(pos)
                 findViewById<TextView>(R.id.think_result).text = bestMove.toPrettyStr()
                 pos.doMove(bestMove)
+            }
+
+            val status = pos.isFinish()
+            if (status != pos.NOT_FINISHED) {
+                val winColor = if (status == pos.WIN) pos.color() else color2oppositeColor(pos.color())
+                val resultStr = if(status == pos.DRAW) {
+                    "Draw"
+                } else if (player[winColor] == HUMAN) {
+                    "You Win"
+                } else {
+                    "You Lose"
+                }
+                AlertDialog.Builder(this)
+                    .setTitle(resultStr)
+                    .setPositiveButton("OK") { dialog, which -> }
+                    .setCancelable(false)
+                    .create()
+                    .show()
+
             }
         }
 

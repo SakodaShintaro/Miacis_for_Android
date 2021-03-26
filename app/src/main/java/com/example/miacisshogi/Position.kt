@@ -1,6 +1,5 @@
 package com.example.miacisshogi
 
-import kotlin.jvm.internal.Ref
 import kotlin.random.Random
 
 class Position {
@@ -118,8 +117,6 @@ class Position {
 
     //一手進める・戻す関数
     fun doMove(move: Move) {
-//        Log.d("doMove", move.toPrettyStr())
-
         //動かす前の状態を残しておく
         stack_.add(StateInfo(this))
 
@@ -320,18 +317,38 @@ class Position {
 
     //この局面が詰み、千日手等で終わっているか確認する関数
     //終わっている場合は手番側から見た点数を引数に書き込んでtrueを返す
+    val WIN = 0
+    val DRAW = 1
+    val LOSE = 2
+    val NOT_FINISHED = 3
     fun isFinish(): Int {
-        return 1
-    }
+        val moveList = generateAllMoves()
+        if (moveList.isEmpty()) {
+            return LOSE
+        } else if (canWinDeclare()) {
+            return WIN
+        }
 
-    //千日手の判定
-    fun isRepeating(score: Ref.FloatRef): Boolean {
-        return false
+        //千日手or連続王手の千日手だったらtrueを返してscoreに適切な値を入れる(技巧と似た実装)
+        for (index in stack_.size - 4 downTo 0 step 2) {
+            if (board_hash_ != stack_[index].board_hash || hand_hash_ != stack_[index].hand_hash) {
+                //ハッシュ値が一致しなかったら関係ない
+                continue
+            }
+
+            return if ((index == stack_.size - 4) && (stack_[index].is_checked && stack_[index + 2].is_checked)) {
+                //手番側が連続王手された
+                WIN
+            } else { //普通の千日手
+                DRAW
+            }
+        }
+        return NOT_FINISHED
     }
 
     //特徴量作成
     fun makeFeature(): Array<Float> {
-        val features = Array<Float>(SQUARE_NUM * INPUT_CHANNEL_NUM) { 0.0f }
+        val features = Array(SQUARE_NUM * INPUT_CHANNEL_NUM) { 0.0f }
 
         //盤上の駒の特徴量
         for (i in 0 until PieceList.size) {
