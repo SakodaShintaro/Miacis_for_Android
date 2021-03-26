@@ -83,7 +83,7 @@ class Move(
         if (this == DECLARE_MOVE) {
             return "入玉宣言"
         }
-        var result: String = ""
+        var result = ""
         val c = pieceToColor(subject())
         result += (if (c == BLACK) "▲" else "△")
         result += fileToString[SquareToFile[to().ordinal].ordinal]
@@ -95,7 +95,7 @@ class Move(
         if (isDrop()) {
             result += "打"
         } else {
-            result += "(" + SquareToFile[from().ordinal] + SquareToRank[from().ordinal] + ") "
+            result += "(" + SquareToFile[from().ordinal].ordinal + SquareToRank[from().ordinal].ordinal + ") "
         }
         if (capture() != EMPTY) {
             result += "capture:" + PieceToStr[capture()]
