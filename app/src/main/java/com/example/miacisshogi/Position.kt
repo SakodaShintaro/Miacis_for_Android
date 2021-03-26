@@ -109,7 +109,7 @@ class Position {
         //その他
         println("手番:${if (color_ == BLACK) "先手" else "後手"}")
         println("手数:${turn_number_}")
-        if (!kifu_.isEmpty()) {
+        if (kifu_.isNotEmpty()) {
             println("最後の手:${lastMove().toPrettyStr()}")
         }
         println("ハッシュ値:${hash_value_}")
@@ -620,9 +620,6 @@ class Position {
         return result
     }
 
-    //ハッシュ
-    fun initHashSeed() {}
-
     //getter
     fun turnNumber(): Int {
         return turn_number_
@@ -879,7 +876,23 @@ class Position {
     }
 
     //ハッシュ値の初期化
-    fun initHashValue() {}
+    private fun initHashValue() {
+        hash_value_ = 0;
+        board_hash_ = 0;
+        hand_hash_ = 0;
+        for (sq in SquareList) {
+            board_hash_ = board_hash_ xor hashSeed[board_[sq.ordinal]][sq.ordinal];
+        }
+        for (piece in PAWN..ROOK) {
+            hand_hash_ = hand_hash_ xor handHashSeed[BLACK][piece][hand_[BLACK].num(piece)];
+            hand_hash_ = hand_hash_ xor handHashSeed[WHITE][piece][hand_[WHITE].num(piece)];
+        }
+        hash_value_ = board_hash_ xor hand_hash_
+        //1bit目を0にする
+        hash_value_ = hash_value_ and (1).toLong().inv()
+        //手番が先手だったら1bitは0のまま,後手だったら1bit目は1になる
+        hash_value_ = hash_value_ or color_.toLong()
+    }
 
     //emptyの条件分けをいちいち書かないための補助関数
     fun lastMove(): Move {
