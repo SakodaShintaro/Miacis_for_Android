@@ -19,7 +19,7 @@ import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
 const val HUMAN = 0
 const val MIACIS = 1
 
-class SubActivity1 : AppCompatActivity() {
+class BattleActivity : AppCompatActivity() {
     private lateinit var squareImageViews: ArrayList<ImageView>
     private lateinit var handImageViews: Array<ArrayList<ImageView>>
     private lateinit var handTextViews: Array<ArrayList<TextView>>
@@ -35,7 +35,7 @@ class SubActivity1 : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_sub1)
+        setContentView(R.layout.activity_battle)
 
         //盤面の準備
         pos = Position()

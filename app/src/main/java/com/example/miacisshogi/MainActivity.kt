@@ -17,25 +17,25 @@ class MainActivity : AppCompatActivity() {
         setContentView(R.layout.activity_main)
 
         findViewById<Button>(R.id.button_consideration).setOnClickListener {
-            val intent = Intent(this, SubActivity1::class.java)
+            val intent = Intent(this, BattleActivity::class.java)
             intent.putExtra(TURN_STR, CONSIDERATION)
             startActivity(intent)
         }
 
         findViewById<Button>(R.id.button_battle_as_black).setOnClickListener {
-            val intent = Intent(this, SubActivity1::class.java)
+            val intent = Intent(this, BattleActivity::class.java)
             intent.putExtra(TURN_STR, HUMAN_TURN_BLACK)
             startActivity(intent)
         }
 
         findViewById<Button>(R.id.button_battle_as_white).setOnClickListener {
-            val intent = Intent(this, SubActivity1::class.java)
+            val intent = Intent(this, BattleActivity::class.java)
             intent.putExtra(TURN_STR, HUMAN_TURN_WHITE)
             startActivity(intent)
         }
 
         findViewById<Button>(R.id.button_battle_as_white).setOnClickListener {
-            val intent = Intent(this, SubActivity1::class.java)
+            val intent = Intent(this, BattleActivity::class.java)
             intent.putExtra(TURN_STR, Random.nextInt(HUMAN_TURN_BLACK, HUMAN_TURN_WHITE + 1))
             startActivity(intent)
         }
