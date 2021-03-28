@@ -113,7 +113,7 @@ class BattleActivity : AppCompatActivity() {
         showPosition()
 
         // Miacisの手番なら実行
-        if (player[pos.color()] == MIACIS) {
+        if (player[pos.color] == MIACIS) {
             thinkAndDo()
         }
 
@@ -174,13 +174,13 @@ class BattleActivity : AppCompatActivity() {
             val handFrame = handFrames[c]
             if (handFrame.y <= pointY && pointY <= handFrame.y + handFrame.height * heightRate) {
                 //手番と違う方の駒台に触っていたらリセット
-                if (pos.color() != c) {
+                if (pos.color != c) {
                     resetHold()
                     return true
                 }
 
                 for (i in 0 until ROOK) {
-                    if (pos.hand_[c].num(ROOK - i) == 0) {
+                    if (pos.hand[c].num(ROOK - i) == 0) {
                         continue
                     }
                     if (handImageViews[c][i].x <= pointX && pointX <= handImageViews[c][i].x + handImageViews[c][i].width) {
@@ -238,7 +238,7 @@ class BattleActivity : AppCompatActivity() {
                         .create()
                         .show()
                 }
-            } else if (pos.on(to) != EMPTY && pieceToColor(pos.on(to)) == pos.color()) {
+            } else if (pos.on(to) != EMPTY && pieceToColor(pos.on(to)) == pos.color) {
                 //駒を掴む
                 holdPiece = pos.on(xy2square(sqX, sqY))
                 moveFrom = xy2square(sqX, sqY)
@@ -252,12 +252,12 @@ class BattleActivity : AppCompatActivity() {
     private fun doMove(move: Move) {
         Log.d("doMove", "Move   :${move.toPrettyStr()}")
         Log.d("doMove", "sfen   :${pos.toStr()}")
-        Log.d("doMove", "hash   :${pos.hash_value_}")
+        Log.d("doMove", "hash   :${pos.hashValue}")
 
         if (pos.isLegalMove(move)) {
             pos.doMove(move)
 
-            if (player[pos.color()] == MIACIS && pos.isFinish() == pos.NOT_FINISHED) {
+            if (player[pos.color] == MIACIS && pos.isFinish() == pos.NOT_FINISHED) {
                 showPosition()
                 val bestMove = searcher.search(pos)
                 findViewById<TextView>(R.id.think_result).text = bestMove.toPrettyStr()
@@ -266,8 +266,8 @@ class BattleActivity : AppCompatActivity() {
 
             val status = pos.isFinish()
             if (status != pos.NOT_FINISHED) {
-                val winColor = if (status == pos.WIN) pos.color() else color2oppositeColor(pos.color())
-                val resultStr = if(status == pos.DRAW) {
+                val winColor = if (status == pos.WIN) pos.color else color2oppositeColor(pos.color)
+                val resultStr = if (status == pos.DRAW) {
                     "Draw"
                 } else if (player[winColor] == HUMAN) {
                     "You Win"
@@ -331,7 +331,7 @@ class BattleActivity : AppCompatActivity() {
         if (moveFrom == Square.WALL00) {
             //持ち駒を指定していた
             for (i in 0 until ROOK) {
-                handImageViews[pos.color()][i].setBackgroundColor(0x00000000)
+                handImageViews[pos.color][i].setBackgroundColor(0x00000000)
             }
 
         } else if (moveFrom != Square.WALLAA) {
@@ -357,7 +357,7 @@ class BattleActivity : AppCompatActivity() {
             for (p in PAWN until KING) {
                 handImageViews[c][ROOK - p].setBackgroundColor(backGroundTransparent)
 
-                val n = pos.hand_[c].num(p)
+                val n = pos.hand[c].num(p)
                 handImageViews[c][ROOK - p].setImageResource(
                     if (n == 0) piece2resourceID(EMPTY) else piece2resourceID(coloredPiece(c, p))
                 )
@@ -403,7 +403,7 @@ class BattleActivity : AppCompatActivity() {
         //対応するxの値を作成
         val x = Array(BIN_SIZE) { MIN_SCORE + VALUE_WIDTH * (it + 0.5f) }
 
-        if (pos.color() == WHITE) {
+        if (pos.color == WHITE) {
             value.reverse()
         }
 

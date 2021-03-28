@@ -118,14 +118,14 @@ class HashTable {
     }
 
     fun findSameHashIndex(pos: Position): Int {
-        val hash = pos.hashValue()
+        val hash = pos.hashValue
         val key = hashToIndex(hash)
         var i = key
         while (true) {
             if (table_[i].age != age_) {
                 //根本的に世代が異なるなら同じものはないのでsize()を返す
                 return table_.size
-            } else if (table_[i].hash == hash && table_[i].turn_number == pos.turnNumber()) {
+            } else if (table_[i].hash == hash && table_[i].turn_number == pos.turnNumber) {
                 //完全に一致したのでここが記録されていたエントリ
                 return i
             }
@@ -145,14 +145,14 @@ class HashTable {
     }
 
     fun searchEmptyIndex(pos: Position): Int {
-        val hash = pos.hashValue()
+        val hash = pos.hashValue
         val key = hashToIndex(hash)
         var i = key
         while (true) {
             if (table_[i].age != age_) {
                 //世代が違うならここを上書きして良い
                 table_[i].hash = hash
-                table_[i].turn_number = pos.turnNumber()
+                table_[i].turn_number = pos.turnNumber
                 table_[i].age = age_
                 used_num_++
                 return i
@@ -270,7 +270,7 @@ class Search(context: Context) {
 
         //行動選択
         val temperature = 0
-        if (root.turnNumber() <= 30) {
+        if (root.turnNumber <= 30) {
             var distribution = Array(curr_node.moves.size) { 0.0f }
             if (temperature == 0) {
                 //探索回数を正規化した分布に従って行動選択
@@ -337,7 +337,7 @@ class Search(context: Context) {
 
         //未展開の局面に至るまで遷移を繰り返す
         while (index != NOT_EXPANDED) {
-            if (pos.turnNumber() > draw_turn) {
+            if (pos.turnNumber > draw_turn) {
                 //手数が制限まで達している場合,抜ける
                 break
             }
@@ -483,7 +483,7 @@ class Search(context: Context) {
         curr_node.value
 
         //ノードを評価
-        if (pos.isFinish() == 1 || pos.turnNumber() > draw_turn) {
+        if (pos.isFinish() == 1 || pos.turnNumber > draw_turn) {
             curr_node.value = Array(BIN_SIZE) { 0.0f }
             //TODO:どこかonethotで立てる
             curr_node.evaled = true
