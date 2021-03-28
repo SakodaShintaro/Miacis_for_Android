@@ -58,7 +58,7 @@ class Position {
 
     var stack = ArrayList<StateInfo>()
 
-    constructor() {
+    init {
         init()
     }
 
@@ -235,10 +235,10 @@ class Position {
             //移動前の分をXORして消す
             boardHash = boardHash xor hashSeed[move.subject()][from]
             //移動後の分をXOR
-            if (move.isPromote()) {
-                boardHash = boardHash xor hashSeed[promote(move.subject())][to]
+            boardHash = if (move.isPromote()) {
+                boardHash xor hashSeed[promote(move.subject())][to]
             } else {
-                boardHash = boardHash xor hashSeed[move.subject()][to]
+                boardHash xor hashSeed[move.subject()][to]
             }
         }
 
@@ -324,10 +324,10 @@ class Position {
             //移動前の分をXOR
             boardHash = boardHash xor hashSeed[lastMove.subject()][from]
             //移動後の分をXORして消す
-            if (lastMove.isPromote()) {
-                boardHash = boardHash xor hashSeed[promote(lastMove.subject())][to]
+            boardHash = if (lastMove.isPromote()) {
+                boardHash xor hashSeed[promote(lastMove.subject())][to]
             } else {
-                boardHash = boardHash xor hashSeed[lastMove.subject()][to]
+                boardHash xor hashSeed[lastMove.subject()][to]
             }
         }
 
@@ -419,14 +419,13 @@ class Position {
             arrayListOf(BLACK, WHITE),
             arrayListOf(WHITE, BLACK),
         )
-        val HAND_PIECE_NUM = 7
-        val HAND_PIECES = arrayListOf(PAWN, LANCE, KNIGHT, SILVER, GOLD, BISHOP, ROOK)
-        val MAX_NUMS = arrayListOf(18.0f, 4.0f, 4.0f, 4.0f, 4.0f, 2.0f, 2.0f)
+        val handPieces = arrayListOf(PAWN, LANCE, KNIGHT, SILVER, GOLD, BISHOP, ROOK)
+        val maxNum = arrayListOf(18.0f, 4.0f, 4.0f, 4.0f, 4.0f, 2.0f, 2.0f)
         var i = PieceList.size
         for (c in colors[color]) {
-            for (j in 0 until HAND_PIECE_NUM) {
+            for (j in 0 until handPieces.size) {
                 for (sq in SquareList) {
-                    features[i * SQUARE_NUM + SquareToNum[sq.ordinal]] = hand[c].num(HAND_PIECES[j]) / MAX_NUMS[j]
+                    features[i * SQUARE_NUM + SquareToNum[sq.ordinal]] = hand[c].num(handPieces[j]) / maxNum[j]
                 }
                 i++
             }
@@ -504,7 +503,11 @@ class Position {
                 //この駒を動かす
                 val toList = movableSquareList(sq, board[sq.ordinal])
                 for (to in toList) {
-                    val move = Move(to, sq, false, false, board[sq.ordinal], board[to.ordinal])
+                    val move = Move(to, sq,
+                        isDrop = false,
+                        isPromote = false,
+                        subject = board[sq.ordinal],
+                        capture = board[to.ordinal])
                     pushMove(move, moves)
                 }
             }
@@ -549,7 +552,7 @@ class Position {
             } else if (sfen[i] == ' ') {
                 //手番の設定へ
                 break
-            } else if ('1' <= sfen[i] && sfen[i] <= '9') {
+            } else if (sfen[i] in '1'..'9') {
                 //空マス分飛ばす
                 f -= sfen[i] - '0'
             } else if (sfen[i] == '+') {
@@ -583,8 +586,8 @@ class Position {
                 i++
                 break
             }
-            if ('1' <= sfen[i] && sfen[i] <= '9') { //数字なら枚数の取得
-                if ('0' <= sfen[i + 1] && sfen[i + 1] <= '9') {
+            if (sfen[i] in '1'..'9') { //数字なら枚数の取得
+                if (sfen[i + 1] in '0'..'9') {
                     //次の文字も数字の場合が一応あるはず(歩が10枚以上)
                     num = 10 * sfen[i].toInt() + sfen[i + 1].toInt()
                     i += 2
@@ -867,11 +870,11 @@ class Position {
         }
 
         //位置関係
-        if (color == BLACK) {
-            return ((Rank.Rank1 <= SquareToRank[to] && SquareToRank[to] <= Rank.Rank3) ||
+        return if (color == BLACK) {
+            ((Rank.Rank1 <= SquareToRank[to] && SquareToRank[to] <= Rank.Rank3) ||
                     (Rank.Rank1 <= SquareToRank[from] && SquareToRank[from] <= Rank.Rank3))
         } else {
-            return ((Rank.Rank7 <= SquareToRank[to] && SquareToRank[to] <= Rank.Rank9) ||
+            ((Rank.Rank7 <= SquareToRank[to] && SquareToRank[to] <= Rank.Rank9) ||
                     (Rank.Rank7 <= SquareToRank[from] && SquareToRank[from] <= Rank.Rank9))
         }
     }
@@ -915,15 +918,15 @@ class Position {
 
     //ハッシュ値の初期化
     private fun initHashValue() {
-        hashValue = 0;
-        boardHash = 0;
-        handHash = 0;
+        hashValue = 0
+        boardHash = 0
+        handHash = 0
         for (sq in SquareList) {
-            boardHash = boardHash xor hashSeed[board[sq.ordinal]][sq.ordinal];
+            boardHash = boardHash xor hashSeed[board[sq.ordinal]][sq.ordinal]
         }
         for (piece in PAWN..ROOK) {
-            handHash = handHash xor handHashSeed[BLACK][piece][hand[BLACK].num(piece)];
-            handHash = handHash xor handHashSeed[WHITE][piece][hand[WHITE].num(piece)];
+            handHash = handHash xor handHashSeed[BLACK][piece][hand[BLACK].num(piece)]
+            handHash = handHash xor handHashSeed[WHITE][piece][hand[WHITE].num(piece)]
         }
         hashValue = boardHash xor handHash
         //1bit目を0にする
