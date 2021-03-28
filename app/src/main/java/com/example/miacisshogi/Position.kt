@@ -458,7 +458,10 @@ class Position {
 
     //合法手生成
     fun generateAllMoves(): ArrayList<Move> {
-        val moveList = ArrayList<Move>()
+        if (alreadyGeneratedMoves) {
+            return moves
+        }
+        moves.clear()
         for (sq in SquareList) {
             if (board[sq.ordinal] == EMPTY) {
                 //ここに打つ手が可能
@@ -475,26 +478,26 @@ class Position {
                         }
                     }
                     if (ok) {
-                        pushMove(dropMove(sq, coloredPiece(color, PAWN)), moveList)
+                        pushMove(dropMove(sq, coloredPiece(color, PAWN)), moves)
                     }
                 }
 
                 //香車
                 //最奥の段は除外する
                 if (hand[color].num(LANCE) > 0 && puttablePawnLanceKnight(sq, 1)) {
-                    pushMove(dropMove(sq, coloredPiece(color, LANCE)), moveList)
+                    pushMove(dropMove(sq, coloredPiece(color, LANCE)), moves)
                 }
 
                 //桂馬
                 //奥の2段は除外する
                 if (hand[color].num(KNIGHT) > 0 && puttablePawnLanceKnight(sq, 2)) {
-                    pushMove(dropMove(sq, coloredPiece(color, KNIGHT)), moveList)
+                    pushMove(dropMove(sq, coloredPiece(color, KNIGHT)), moves)
                 }
 
                 //その他
                 for (p in arrayListOf(SILVER, GOLD, BISHOP, ROOK)) {
                     if (hand[color].num(p) > 0) {
-                        pushMove(dropMove(sq, coloredPiece(color, p)), moveList)
+                        pushMove(dropMove(sq, coloredPiece(color, p)), moves)
                     }
                 }
             } else if (pieceToColor(board[sq.ordinal]) == color) {
@@ -502,11 +505,11 @@ class Position {
                 val toList = movableSquareList(sq, board[sq.ordinal])
                 for (to in toList) {
                     val move = Move(to, sq, false, false, board[sq.ordinal], board[to.ordinal])
-                    pushMove(move, moveList)
+                    pushMove(move, moves)
                 }
             }
         }
-        return moveList
+        return moves
     }
 
     private fun puttablePawnLanceKnight(sq: Square, forbiddenWidth: Int): Boolean {
