@@ -379,7 +379,7 @@ class Position {
     fun isFinish(): Int {
         val moveList = generateAllMoves()
         if (moveList.isEmpty()) {
-            return LOSE
+            return if (isLastMoveDropPawn()) WIN else LOSE
         } else if (canWinDeclare()) {
             return WIN
         }
@@ -888,8 +888,6 @@ class Position {
 
         //動かしてみる
         doMove(move)
-
-        //TODO:ここで打ち歩判定も入れるべきだな
 
         //自玉に王手がかかったまま, あるいは動かしたことで王手になるとダメ
         val ok = !isThereControl(color, kingSq[moveColor])
