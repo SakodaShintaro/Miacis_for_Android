@@ -209,7 +209,10 @@ class BattleActivity : AppCompatActivity() {
             boardY <= pointY && pointY <= boardY + boardHeight) {
             val sqX = ((pointX - boardX) / squareWidth).toInt()
             val sqY = ((pointY - boardY) / squareHeight).toInt()
-            val to = xy2square(sqX, sqY)
+            var to = xy2square(sqX, sqY)
+            if (showInverse) {
+                to = InvSquare[to.ordinal]
+            }
 
             if (holdPiece != EMPTY) {
                 // Moveを構成
@@ -249,8 +252,8 @@ class BattleActivity : AppCompatActivity() {
                 }
             } else if (pos.on(to) != EMPTY && pieceToColor(pos.on(to)) == pos.color) {
                 //駒を掴む
-                holdPiece = pos.on(xy2square(sqX, sqY))
-                moveFrom = xy2square(sqX, sqY)
+                holdPiece = pos.on(to)
+                moveFrom = to
                 squareImageViews[sqY * BOARD_WIDTH + sqX].setBackgroundColor(backGroundHoldColor)
             }
         }
