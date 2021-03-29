@@ -180,7 +180,8 @@ class BattleActivity : AppCompatActivity() {
 
         //駒台にタッチしているかどうかを判定
         for (c in BLACK..WHITE) {
-            val handFrame = handFrames[c]
+            val showIndex = if (showInverse) 1 - c else c
+            val handFrame = handFrames[showIndex]
             if (handFrame.y <= pointY && pointY <= handFrame.y + handFrame.height * heightRate) {
                 //手番と違う方の駒台に触っていたらリセット
                 if (pos.color != c) {
@@ -192,11 +193,11 @@ class BattleActivity : AppCompatActivity() {
                     if (pos.hand[c].num(ROOK - i) == 0) {
                         continue
                     }
-                    if (handImageViews[c][i].x <= pointX && pointX <= handImageViews[c][i].x + handImageViews[c][i].width) {
+                    if (handImageViews[showIndex][i].x <= pointX && pointX <= handImageViews[showIndex][i].x + handImageViews[showIndex][i].width) {
                         //iが押された
                         holdPiece = coloredPiece(c, ROOK - i)
                         moveFrom = Square.WALL00
-                        handImageViews[c][i].setBackgroundColor(backGroundHoldColor)
+                        handImageViews[showIndex][i].setBackgroundColor(backGroundHoldColor)
                         Log.d("TouchEvent", "catch to drop ${holdPiece} ${moveFrom}")
                         return true
                     }
