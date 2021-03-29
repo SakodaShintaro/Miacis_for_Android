@@ -186,9 +186,6 @@ class BattleActivity : AppCompatActivity() {
 
             showValue(searcher.value)
         }
-        findViewById<Button>(R.id.button_think_and_do).setOnClickListener {
-            thinkAndDo()
-        }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
