@@ -127,8 +127,32 @@ class BattleActivity : AppCompatActivity() {
         }
 
         // ボタンの初期化
+        findViewById<Button>(R.id.button_menu).setOnClickListener {
+            val items = arrayOf("盤面を初期化", "sfenを入力", "item_2")
+            AlertDialog.Builder(this)
+                .setTitle("Selector")
+                .setItems(items) { dialog, which ->
+                    when (which) {
+                        0 -> {
+                            pos.init()
+                            showPosition()
+                        }
+                        1 -> {
+                            val editText = EditText(this)
+                            editText.hint = "sfen ~"
+                            AlertDialog.Builder(this)
+                                .setView(editText)
+                                .setPositiveButton("OK") { dialog, which ->
+                                    pos.fromStr(editText.text.toString())
+                                    showPosition()
+                                }
+                                .show()
+                        }
+                    }
+                }
+                .show()
+        }
         findViewById<Button>(R.id.button_undo).setOnClickListener {
-
             pos.undo()
             showPosition()
         }
@@ -139,21 +163,6 @@ class BattleActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.button_think_and_do).setOnClickListener {
             thinkAndDo()
-        }
-        findViewById<Button>(R.id.button_init_pos).setOnClickListener {
-            pos.init()
-            showPosition()
-        }
-        findViewById<Button>(R.id.button_input_sfen).setOnClickListener {
-            val editText = EditText(this)
-            editText.hint = "sfen ~"
-            AlertDialog.Builder(this)
-                .setView(editText)
-                .setPositiveButton("OK") { dialog, which ->
-                    pos.fromStr(editText.text.toString())
-                    showPosition()
-                }
-                .show()
         }
     }
 
