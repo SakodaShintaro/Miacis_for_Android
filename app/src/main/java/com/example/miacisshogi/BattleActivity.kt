@@ -356,7 +356,13 @@ class BattleActivity : AppCompatActivity() {
         for (i in 0 until BOARD_WIDTH) {
             for (j in 0 until BOARD_WIDTH) {
                 val sq = xy2square(j, i)
-                squareImageViews[i * BOARD_WIDTH + j].setImageResource(piece2resourceID(pos.on(sq)))
+                if (!showInverse) {
+                    squareImageViews[i * BOARD_WIDTH + j].setImageResource(piece2resourceID(pos.on(sq)))
+                } else {
+                    val invSq = InvSquare[sq.ordinal]
+                    val piece = piece2oppositeColorPiece(pos.on(invSq))
+                    squareImageViews[i * BOARD_WIDTH + j].setImageResource(piece2resourceID(piece))
+                }
                 squareImageViews[i * BOARD_WIDTH + j].setBackgroundColor(backGroundTransparent)
             }
         }
@@ -364,21 +370,22 @@ class BattleActivity : AppCompatActivity() {
         //持ち駒の表示
         for (c in BLACK..WHITE) {
             for (p in PAWN until KING) {
-                handImageViews[c][ROOK - p].setBackgroundColor(backGroundTransparent)
-
                 val n = pos.hand[c].num(p)
-                handImageViews[c][ROOK - p].setImageResource(
-                    if (n == 0) piece2resourceID(EMPTY) else piece2resourceID(coloredPiece(c, p))
+
+                val showIndex = if (showInverse) 1 - c else c
+                handImageViews[showIndex][ROOK - p].setImageResource(
+                    if (n == 0) piece2resourceID(EMPTY) else piece2resourceID(coloredPiece(showIndex, p))
                 )
-                handTextViews[c][ROOK - p].text = if (n > 1) n.toString() else ""
+                handImageViews[showIndex][ROOK - p].setBackgroundColor(backGroundTransparent)
+                handTextViews[showIndex][ROOK - p].text = if (n > 1) n.toString() else ""
             }
         }
 
         //最終行動マスの背景色を変更
         val lastMove = pos.lastMove()
         if (lastMove != NULL_MOVE) {
-            val (lastX, lastY) = square2xy(lastMove.to())
-            squareImageViews[lastY * BOARD_WIDTH + lastX].setBackgroundColor(backGroundMovedColor)
+            val to = if (showInverse) InvSquare[lastMove.to().ordinal] else lastMove.to()
+            squareImageViews[square2sqid(to)].setBackgroundColor(backGroundMovedColor)
         }
     }
 
