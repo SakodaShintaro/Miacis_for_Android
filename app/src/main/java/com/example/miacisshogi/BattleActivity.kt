@@ -10,6 +10,7 @@ import android.util.Log
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
 import android.widget.*
+import android.widget.TableLayout
 import androidx.appcompat.app.AppCompatActivity
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.XAxis
@@ -416,16 +417,28 @@ class BattleActivity : AppCompatActivity() {
 
     private fun think(): Move {
         val bestMove = searcher.search(pos)
-        val textView = findViewById<TextView>(R.id.think_result)
         val moveList = pos.generateAllMoves()
-        var str = String()
         val policy = searcher.policy
         val policyAndMove = policy.zip(moveList).sortedBy { pair -> -pair.first }
 
+        val tableLayout = findViewById<TableLayout>(R.id.tableLayout)
+
+        //以前の内容を削除
+        tableLayout.removeAllViews()
+
+        //見出し
+        val labelRow = layoutInflater.inflate(R.layout.table_row, null) as TableRow
+        labelRow.findViewById<TextView>(R.id.rowtext1).text = "指し手"
+        labelRow.findViewById<TextView>(R.id.rowtext2).text = "方策確率"
+        tableLayout.addView(labelRow, TableLayout.LayoutParams())
+
+        //各指し手
         for (i in policy.indices) {
-            str += "%.4f ${policyAndMove[i].second.toPrettyStr()}\n".format(policyAndMove[i].first)
+            val tableRow = layoutInflater.inflate(R.layout.table_row, null) as TableRow
+            tableRow.findViewById<TextView>(R.id.rowtext1).text = policyAndMove[i].second.toPrettyStr()
+            tableRow.findViewById<TextView>(R.id.rowtext2).text = "%5.1f%%".format((policyAndMove[i].first * 100))
+            tableLayout.addView(tableRow, TableLayout.LayoutParams())
         }
-        textView.text = str
 
         showValue(searcher.value)
         return bestMove

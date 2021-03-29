@@ -1,0 +1,23 @@
+<?xml version="1.0" encoding="utf-8"?>
+<TableRow xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <TextView
+        android:id="@+id/rowtext1"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="field"
+        android:gravity="center"
+        android:layout_weight="1"
+        android:textColor="@color/black" />
+
+    <TextView
+        android:id="@+id/rowtext2"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:text="0"
+        android:layout_weight="1"
+        android:textColor="@color/black" />
+</TableRow>
