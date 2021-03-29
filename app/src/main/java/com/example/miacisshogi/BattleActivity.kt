@@ -271,6 +271,7 @@ class BattleActivity : AppCompatActivity() {
                 if (!isLegalNonPromotive && !isLegalPromotive) {
                     //両方非合法手だとダメ
                     resetHold()
+                    showPosition()
                     Log.d("TouchEvent", "Illegal Move! ${nonPromotiveMove.toPrettyStr()}")
                     return true
                 } else if (!isLegalNonPromotive && isLegalPromotive) {
