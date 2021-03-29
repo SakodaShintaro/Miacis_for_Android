@@ -127,6 +127,11 @@ class BattleActivity : AppCompatActivity() {
         }
 
         // ボタンの初期化
+        findViewById<Button>(R.id.button_undo).setOnClickListener {
+
+            pos.undo()
+            showPosition()
+        }
         findViewById<Button>(R.id.button_think).setOnClickListener {
             val bestMove = searcher.search(pos)
             val textView = findViewById<TextView>(R.id.think_result)

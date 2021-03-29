@@ -271,7 +271,11 @@ class Position {
     }
 
     fun undo() {
-        val lastMove = kifu.last()
+        val lastMove = lastMove()
+        if (lastMove == NULL_MOVE) {
+            return
+        }
+
         kifu.removeLast()
 
         //手番を戻す(このタイミングでいいかな?)
