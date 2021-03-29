@@ -170,7 +170,21 @@ class BattleActivity : AppCompatActivity() {
         findViewById<Button>(R.id.button_think).setOnClickListener {
             val bestMove = searcher.search(pos)
             val textView = findViewById<TextView>(R.id.think_result)
-            textView.text = bestMove.toPrettyStr()
+            val moveList = pos.generateAllMoves()
+            var str = String()
+            val policy = searcher.policy
+            val policyAndMove = policy.zip(moveList).sortedBy { pair -> -pair.first }
+
+            for (i in policy.indices) {
+                str += "%.4f ${policyAndMove[i].second.toPrettyStr()}\n".format(policyAndMove[i].first)
+
+                if (i >= 2) {
+                    break
+                }
+            }
+            textView.text = str
+
+            showValue(searcher.value)
         }
         findViewById<Button>(R.id.button_think_and_do).setOnClickListener {
             thinkAndDo()
@@ -190,8 +204,6 @@ class BattleActivity : AppCompatActivity() {
         val downHandFrame = findViewById<FrameLayout>(R.id.frame_hand_down)
         val handFrames = arrayOf(downHandFrame, upHandFrame)
         val heightRate = 1.5
-
-        println("${upHandFrame.y} ${upHandFrame.height} ${downHandFrame.y} ${downHandFrame.height}")
 
         //単純な押下以外はとりあえず無視
         if (event.action != ACTION_DOWN) {
@@ -259,7 +271,7 @@ class BattleActivity : AppCompatActivity() {
                 if (!isLegalNonPromotive && !isLegalPromotive) {
                     //両方非合法手だとダメ
                     resetHold()
-                    Log.d("TouchEvent", "Illegal Move!")
+                    Log.d("TouchEvent", "Illegal Move! ${nonPromotiveMove.toPrettyStr()}")
                     return true
                 } else if (!isLegalNonPromotive && isLegalPromotive) {
                     //歩、香車、桂馬は成らないと非合法であることがありえる
