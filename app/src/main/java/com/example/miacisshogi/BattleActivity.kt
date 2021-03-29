@@ -126,7 +126,10 @@ class BattleActivity : AppCompatActivity() {
 
         // Miacisの手番なら実行
         if (player[pos.color] == MIACIS) {
-            thinkAndDo()
+            val bestMove = think()
+            holdPiece = bestMove.subject()
+            moveFrom = bestMove.from()
+            doMove(bestMove)
         }
 
         // ボタンの初期化
@@ -168,23 +171,7 @@ class BattleActivity : AppCompatActivity() {
             showPosition()
         }
         findViewById<Button>(R.id.button_think).setOnClickListener {
-            val bestMove = searcher.search(pos)
-            val textView = findViewById<TextView>(R.id.think_result)
-            val moveList = pos.generateAllMoves()
-            var str = String()
-            val policy = searcher.policy
-            val policyAndMove = policy.zip(moveList).sortedBy { pair -> -pair.first }
-
-            for (i in policy.indices) {
-                str += "%.4f ${policyAndMove[i].second.toPrettyStr()}\n".format(policyAndMove[i].first)
-
-                if (i >= 2) {
-                    break
-                }
-            }
-            textView.text = str
-
-            showValue(searcher.value)
+            think()
         }
     }
 
@@ -307,8 +294,7 @@ class BattleActivity : AppCompatActivity() {
 
             if (player[pos.color] == MIACIS && pos.isFinish() == pos.NOT_FINISHED) {
                 showPosition()
-                val bestMove = searcher.search(pos)
-                findViewById<TextView>(R.id.think_result).text = bestMove.toPrettyStr()
+                val bestMove = think()
                 pos.doMove(bestMove)
             }
 
@@ -428,30 +414,21 @@ class BattleActivity : AppCompatActivity() {
         }
     }
 
-    private fun thinkAndDo() {
+    private fun think(): Move {
         val bestMove = searcher.search(pos)
         val textView = findViewById<TextView>(R.id.think_result)
-
         val moveList = pos.generateAllMoves()
-
         var str = String()
         val policy = searcher.policy
         val policyAndMove = policy.zip(moveList).sortedBy { pair -> -pair.first }
 
         for (i in policy.indices) {
             str += "%.4f ${policyAndMove[i].second.toPrettyStr()}\n".format(policyAndMove[i].first)
-
-            if (i >= 2) {
-                break
-            }
         }
         textView.text = str
 
         showValue(searcher.value)
-
-        holdPiece = bestMove.subject()
-        moveFrom = bestMove.from()
-        doMove(bestMove)
+        return bestMove
     }
 
     private fun showValue(value: Array<Float>) {
