@@ -1,6 +1,9 @@
 package com.example.miacisshogi
 
 import android.app.AlertDialog
+import android.content.ClipData
+import android.content.ClipboardManager
+import android.content.Context
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
@@ -128,16 +131,19 @@ class BattleActivity : AppCompatActivity() {
 
         // ボタンの初期化
         findViewById<Button>(R.id.button_menu).setOnClickListener {
-            val items = arrayOf("盤面を初期化", "sfenを入力", "item_2")
+            val items = arrayOf("トップ画面に戻る", "盤面を初期化", "sfenを入力", "局面のsfenをクリップボードにコピー")
             AlertDialog.Builder(this)
-                .setTitle("Selector")
+                .setTitle("メニュー")
                 .setItems(items) { dialog, which ->
                     when (which) {
                         0 -> {
+                            finish()
+                        }
+                        1 -> {
                             pos.init()
                             showPosition()
                         }
-                        1 -> {
+                        2 -> {
                             val editText = EditText(this)
                             editText.hint = "sfen ~"
                             AlertDialog.Builder(this)
@@ -147,6 +153,11 @@ class BattleActivity : AppCompatActivity() {
                                     showPosition()
                                 }
                                 .show()
+                        }
+                        3 -> {
+                            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                            val clip: ClipData = ClipData.newPlainText("sfen", pos.toStr())
+                            clipboard.setPrimaryClip(clip)
                         }
                     }
                 }
