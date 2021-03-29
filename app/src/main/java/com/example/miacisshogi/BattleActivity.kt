@@ -302,12 +302,22 @@ class BattleActivity : AppCompatActivity() {
             val status = pos.isFinish()
             if (status != pos.NOT_FINISHED) {
                 val winColor = if (status == pos.WIN) pos.color else color2oppositeColor(pos.color)
-                val resultStr = if (status == pos.DRAW) {
-                    "Draw"
-                } else if (player[winColor] == HUMAN) {
-                    "You Win"
+                val resultStr = if (mode == CONSIDERATION) {
+                    if (status == pos.DRAW) {
+                        "引き分け"
+                    } else if (winColor == BLACK) {
+                        "先手の勝ち"
+                    } else {
+                        "後手の勝ち"
+                    }
                 } else {
-                    "You Lose"
+                    if (status == pos.DRAW) {
+                        "引き分け"
+                    } else if (player[winColor] == HUMAN) {
+                        "あなたの勝ち"
+                    } else {
+                        "あなたの負け"
+                    }
                 }
                 AlertDialog.Builder(this)
                     .setTitle(resultStr)
