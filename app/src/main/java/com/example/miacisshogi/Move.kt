@@ -76,7 +76,7 @@ class Move(
     }
 
     //見やすい日本語での表示
-    fun toPrettyStr(): String {
+    fun toPrettyStr(printCapture: Boolean = false): String {
         if (this == NULL_MOVE) {
             return "投了"
         }
@@ -97,7 +97,7 @@ class Move(
         } else {
             result += "(" + SquareToFile[from().ordinal].ordinal + SquareToRank[from().ordinal].ordinal + ") "
         }
-        if (capture() != EMPTY) {
+        if (printCapture && capture() != EMPTY) {
             result += "capture:" + PieceToStr[capture()]
         }
         return result

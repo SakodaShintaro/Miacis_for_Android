@@ -90,7 +90,7 @@
         android:layout_height="wrap_content"
         android:text=""
         android:textColor="@color/black"
-        app:layout_constraintEnd_toStartOf="@+id/button_think"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_menu"
         tools:text="TextView" />
@@ -99,9 +99,9 @@
         android:id="@+id/barChartExample"
         android:layout_width="0dp"
         android:layout_height="0dp"
-        app:layout_constraintEnd_toStartOf="@+id/button_think"
+        app:layout_constraintBottom_toBottomOf="parent"
+        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/think_result"
-        app:layout_constraintBottom_toBottomOf="parent" />
+        app:layout_constraintTop_toBottomOf="@+id/think_result" />
 
 </androidx.constraintlayout.widget.ConstraintLayout >
