@@ -34,7 +34,7 @@ class MainActivity : AppCompatActivity() {
             startActivity(intent)
         }
 
-        findViewById<Button>(R.id.button_battle_as_white).setOnClickListener {
+        findViewById<Button>(R.id.button_battle_as_random).setOnClickListener {
             val intent = Intent(this, BattleActivity::class.java)
             intent.putExtra(TURN_STR, Random.nextInt(HUMAN_TURN_BLACK, HUMAN_TURN_WHITE + 1))
             startActivity(intent)
