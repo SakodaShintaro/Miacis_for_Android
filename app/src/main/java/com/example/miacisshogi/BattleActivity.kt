@@ -32,6 +32,8 @@ class BattleActivity : AppCompatActivity() {
     private val backGroundTransparent = 0x00000000
     private lateinit var searcher: Search
     private lateinit var player: Array<Int>
+    private var mode: Int = CONSIDERATION
+    private var showInverse: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -44,9 +46,16 @@ class BattleActivity : AppCompatActivity() {
         searcher = Search(this)
 
         //ターンの制御
-        when (intent?.extras?.get(TURN_STR)) {
+        mode = intent?.extras?.get(TURN_STR) as Int
+        println("mode = $mode")
+        when (mode) {
             HUMAN_TURN_BLACK -> player = arrayOf(HUMAN, MIACIS)
-            HUMAN_TURN_WHITE -> player = arrayOf(MIACIS, HUMAN)
+            HUMAN_TURN_WHITE -> {
+                player = arrayOf(MIACIS, HUMAN)
+                val boardView = findViewById<ImageView>(R.id.board)
+                boardView.setImageResource(R.drawable.board2)
+                showInverse = true
+            }
             CONSIDERATION -> player = arrayOf(HUMAN, HUMAN)
         }
 
