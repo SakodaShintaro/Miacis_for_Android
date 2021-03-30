@@ -40,6 +40,7 @@ class BattleActivity : AppCompatActivity() {
     private var mode: Int = CONSIDERATION
     private var showInverse: Boolean = false
     private var autoThink: Boolean = false
+    private val resultFilename = "result.txt"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -137,7 +138,7 @@ class BattleActivity : AppCompatActivity() {
 
         // ボタンの初期化
         findViewById<Button>(R.id.button_menu).setOnClickListener {
-            val items = arrayOf("トップ画面に戻る", "盤面を初期化", "自動検討モード切り替え", "sfenを入力", "局面のsfenをクリップボードにコピー")
+            val items = arrayOf("トップ画面に戻る", "盤面を初期化", "自動検討モード切り替え", "sfenを入力", "局面のsfenをクリップボードにコピー", "対局成績のクリア")
             AlertDialog.Builder(this)
                 .setTitle("メニュー")
                 .setItems(items) { dialog, which ->
@@ -180,6 +181,24 @@ class BattleActivity : AppCompatActivity() {
                                 "現局面のSFENをクリップボードへコピーしました",
                                 Snackbar.LENGTH_SHORT
                             ).show()
+                        }
+                        5 -> {
+                            AlertDialog.Builder(this)
+                                .setMessage("本当に戦績を削除しますか?")
+                                .setNegativeButton("キャンセル") { _, _ ->  }
+                                .setPositiveButton("OK") { dialog, which ->
+                                    // (0, 0, 0)を書き出す
+                                    val fileContents = listOf(0, 0, 0).joinToString("\n")
+                                    this.openFileOutput(resultFilename, Context.MODE_PRIVATE).use {
+                                        it.write(fileContents.toByteArray())
+                                    }
+                                    Snackbar.make(
+                                        findViewById(R.id.constraintLayout),
+                                        "戦績を削除しました",
+                                        Snackbar.LENGTH_SHORT
+                                    ).show()
+                                }
+                                .show()
                         }
                     }
                 }
@@ -323,6 +342,36 @@ class BattleActivity : AppCompatActivity() {
             val status = pos.isFinish()
             if (status != pos.NOT_FINISHED) {
                 val winColor = if (status == pos.WIN) pos.color else color2oppositeColor(pos.color)
+
+                val resultHistory =  if (mode != CONSIDERATION) {
+                    // 読み込む
+                    val result = if (resultFilename in fileList()) {
+                        this.openFileInput(resultFilename).bufferedReader().readLines().map { it -> it.toInt() }
+                            .toMutableList()
+                    } else {
+                        mutableListOf(0, 0, 0)
+                    }
+
+                    // 今回の結果を足す
+                    if (status == pos.DRAW) {
+                        result[1]++
+                    } else if (player[winColor] == HUMAN) {
+                        result[0]++
+                    } else {
+                        result[2]++
+                    }
+
+                    // 書き出す
+                    val fileContents = result.joinToString("\n")
+                    this.openFileOutput(resultFilename, Context.MODE_PRIVATE).use {
+                        it.write(fileContents.toByteArray())
+                    }
+
+                    "通算 ${result[0]}勝 ${result[1]}引分 ${result[2]}敗"
+                } else {
+                    "Empty"
+                }
+
                 val resultStr = if (mode == CONSIDERATION) {
                     if (status == pos.DRAW) {
                         "引き分け"
@@ -333,11 +382,11 @@ class BattleActivity : AppCompatActivity() {
                     }
                 } else {
                     if (status == pos.DRAW) {
-                        "引き分け"
+                        "引き分け\n${resultHistory}"
                     } else if (player[winColor] == HUMAN) {
-                        "あなたの勝ち"
+                        "あなたの勝ち\n${resultHistory}"
                     } else {
-                        "あなたの負け"
+                        "あなたの負け\n${resultHistory}"
                     }
                 }
                 AlertDialog.Builder(this)
