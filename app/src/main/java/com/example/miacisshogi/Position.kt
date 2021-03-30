@@ -257,7 +257,7 @@ class Position {
         kifu.add(move)
 
         //王手
-        isChecked = false
+        isChecked = isThereControl(color2oppositeColor(color), kingSq[color])
 
         //hashの手番要素を更新
         hashValue = boardHash xor handHash
@@ -348,6 +348,9 @@ class Position {
         //手数
         turnNumber--
 
+        //王手判定は重そうなのでstackから取る
+        isChecked = stack.last().isChecked
+
         //Stack更新
         stack.removeLast()
 
@@ -384,18 +387,36 @@ class Position {
             return WIN
         }
 
-        //千日手or連続王手の千日手だったらtrueを返してscoreに適切な値を入れる(技巧と似た実装)
+        //まずこの局面が1回現れているので1からスタート
+        var num = 1
+
+        //今の局面と同一に成りうるのは、最短で4手前
+        //そこから2手ずつ可能性としてあり得る
         for (index in stack.size - 4 downTo 0 step 2) {
             if (boardHash != stack[index].boardHash || handHash != stack[index].handHash) {
                 //ハッシュ値が一致しなかったら関係ない
                 continue
             }
 
-            return if ((index == stack.size - 4) && (stack[index].isChecked && stack[index + 2].isChecked)) {
-                //手番側が連続王手された
-                WIN
-            } else { //普通の千日手
-                DRAW
+            if (++num == 4) {
+                //千日手成立
+                //どちらかの手が全て王手かどうか確認する
+                val allCheck = arrayOf(true, true)
+                var c = color
+                for (i in index..stack.size) {
+                    allCheck[c] = allCheck[c] && stack[index].isChecked
+                    c = color2oppositeColor(c)
+                }
+
+                return if (allCheck[c]) {
+                    //手番側が全て王手された
+                    WIN
+                } else if (allCheck[color2oppositeColor(c)]) {
+                    //手番側が全て王手した
+                    LOSE
+                } else {
+                    DRAW
+                }
             }
         }
         return NOT_FINISHED
