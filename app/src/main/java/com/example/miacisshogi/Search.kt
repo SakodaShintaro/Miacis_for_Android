@@ -178,7 +178,7 @@ class HashTable {
     }
 }
 
-class Search(context: Context) {
+class Search(context: Context, val randomTurn: Int) {
     private val module: Module
     var hash_table_ = HashTable()
     val draw_turn = 10
@@ -219,33 +219,37 @@ class Search(context: Context) {
         // 結果
         val output = module.forward(IValue.from(tensor))
         val tuple = output.toTuple()
-        val raw_policy = tuple[0].toTensor().dataAsFloatArray
-        val raw_value = tuple[1].toTensor().dataAsFloatArray
-
+        val rawPolicy = tuple[0].toTensor().dataAsFloatArray
+        val rawValue = tuple[1].toTensor().dataAsFloatArray
 
         // 合法手だけマスク
         val moveList = pos.generateAllMoves()
-        policy = Array(moveList.size) { it -> raw_policy[moveList[it].toLabel()] }
+        policy = Array(moveList.size) { it -> rawPolicy[moveList[it].toLabel()] }
         policy = softmax(policy, 1.0f)
 
         // valueを取得
         value = Array(BIN_SIZE) { 0.0f }
         for (i in 0 until BIN_SIZE) {
-            value[i] = raw_value[i]
+            value[i] = rawValue[i]
         }
         value = softmax(value, 1.0f)
 
-        // 最も確率が高いものを取得する
-        var maxScore = -10000.0f
-        var bestMove = NULL_MOVE
-        for (move in moveList) {
-            if (raw_policy[move.toLabel()] > maxScore) {
-                maxScore = raw_policy[move.toLabel()]
-                bestMove = move
+        if (pos.turnNumber < randomTurn) {
+            val index = randomChoose(policy)
+            return moveList[index]
+        } else {
+            // 最も確率が高いものを取得する
+            var maxScore = -10000.0f
+            var bestMove = NULL_MOVE
+            for (move in moveList) {
+                if (rawPolicy[move.toLabel()] > maxScore) {
+                    maxScore = rawPolicy[move.toLabel()]
+                    bestMove = move
+                }
             }
-        }
 
-        return bestMove
+            return bestMove
+        }
     }
 
     fun think(root: Position): Move {
@@ -270,7 +274,7 @@ class Search(context: Context) {
 
         //行動選択
         val temperature = 0
-        if (root.turnNumber <= 30) {
+        if (root.turnNumber <= randomTurn) {
             var distribution = Array(curr_node.moves.size) { 0.0f }
             if (temperature == 0) {
                 //探索回数を正規化した分布に従って行動選択

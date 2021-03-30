@@ -52,7 +52,7 @@ class BattleActivity : AppCompatActivity() {
         pos = Position()
 
         //探索部の準備
-        searcher = Search(this)
+        searcher = Search(this, 10)
 
         //ターンの制御
         mode = intent?.extras?.get(TURN_STR) as Int
