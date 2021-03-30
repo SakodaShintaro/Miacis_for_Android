@@ -22,7 +22,6 @@ import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
 import com.google.android.material.snackbar.Snackbar
 
 
-
 class BattleActivity : AppCompatActivity() {
     companion object {
         private const val HUMAN = 0
@@ -31,6 +30,7 @@ class BattleActivity : AppCompatActivity() {
         private val backGroundMovedColor = Color.rgb(255, 128, 0)
         private const val backGroundTransparent = 0x00000000
     }
+
     private lateinit var squareImageViews: ArrayList<ImageView>
     private lateinit var handImageViews: Array<ArrayList<ImageView>>
     private lateinit var handTextViews: Array<ArrayList<TextView>>
@@ -343,15 +343,15 @@ class BattleActivity : AppCompatActivity() {
         if (pos.isLegalMove(move)) {
             pos.doMove(move)
 
-            if (player[pos.color] == MIACIS && pos.isFinish() == pos.NOT_FINISHED) {
+            if (player[pos.color] == MIACIS && pos.isFinish() == Position.NOT_FINISHED) {
                 showPosition()
                 val bestMove = think()
                 pos.doMove(bestMove)
             }
 
             val status = pos.isFinish()
-            if (status != pos.NOT_FINISHED) {
-                val winColor = if (status == pos.WIN) pos.color else color2oppositeColor(pos.color)
+            if (status != Position.NOT_FINISHED) {
+                val winColor = if (status == Position.WIN) pos.color else color2oppositeColor(pos.color)
 
                 val resultHistory = if (mode != CONSIDERATION) {
                     val sharedPref = getPreferences(Context.MODE_PRIVATE)
@@ -361,7 +361,7 @@ class BattleActivity : AppCompatActivity() {
 
                     // 今回の結果を足す
                     when {
-                        status == pos.DRAW -> drawNum++
+                        status == Position.DRAW -> drawNum++
                         player[winColor] == HUMAN -> winNum++
                         else -> loseNum++
                     }
@@ -381,27 +381,15 @@ class BattleActivity : AppCompatActivity() {
 
                 val resultStr = if (mode == CONSIDERATION) {
                     when {
-                        status == pos.DRAW -> {
-                            "引き分け"
-                        }
-                        winColor == BLACK -> {
-                            "先手の勝ち"
-                        }
-                        else -> {
-                            "後手の勝ち"
-                        }
+                        status == Position.DRAW -> "引き分け"
+                        winColor == BLACK -> "先手の勝ち"
+                        else -> "後手の勝ち"
                     }
                 } else {
                     when {
-                        status == pos.DRAW -> {
-                            "引き分け\n${resultHistory}"
-                        }
-                        player[winColor] == HUMAN -> {
-                            "あなたの勝ち\n${resultHistory}"
-                        }
-                        else -> {
-                            "あなたの負け\n${resultHistory}"
-                        }
+                        status == Position.DRAW -> "引き分け\n${resultHistory}"
+                        player[winColor] == HUMAN -> "あなたの勝ち\n${resultHistory}"
+                        else -> "あなたの負け\n${resultHistory}"
                     }
                 }
                 AlertDialog.Builder(this)
