@@ -188,10 +188,14 @@ class BattleActivity : AppCompatActivity() {
                                 .setNegativeButton("キャンセル") { _, _ ->  }
                                 .setPositiveButton("OK") { dialog, which ->
                                     // (0, 0, 0)を書き出す
-                                    val fileContents = listOf(0, 0, 0).joinToString("\n")
-                                    this.openFileOutput(resultFilename, Context.MODE_PRIVATE).use {
-                                        it.write(fileContents.toByteArray())
+                                    val sharedPref = getPreferences(Context.MODE_PRIVATE)
+                                    with (sharedPref.edit()) {
+                                        putInt(getString(R.string.result_user_win), 0)
+                                        putInt(getString(R.string.result_user_draw), 0)
+                                        putInt(getString(R.string.result_user_lose), 0)
+                                        apply()
                                     }
+
                                     Snackbar.make(
                                         findViewById(R.id.constraintLayout),
                                         "戦績を削除しました",
@@ -344,30 +348,29 @@ class BattleActivity : AppCompatActivity() {
                 val winColor = if (status == pos.WIN) pos.color else color2oppositeColor(pos.color)
 
                 val resultHistory =  if (mode != CONSIDERATION) {
-                    // 読み込む
-                    val result = if (resultFilename in fileList()) {
-                        this.openFileInput(resultFilename).bufferedReader().readLines().map { it -> it.toInt() }
-                            .toMutableList()
-                    } else {
-                        mutableListOf(0, 0, 0)
-                    }
+                    val sharedPref = getPreferences(Context.MODE_PRIVATE)
+                    var winNum = sharedPref.getInt(getString(R.string.result_user_win), 0)
+                    var drawNum = sharedPref.getInt(getString(R.string.result_user_draw), 0)
+                    var loseNum = sharedPref.getInt(getString(R.string.result_user_lose), 0)
 
                     // 今回の結果を足す
                     if (status == pos.DRAW) {
-                        result[1]++
+                        drawNum++
                     } else if (player[winColor] == HUMAN) {
-                        result[0]++
+                        winNum++
                     } else {
-                        result[2]++
+                        loseNum++
                     }
 
                     // 書き出す
-                    val fileContents = result.joinToString("\n")
-                    this.openFileOutput(resultFilename, Context.MODE_PRIVATE).use {
-                        it.write(fileContents.toByteArray())
+                    with (sharedPref.edit()) {
+                        putInt(getString(R.string.result_user_win), winNum)
+                        putInt(getString(R.string.result_user_draw), drawNum)
+                        putInt(getString(R.string.result_user_lose), loseNum)
+                        apply()
                     }
 
-                    "通算 ${result[0]}勝 ${result[1]}引分 ${result[2]}敗"
+                    "通算 ${winNum}勝 ${drawNum}引分 ${loseNum}敗"
                 } else {
                     "Empty"
                 }
