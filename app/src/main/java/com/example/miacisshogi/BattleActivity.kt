@@ -4,9 +4,11 @@ import android.app.AlertDialog
 import android.content.ClipData
 import android.content.ClipboardManager
 import android.content.Context
+import android.content.DialogInterface
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
+import android.view.Gravity
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.View
@@ -318,13 +320,22 @@ class BattleActivity : AppCompatActivity() {
                     doMove(nonPromotiveMove)
                 } else if (isLegalPromotive) {
                     // 選択が発生するのでAlertDialogを作成
-                    AlertDialog.Builder(this)
-                        .setTitle("成るか成らないか")
+                    val dialog = AlertDialog.Builder(this)
+                        .setTitle("成りますか？")
                         .setPositiveButton("成る") { _, _ -> doMove(promotiveMove) }
                         .setNegativeButton("成らない") { _, _ -> doMove(nonPromotiveMove) }
-                        .setCancelable(false)
-                        .create()
+                        .setCancelable(true)
+                        .setOnCancelListener {
+                            resetHold()
+                            showPosition()
+                        }
                         .show()
+                    dialog.getButton(DialogInterface.BUTTON_POSITIVE).apply {
+                        textSize = 24.0f
+                    }
+                    dialog.getButton(DialogInterface.BUTTON_NEGATIVE).apply {
+                        textSize = 24.0f
+                    }
                 }
             } else if (pos.on(to) != EMPTY && pieceToColor(pos.on(to)) == pos.color) {
                 //駒を掴む
