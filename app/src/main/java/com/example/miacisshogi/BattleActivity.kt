@@ -9,6 +9,7 @@ import android.os.Bundle
 import android.util.Log
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
+import android.view.View
 import android.widget.*
 import android.widget.TableLayout
 import androidx.appcompat.app.AppCompatActivity
@@ -64,6 +65,11 @@ class BattleActivity : AppCompatActivity() {
                 showInverse = true
             }
             CONSIDERATION -> player = arrayOf(HUMAN, HUMAN)
+        }
+
+        if (mode != CONSIDERATION) {
+            findViewById<TableLayout>(R.id.tableLayout).visibility = View.INVISIBLE
+            findViewById<BarChart>(R.id.barChartExample).visibility = View.INVISIBLE
         }
 
         //マス画像の初期化
@@ -399,6 +405,13 @@ class BattleActivity : AppCompatActivity() {
                     .create()
                     .show()
 
+                if (mode != CONSIDERATION) {
+                    //対局モードから検討モードへ移行する
+                    mode = CONSIDERATION
+                    player = arrayOf(HUMAN, HUMAN)
+                    findViewById<TableLayout>(R.id.tableLayout).visibility = View.VISIBLE
+                    findViewById<BarChart>(R.id.barChartExample).visibility = View.VISIBLE
+                }
             }
         }
 
