@@ -6,15 +6,17 @@ class Position {
     //------------------
     //    クラス変数
     //------------------
-    //ハッシュの各駒・位置に対する決められた値
-    private val hashSeed = Array(PieceNum) { Array(Square.SquareNum.ordinal) { Random.nextLong() } }
-    private val handHashSeed = Array(ColorNum) { Array(PieceNum) { Array(19) { Random.nextLong() } } }
+    companion object {
+        //ハッシュの各駒・位置に対する決められた値
+        private val hashSeed = Array(PieceNum) { Array(Square.SquareNum.ordinal) { Random.nextLong() } }
+        private val handHashSeed = Array(ColorNum) { Array(PieceNum) { Array(19) { Random.nextLong() } } }
 
-    //isFinishで返す結果
-    val WIN = 0
-    val DRAW = 1
-    val LOSE = 2
-    val NOT_FINISHED = 3
+        //isFinishで返す結果
+        const val WIN = 0
+        const val DRAW = 1
+        const val LOSE = 2
+        const val NOT_FINISHED = 3
+    }
 
     //------------------------
     //    インスタンス変数
@@ -32,15 +34,15 @@ class Position {
     var turnNumber: Int = 0
 
     //玉の位置
-    var kingSq = arrayListOf(Square.WALL00, Square.WALL00)
+    private var kingSq = arrayListOf(Square.WALL00, Square.WALL00)
 
     //現局面までの指し手履歴
-    var kifu = ArrayList<Move>()
+    private var kifu = ArrayList<Move>()
 
     //現局面の合法手
-    var moves = ArrayList<Move>()
+    private var moves = ArrayList<Move>()
 
-    var alreadyGeneratedMoves = false
+    private var alreadyGeneratedMoves = false
 
     //現局面のハッシュ値
     var hashValue: Long = 0
@@ -56,7 +58,7 @@ class Position {
         var isChecked = pos.isChecked
     }
 
-    var stack = ArrayList<StateInfo>()
+    private var stack = ArrayList<StateInfo>()
 
     init {
         init()
@@ -452,14 +454,10 @@ class Position {
                     c = color2oppositeColor(c)
                 }
 
-                return if (allCheck[c]) {
-                    //手番側が全て王手された
-                    WIN
-                } else if (allCheck[color2oppositeColor(c)]) {
-                    //手番側が全て王手した
-                    LOSE
-                } else {
-                    DRAW
+                return when {
+                    allCheck[c] -> WIN                        //手番側が全て王手された
+                    allCheck[color2oppositeColor(c)] -> LOSE  //手番側が全て王手した
+                    else -> DRAW                              //普通の千日手
                 }
             }
         }
