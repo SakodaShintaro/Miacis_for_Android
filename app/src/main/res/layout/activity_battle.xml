@@ -1,12 +1,12 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout  xmlns:android="http://schemas.android.com/apk/res/android"
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:app="http://schemas.android.com/apk/res-auto"
     xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/constraintLayout"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".BattleActivity"
     android:orientation="vertical"
-    android:id="@+id/constraintLayout">
+    tools:context=".BattleActivity">
 
     <FrameLayout
         android:id="@+id/frame_hand_up"
@@ -62,44 +62,53 @@
 
     <Button
         android:id="@+id/button_menu"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:text="メニュー"
+        app:layout_constraintEnd_toStartOf="@+id/button_undo"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/frame_hand_down" />
 
     <Button
         android:id="@+id/button_undo"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="一手戻る"
         app:layout_constraintEnd_toStartOf="@+id/button_think"
-        app:layout_constraintStart_toEndOf="@id/button_menu"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/button_menu"
         app:layout_constraintTop_toBottomOf="@+id/frame_hand_down" />
 
     <Button
         android:id="@+id/button_think"
-        android:layout_width="130dp"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="16dp"
+        android:layout_marginEnd="16dp"
         android:text="検討"
         app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintHorizontal_bias="0.5"
+        app:layout_constraintStart_toEndOf="@+id/button_undo"
         app:layout_constraintTop_toBottomOf="@+id/frame_hand_down" />
 
     <ScrollView
+        android:id="@+id/scrollView"
         android:layout_width="match_parent"
         android:layout_height="80dp"
         app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/button_menu"
-        tools:context=".MainActivity"
-        android:id="@+id/scrollView"
-        >
+        tools:context=".MainActivity">
 
         <TableLayout
             android:id="@+id/tableLayout"
             android:layout_width="match_parent"
             android:layout_height="wrap_content"
-            android:stretchColumns="0" >
+            android:stretchColumns="0">
 
             <TableRow
                 android:id="@+id/tableRow1"
@@ -110,19 +119,19 @@
                     android:id="@+id/textView1"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:gravity="center"
                     android:text="指し手"
-                    android:layout_weight="1"
                     android:textColor="@color/black" />
 
                 <TextView
                     android:id="@+id/textView2"
                     android:layout_width="0dp"
                     android:layout_height="wrap_content"
+                    android:layout_weight="1"
                     android:gravity="center"
                     android:text="方策確率"
-                    android:layout_weight="1"
-                    android:textColor="@color/black"/>
+                    android:textColor="@color/black" />
             </TableRow>
         </TableLayout>
     </ScrollView>
@@ -136,4 +145,4 @@
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintTop_toBottomOf="@+id/scrollView" />
 
-</androidx.constraintlayout.widget.ConstraintLayout >
+</androidx.constraintlayout.widget.ConstraintLayout>
