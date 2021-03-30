@@ -18,6 +18,7 @@ import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
+import com.google.android.material.snackbar.Snackbar
 
 
 const val HUMAN = 0
@@ -38,6 +39,7 @@ class BattleActivity : AppCompatActivity() {
     private lateinit var player: Array<Int>
     private var mode: Int = CONSIDERATION
     private var showInverse: Boolean = false
+    private var autoThink: Boolean = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -135,7 +137,7 @@ class BattleActivity : AppCompatActivity() {
 
         // ボタンの初期化
         findViewById<Button>(R.id.button_menu).setOnClickListener {
-            val items = arrayOf("トップ画面に戻る", "盤面を初期化", "sfenを入力", "局面のsfenをクリップボードにコピー")
+            val items = arrayOf("トップ画面に戻る", "盤面を初期化", "自動検討モード切り替え", "sfenを入力", "局面のsfenをクリップボードにコピー")
             AlertDialog.Builder(this)
                 .setTitle("メニュー")
                 .setItems(items) { dialog, which ->
@@ -148,8 +150,19 @@ class BattleActivity : AppCompatActivity() {
                             showPosition()
                         }
                         2 -> {
+                            autoThink = !autoThink
+                            Snackbar.make(
+                                findViewById(R.id.constraintLayout),
+                                if (autoThink) "自動検討をオンにしました" else "自動検討をオフにしました",
+                                Snackbar.LENGTH_SHORT
+                            ).show()
+                            if (mode == CONSIDERATION && autoThink) {
+                                think()
+                            }
+                        }
+                        3 -> {
                             val editText = EditText(this)
-                            editText.hint = "sfen ~"
+                            editText.hint = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1"
                             AlertDialog.Builder(this)
                                 .setView(editText)
                                 .setPositiveButton("OK") { dialog, which ->
@@ -158,10 +171,15 @@ class BattleActivity : AppCompatActivity() {
                                 }
                                 .show()
                         }
-                        3 -> {
+                        4 -> {
                             val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                             val clip: ClipData = ClipData.newPlainText("sfen", pos.toStr())
                             clipboard.setPrimaryClip(clip)
+                            Snackbar.make(
+                                findViewById(R.id.constraintLayout),
+                                "現局面のSFENをクリップボードへコピーしました",
+                                Snackbar.LENGTH_SHORT
+                            ).show()
                         }
                     }
                 }
@@ -169,6 +187,9 @@ class BattleActivity : AppCompatActivity() {
         }
         findViewById<Button>(R.id.button_undo).setOnClickListener {
             pos.undo()
+            if (mode == CONSIDERATION && autoThink) {
+                think()
+            }
             showPosition()
         }
         findViewById<Button>(R.id.button_think).setOnClickListener {
@@ -327,6 +348,10 @@ class BattleActivity : AppCompatActivity() {
                     .show()
 
             }
+        }
+
+        if (mode == CONSIDERATION && autoThink) {
+            think()
         }
 
         //盤面を再描画
