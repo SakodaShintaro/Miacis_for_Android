@@ -71,6 +71,8 @@ class BattleActivity : AppCompatActivity() {
         if (mode != CONSIDERATION) {
             findViewById<TableLayout>(R.id.tableLayout).visibility = View.INVISIBLE
             findViewById<BarChart>(R.id.barChartExample).visibility = View.INVISIBLE
+            findViewById<Button>(R.id.button_undo).isEnabled = false
+            findViewById<Button>(R.id.button_think).isEnabled = false
         }
 
         //マス画像の初期化
@@ -405,6 +407,8 @@ class BattleActivity : AppCompatActivity() {
                     player = arrayOf(HUMAN, HUMAN)
                     findViewById<TableLayout>(R.id.tableLayout).visibility = View.VISIBLE
                     findViewById<BarChart>(R.id.barChartExample).visibility = View.VISIBLE
+                    findViewById<Button>(R.id.button_undo).isEnabled = true
+                    findViewById<Button>(R.id.button_think).isEnabled = true
                 }
             }
         }
