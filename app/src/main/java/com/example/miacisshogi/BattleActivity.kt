@@ -22,10 +22,15 @@ import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
 import com.google.android.material.snackbar.Snackbar
 
 
-const val HUMAN = 0
-const val MIACIS = 1
 
 class BattleActivity : AppCompatActivity() {
+    companion object {
+        private const val HUMAN = 0
+        private const val MIACIS = 1
+        private val backGroundHoldColor = Color.rgb(0, 255, 0)
+        private val backGroundMovedColor = Color.rgb(255, 128, 0)
+        private const val backGroundTransparent = 0x00000000
+    }
     private lateinit var squareImageViews: ArrayList<ImageView>
     private lateinit var handImageViews: Array<ArrayList<ImageView>>
     private lateinit var handTextViews: Array<ArrayList<TextView>>
@@ -33,15 +38,11 @@ class BattleActivity : AppCompatActivity() {
     private var holdPiece: Int = EMPTY
     private var moveFrom: Square = Square.WALLAA
     private val marginRate = 0.05
-    private val backGroundHoldColor = Color.rgb(0, 255, 0)
-    private val backGroundMovedColor = Color.rgb(255, 128, 0)
-    private val backGroundTransparent = 0x00000000
     private lateinit var searcher: Search
     private lateinit var player: Array<Int>
     private var mode: Int = CONSIDERATION
     private var showInverse: Boolean = false
     private var autoThink: Boolean = false
-    private val resultFilename = "result.txt"
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -147,7 +148,7 @@ class BattleActivity : AppCompatActivity() {
             val items = arrayOf("トップ画面に戻る", "盤面を初期化", "自動検討モード切り替え", "sfenを入力", "局面のsfenをクリップボードにコピー", "対局成績のクリア")
             AlertDialog.Builder(this)
                 .setTitle("メニュー")
-                .setItems(items) { dialog, which ->
+                .setItems(items) { _, which ->
                     when (which) {
                         0 -> {
                             finish()
@@ -172,7 +173,7 @@ class BattleActivity : AppCompatActivity() {
                             editText.hint = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1"
                             AlertDialog.Builder(this)
                                 .setView(editText)
-                                .setPositiveButton("OK") { dialog, which ->
+                                .setPositiveButton("OK") { _, _ ->
                                     pos.fromStr(editText.text.toString())
                                     showPosition()
                                 }
@@ -191,11 +192,11 @@ class BattleActivity : AppCompatActivity() {
                         5 -> {
                             AlertDialog.Builder(this)
                                 .setMessage("本当に戦績を削除しますか?")
-                                .setNegativeButton("キャンセル") { _, _ ->  }
-                                .setPositiveButton("OK") { dialog, which ->
+                                .setNegativeButton("キャンセル") { _, _ -> }
+                                .setPositiveButton("OK") { _, _ ->
                                     // (0, 0, 0)を書き出す
                                     val sharedPref = getPreferences(Context.MODE_PRIVATE)
-                                    with (sharedPref.edit()) {
+                                    with(sharedPref.edit()) {
                                         putInt(getString(R.string.result_user_win), 0)
                                         putInt(getString(R.string.result_user_draw), 0)
                                         putInt(getString(R.string.result_user_lose), 0)
@@ -270,7 +271,6 @@ class BattleActivity : AppCompatActivity() {
                         holdPiece = coloredPiece(c, ROOK - i)
                         moveFrom = Square.WALL00
                         handImageViews[showIndex][i].setBackgroundColor(backGroundHoldColor)
-                        Log.d("TouchEvent", "catch to drop ${holdPiece} ${moveFrom}")
                         return true
                     }
                 }
@@ -318,8 +318,8 @@ class BattleActivity : AppCompatActivity() {
                     // 選択が発生するのでAlertDialogを作成
                     AlertDialog.Builder(this)
                         .setTitle("成るか成らないか")
-                        .setPositiveButton("成る") { dialog, which -> doMove(promotiveMove) }
-                        .setNegativeButton("成らない") { dialog, which -> doMove(nonPromotiveMove) }
+                        .setPositiveButton("成る") { _, _ -> doMove(promotiveMove) }
+                        .setNegativeButton("成らない") { _, _ -> doMove(nonPromotiveMove) }
                         .setCancelable(false)
                         .create()
                         .show()
@@ -353,23 +353,21 @@ class BattleActivity : AppCompatActivity() {
             if (status != pos.NOT_FINISHED) {
                 val winColor = if (status == pos.WIN) pos.color else color2oppositeColor(pos.color)
 
-                val resultHistory =  if (mode != CONSIDERATION) {
+                val resultHistory = if (mode != CONSIDERATION) {
                     val sharedPref = getPreferences(Context.MODE_PRIVATE)
                     var winNum = sharedPref.getInt(getString(R.string.result_user_win), 0)
                     var drawNum = sharedPref.getInt(getString(R.string.result_user_draw), 0)
                     var loseNum = sharedPref.getInt(getString(R.string.result_user_lose), 0)
 
                     // 今回の結果を足す
-                    if (status == pos.DRAW) {
-                        drawNum++
-                    } else if (player[winColor] == HUMAN) {
-                        winNum++
-                    } else {
-                        loseNum++
+                    when {
+                        status == pos.DRAW -> drawNum++
+                        player[winColor] == HUMAN -> winNum++
+                        else -> loseNum++
                     }
 
                     // 書き出す
-                    with (sharedPref.edit()) {
+                    with(sharedPref.edit()) {
                         putInt(getString(R.string.result_user_win), winNum)
                         putInt(getString(R.string.result_user_draw), drawNum)
                         putInt(getString(R.string.result_user_lose), loseNum)
@@ -382,25 +380,33 @@ class BattleActivity : AppCompatActivity() {
                 }
 
                 val resultStr = if (mode == CONSIDERATION) {
-                    if (status == pos.DRAW) {
-                        "引き分け"
-                    } else if (winColor == BLACK) {
-                        "先手の勝ち"
-                    } else {
-                        "後手の勝ち"
+                    when {
+                        status == pos.DRAW -> {
+                            "引き分け"
+                        }
+                        winColor == BLACK -> {
+                            "先手の勝ち"
+                        }
+                        else -> {
+                            "後手の勝ち"
+                        }
                     }
                 } else {
-                    if (status == pos.DRAW) {
-                        "引き分け\n${resultHistory}"
-                    } else if (player[winColor] == HUMAN) {
-                        "あなたの勝ち\n${resultHistory}"
-                    } else {
-                        "あなたの負け\n${resultHistory}"
+                    when {
+                        status == pos.DRAW -> {
+                            "引き分け\n${resultHistory}"
+                        }
+                        player[winColor] == HUMAN -> {
+                            "あなたの勝ち\n${resultHistory}"
+                        }
+                        else -> {
+                            "あなたの負け\n${resultHistory}"
+                        }
                     }
                 }
                 AlertDialog.Builder(this)
                     .setTitle(resultStr)
-                    .setPositiveButton("OK") { dialog, which -> }
+                    .setPositiveButton("OK") { _, _ -> }
                     .setCancelable(false)
                     .create()
                     .show()
