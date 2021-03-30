@@ -1,5 +1,7 @@
 package com.example.miacisshogi
 
+import android.hardware.camera2.params.BlackLevelPattern
+
 enum class Square {
     WALL00, WALL01, WALL02, WALL03, WALL04, WALL05, WALL06, WALL07, WALL08, WALL09, WALL0A,
     WALL10,   SQ11,   SQ12,   SQ13,   SQ14,   SQ15,   SQ16,   SQ17,   SQ18,   SQ19, WALL1A,
@@ -148,6 +150,20 @@ fun directionAtoB(A: Square, B: Square):Int {
         if (SquareToDiagL[a] == SquareToDiagL[b]) return DIR_RU;
     }
     return DIR_H;
+}
+
+//rankがcolor側から見て、奥からx段以内に入っているかどうか
+fun isWithinXRankFromTheBack(rank: Rank, color: Int, x: Int): Boolean {
+    return if (color == BLACK) {
+        Rank.Rank1.ordinal <= rank.ordinal && rank.ordinal <= Rank.Rank0.ordinal + x
+    } else {
+        Rank.RankA.ordinal - x <= rank.ordinal && rank.ordinal <= Rank.Rank9.ordinal
+    }
+}
+
+//sqがcolor側から見て、奥からx段以内に入っているかどうか
+fun isWithinXRankFromTheBack(sq: Square, color: Int, x: Int): Boolean {
+    return isWithinXRankFromTheBack(SquareToRank[sq.ordinal], color, x)
 }
 
 val SquareList = arrayListOf(

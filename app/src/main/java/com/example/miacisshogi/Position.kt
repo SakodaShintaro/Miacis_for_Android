@@ -368,7 +368,51 @@ class Position {
     }
 
     fun canWinDeclare(): Boolean {
-        return false
+        //手番側が入玉宣言できるかどうか
+        //WCSC29のルールに準拠
+        //1. 宣言側の手番である
+        //   手番側で考えるのでこれは自明
+        //2. 宣言側の玉が敵陣三段目以内に入っている
+        val rank = SquareToRank[kingSq[color].ordinal]
+        if ((color == BLACK && rank > Rank.Rank3) || (color == WHITE && rank < Rank.Rank7)) {
+            return false
+        }
+
+        //5. 宣言側の玉に王手がかかっていない
+        if (isChecked) {
+            return false
+        }
+        //6. 宣言側の持ち時間が残っている
+        //   これは自明なものとする
+
+        //3. 宣言側が大駒5点小駒1点で計算して
+        //   ・先手の場合28点以上の持点がある
+        //   ・後手の場合27点以上の持点がある
+        //   ・点数の対象となるのは、宣言側の持駒と敵陣三段目以内に存在する玉を除く宣言側の駒のみである
+        //4. 宣言側の敵陣三段目以内の駒は、玉を除いて10枚以上存在する
+        val scoreTable = arrayOf(0, 1, 1, 1, 1, 1, 5, 5)
+        val lowerBound = if (color == BLACK) Rank.Rank1 else Rank.Rank7
+        val upperBound = if (color == BLACK) Rank.Rank3 else Rank.Rank9
+        var score = 0
+        var num = 0
+        for (r in lowerBound.ordinal..upperBound.ordinal) {
+            for (f in File.File1.ordinal..File.File9.ordinal) {
+                val p = board[FRToSquare[f][r].ordinal]
+                if (pieceToColor(p) != color || kind(p) == KING) {
+                    continue
+                }
+                score += scoreTable[kind(p)]
+                num++
+            }
+        }
+
+        //持ち駒
+        for (p in PAWN..ROOK) {
+            score += scoreTable[p] * hand[color].num(p)
+        }
+
+        val threshold = if (color == BLACK) 28 else 27
+        return (score >= threshold && num >= 10)
     }
 
     //詰み探索中に枝刈りして良いかを判定
@@ -528,7 +572,8 @@ class Position {
                 //この駒を動かす
                 val toList = movableSquareList(sq, board[sq.ordinal])
                 for (to in toList) {
-                    val move = Move(to, sq,
+                    val move = Move(
+                        to, sq,
                         isDrop = false,
                         isPromote = false,
                         subject = board[sq.ordinal],
@@ -748,8 +793,10 @@ class Position {
                 list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_U))
             }
             BLACK_KNIGHT -> {
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_RUU], BLACK, list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_LUU], BLACK, list)
+                if (!isWithinXRankFromTheBack(sq, BLACK, 2)) {
+                    addSquare(SquareListWithWALL[sq.ordinal + DIR_RUU], BLACK, list)
+                    addSquare(SquareListWithWALL[sq.ordinal + DIR_LUU], BLACK, list)
+                }
             }
             BLACK_SILVER -> {
                 addSquare(SquareListWithWALL[sq.ordinal + DIR_U], BLACK, list)
@@ -777,8 +824,10 @@ class Position {
                 list.addAll(movableSquareList(sq, pieceToColor(piece), DIR_D))
             }
             WHITE_KNIGHT -> {
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_RDD], WHITE, list)
-                addSquare(SquareListWithWALL[sq.ordinal + DIR_LDD], WHITE, list)
+                if (!isWithinXRankFromTheBack(sq, WHITE, 2)) {
+                    addSquare(SquareListWithWALL[sq.ordinal + DIR_RDD], WHITE, list)
+                    addSquare(SquareListWithWALL[sq.ordinal + DIR_LDD], WHITE, list)
+                }
             }
             WHITE_SILVER -> {
                 addSquare(SquareListWithWALL[sq.ordinal + DIR_D], WHITE, list)
