@@ -346,7 +346,7 @@ class Search(context: Context, val randomTurn: Int) {
                 break
             }
 
-            if (index != hash_table_.root_index && pos.isFinish() == 0) {
+            if (index != hash_table_.root_index && pos.getFinishStatus() == 0) {
                 //繰り返しが発生している場合も抜ける
                 break
             }
@@ -487,7 +487,7 @@ class Search(context: Context, val randomTurn: Int) {
         curr_node.value
 
         //ノードを評価
-        if (pos.isFinish() == 1 || pos.turnNumber > draw_turn) {
+        if (pos.getFinishStatus() == 1 || pos.turnNumber > draw_turn) {
             curr_node.value = Array(BIN_SIZE) { 0.0f }
             //TODO:どこかonethotで立てる
             curr_node.evaled = true

@@ -8,7 +8,6 @@ import android.content.DialogInterface
 import android.graphics.Color
 import android.os.Bundle
 import android.util.Log
-import android.view.Gravity
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.View
@@ -356,71 +355,12 @@ class BattleActivity : AppCompatActivity() {
         if (pos.isLegalMove(move)) {
             pos.doMove(move)
 
-            if (player[pos.color] == MIACIS && pos.isFinish() == Position.NOT_FINISHED) {
+            if (pos.getFinishStatus() != Position.NOT_FINISHED) {
+                finishProcess()
+            } else if (player[pos.color] == MIACIS) {
                 showPosition()
                 val bestMove = think()
                 pos.doMove(bestMove)
-            }
-
-            val status = pos.isFinish()
-            if (status != Position.NOT_FINISHED) {
-                val winColor = if (status == Position.WIN) pos.color else color2oppositeColor(pos.color)
-
-                val resultHistory = if (mode != CONSIDERATION) {
-                    val sharedPref = getPreferences(Context.MODE_PRIVATE)
-                    var winNum = sharedPref.getInt(getString(R.string.result_user_win), 0)
-                    var drawNum = sharedPref.getInt(getString(R.string.result_user_draw), 0)
-                    var loseNum = sharedPref.getInt(getString(R.string.result_user_lose), 0)
-
-                    // 今回の結果を足す
-                    when {
-                        status == Position.DRAW -> drawNum++
-                        player[winColor] == HUMAN -> winNum++
-                        else -> loseNum++
-                    }
-
-                    // 書き出す
-                    with(sharedPref.edit()) {
-                        putInt(getString(R.string.result_user_win), winNum)
-                        putInt(getString(R.string.result_user_draw), drawNum)
-                        putInt(getString(R.string.result_user_lose), loseNum)
-                        apply()
-                    }
-
-                    "通算 ${winNum}勝 ${drawNum}引分 ${loseNum}敗"
-                } else {
-                    "Empty"
-                }
-
-                val resultStr = if (mode == CONSIDERATION) {
-                    when {
-                        status == Position.DRAW -> "引き分け"
-                        winColor == BLACK -> "先手の勝ち"
-                        else -> "後手の勝ち"
-                    }
-                } else {
-                    when {
-                        status == Position.DRAW -> "引き分け\n${resultHistory}"
-                        player[winColor] == HUMAN -> "あなたの勝ち\n${resultHistory}"
-                        else -> "あなたの負け\n${resultHistory}"
-                    }
-                }
-                AlertDialog.Builder(this)
-                    .setTitle(resultStr)
-                    .setPositiveButton("OK") { _, _ -> }
-                    .setCancelable(false)
-                    .create()
-                    .show()
-
-                if (mode != CONSIDERATION) {
-                    //対局モードから検討モードへ移行する
-                    mode = CONSIDERATION
-                    player = arrayOf(HUMAN, HUMAN)
-                    findViewById<TableLayout>(R.id.tableLayout).visibility = View.VISIBLE
-                    findViewById<BarChart>(R.id.barChartExample).visibility = View.VISIBLE
-                    findViewById<Button>(R.id.button_undo).isEnabled = true
-                    findViewById<Button>(R.id.button_think).isEnabled = true
-                }
             }
         }
 
@@ -433,6 +373,63 @@ class BattleActivity : AppCompatActivity() {
 
         //保持した情報を解放
         resetHold()
+    }
+
+    private fun finishProcess() {
+        val status = pos.getFinishStatus()
+        val winColor = if (status == Position.WIN) pos.color else color2oppositeColor(pos.color)
+
+        val resultStr = if (mode == CONSIDERATION) {
+            when {
+                status == Position.DRAW -> "引き分け"
+                winColor == BLACK -> "先手の勝ち"
+                else -> "後手の勝ち"
+            }
+        } else {
+            val sharedPref = getPreferences(Context.MODE_PRIVATE)
+            var winNum = sharedPref.getInt(getString(R.string.result_user_win), 0)
+            var drawNum = sharedPref.getInt(getString(R.string.result_user_draw), 0)
+            var loseNum = sharedPref.getInt(getString(R.string.result_user_lose), 0)
+
+            // 今回の結果を足す
+            when {
+                status == Position.DRAW -> drawNum++
+                player[winColor] == HUMAN -> winNum++
+                else -> loseNum++
+            }
+
+            // 書き出す
+            with(sharedPref.edit()) {
+                putInt(getString(R.string.result_user_win), winNum)
+                putInt(getString(R.string.result_user_draw), drawNum)
+                putInt(getString(R.string.result_user_lose), loseNum)
+                apply()
+            }
+
+            val resultHistory = "通算 ${winNum}勝 ${drawNum}引分 ${loseNum}敗"
+
+            when {
+                status == Position.DRAW -> "引き分け\n${resultHistory}"
+                player[winColor] == HUMAN -> "あなたの勝ち\n${resultHistory}"
+                else -> "あなたの負け\n${resultHistory}"
+            }
+        }
+        AlertDialog.Builder(this)
+            .setTitle(resultStr)
+            .setPositiveButton("OK") { _, _ -> }
+            .setCancelable(false)
+            .create()
+            .show()
+
+        if (mode != CONSIDERATION) {
+            //対局モードから検討モードへ移行する
+            mode = CONSIDERATION
+            player = arrayOf(HUMAN, HUMAN)
+            findViewById<TableLayout>(R.id.tableLayout).visibility = View.VISIBLE
+            findViewById<BarChart>(R.id.barChartExample).visibility = View.VISIBLE
+            findViewById<Button>(R.id.button_undo).isEnabled = true
+            findViewById<Button>(R.id.button_think).isEnabled = true
+        }
     }
 
     private fun piece2resourceID(piece: Int): Int {
