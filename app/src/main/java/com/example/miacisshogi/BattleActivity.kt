@@ -57,7 +57,6 @@ class BattleActivity : AppCompatActivity() {
 
         //ターンの制御
         mode = intent?.extras?.get(TURN_STR) as Int
-        println("mode = $mode")
         when (mode) {
             HUMAN_TURN_BLACK -> player = arrayOf(HUMAN, MIACIS)
             HUMAN_TURN_WHITE -> {
