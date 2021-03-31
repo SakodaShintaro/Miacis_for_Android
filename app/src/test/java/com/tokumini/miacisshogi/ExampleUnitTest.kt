@@ -1,4 +1,4 @@
-package com.example.miacisshogi
+package com.tokumini.miacisshogi
 
 import org.junit.Test
 

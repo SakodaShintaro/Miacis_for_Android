@@ -1,4 +1,4 @@
-package com.example.miacisshogi
+package com.tokumini.miacisshogi
 
 // MoveConst
 //0000 0000 0000 0000 0000 0000 0111 1111 to

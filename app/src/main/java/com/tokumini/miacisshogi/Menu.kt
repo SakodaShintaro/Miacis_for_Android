@@ -1,4 +1,4 @@
-package com.example.miacisshogi
+package com.tokumini.miacisshogi
 
 enum class Menu {
     BACK_TO_TOP,

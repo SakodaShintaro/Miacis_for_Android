@@ -1,4 +1,4 @@
-package com.example.miacisshogi
+package com.tokumini.miacisshogi
 
 //0000 0000 0000 0000 0000 0000 0011 1111 PAWN
 //0000 0000 0000 0000 0000 0011 1000 0000 LANCE

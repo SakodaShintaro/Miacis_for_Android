@@ -1,6 +1,4 @@
-package com.example.miacisshogi
-
-import android.hardware.camera2.params.BlackLevelPattern
+package com.tokumini.miacisshogi
 
 enum class Square {
     WALL00, WALL01, WALL02, WALL03, WALL04, WALL05, WALL06, WALL07, WALL08, WALL09, WALL0A,

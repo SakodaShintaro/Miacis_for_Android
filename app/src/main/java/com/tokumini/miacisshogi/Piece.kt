@@ -1,4 +1,4 @@
-package com.example.miacisshogi
+package com.tokumini.miacisshogi
 
 const val BLACK = 0
 const val WHITE = 1

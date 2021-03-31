@@ -1,4 +1,4 @@
-package com.example.miacisshogi
+package com.tokumini.miacisshogi
 
 import android.app.AlertDialog
 import android.content.ClipData
