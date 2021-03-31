@@ -11,7 +11,7 @@ class Position {
         private val hashSeed = Array(PieceNum) { Array(Square.SquareNum.ordinal) { Random.nextLong() } }
         private val handHashSeed = Array(ColorNum) { Array(PieceNum) { Array(19) { Random.nextLong() } } }
 
-        //isFinishで返す結果
+        //getFinishStatusで返す結果
         const val WIN = 0
         const val DRAW = 1
         const val LOSE = 2
