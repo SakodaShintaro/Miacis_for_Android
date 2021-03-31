@@ -514,6 +514,9 @@ class BattleActivity : AppCompatActivity() {
             .setItems(items) { _, which ->
                 when (which) {
                     Menu.BACK_TO_TOP.ordinal -> { finish() }
+                    Menu.RESIGN.ordinal -> {
+                        finishProcess()
+                    }
                     Menu.INIT_POSITION.ordinal -> {
                         pos.init()
                         showPosition()
