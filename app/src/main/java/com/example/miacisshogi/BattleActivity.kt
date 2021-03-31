@@ -7,7 +7,6 @@ import android.content.Context
 import android.content.DialogInterface
 import android.graphics.Color
 import android.os.Bundle
-import android.util.Log
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.View
@@ -183,7 +182,6 @@ class BattleActivity : AppCompatActivity() {
 
         val pointX = event.x
         val pointY = event.y
-        Log.d("TouchEvent", "X:$pointX,Y:$pointY")
 
         //駒台にタッチしているかどうかを判定
         for (c in BLACK..WHITE) {
@@ -240,7 +238,6 @@ class BattleActivity : AppCompatActivity() {
                 if (!isLegalNonPromotive && !isLegalPromotive) {
                     //両方非合法手だとダメ
                     showPosition()
-                    Log.d("TouchEvent", "Illegal Move! ${nonPromotiveMove.toPrettyStr()}")
                     return true
                 } else if (!isLegalNonPromotive && isLegalPromotive) {
                     //歩、香車、桂馬は成らないと非合法であることがありえる
@@ -277,10 +274,6 @@ class BattleActivity : AppCompatActivity() {
     }
 
     private fun doMove(move: Move) {
-        Log.d("doMove", "Move   :${move.toPrettyStr()}")
-        Log.d("doMove", "sfen   :${pos.toStr()}")
-        Log.d("doMove", "hash   :${pos.hashValue}")
-
         if (pos.isLegalMove(move)) {
             pos.doMove(move)
 
