@@ -261,7 +261,7 @@ class BattleActivity : AppCompatActivity() {
             if (handFrame.y <= pointY && pointY <= handFrame.y + handFrame.height * heightRate) {
                 //手番と違う方の駒台に触っていたらリセット
                 if (pos.color != c) {
-                    resetHold()
+                    showPosition()
                     return true
                 }
 
@@ -308,7 +308,6 @@ class BattleActivity : AppCompatActivity() {
 
                 if (!isLegalNonPromotive && !isLegalPromotive) {
                     //両方非合法手だとダメ
-                    resetHold()
                     showPosition()
                     Log.d("TouchEvent", "Illegal Move! ${nonPromotiveMove.toPrettyStr()}")
                     return true
@@ -325,7 +324,6 @@ class BattleActivity : AppCompatActivity() {
                         .setNegativeButton("成らない") { _, _ -> doMove(nonPromotiveMove) }
                         .setCancelable(true)
                         .setOnCancelListener {
-                            resetHold()
                             showPosition()
                         }
                         .show()
@@ -370,9 +368,6 @@ class BattleActivity : AppCompatActivity() {
 
         //盤面を再描画
         showPosition()
-
-        //保持した情報を解放
-        resetHold()
     }
 
     private fun finishProcess() {
@@ -468,21 +463,6 @@ class BattleActivity : AppCompatActivity() {
         }
     }
 
-    private fun resetHold() {
-        if (moveFrom == Square.WALL00) {
-            //持ち駒を指定していた
-            for (i in 0 until ROOK) {
-                handImageViews[pos.color][i].setBackgroundColor(0x00000000)
-            }
-
-        } else if (moveFrom != Square.WALLAA) {
-            //盤上のどこかを指定していた
-            squareImageViews[square2sqid(moveFrom)].setBackgroundColor(0x00000000)
-        }
-
-        holdPiece = EMPTY
-    }
-
     private fun showPosition() {
         //盤上の表示
         for (i in 0 until BOARD_WIDTH) {
@@ -519,6 +499,10 @@ class BattleActivity : AppCompatActivity() {
             val to = if (showInverse) InvSquare[lastMove.to().ordinal] else lastMove.to()
             squareImageViews[square2sqid(to)].setBackgroundColor(backGroundMovedColor)
         }
+
+        //行動のための変数を初期化
+        moveFrom = Square.WALLAA
+        holdPiece = EMPTY
     }
 
     private fun think(): Move {
