@@ -394,7 +394,7 @@ class BattleActivity : AppCompatActivity() {
             WHITE_BISHOP_PROMOTE -> R.drawable.sgl53
             WHITE_ROOK_PROMOTE -> R.drawable.sgl51
 
-            else -> R.drawable.sgl18
+            else -> R.drawable.illegal
         }
     }
 
