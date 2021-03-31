@@ -366,7 +366,7 @@ class Position {
     }
 
     fun isLastMoveDropPawn(): Boolean {
-        return kind(lastMove().subject()) == PAWN
+        return lastMove().isDrop() && kind(lastMove().subject()) == PAWN
     }
 
     fun canWinDeclare(): Boolean {
