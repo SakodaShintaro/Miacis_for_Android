@@ -657,11 +657,12 @@ class Position {
             if (sfen[i] in '1'..'9') { //数字なら枚数の取得
                 if (sfen[i + 1] in '0'..'9') {
                     //次の文字も数字の場合が一応あるはず(歩が10枚以上)
-                    num = 10 * sfen[i].toInt() + sfen[i + 1].toInt()
+                    //charをいったんStringにしてからIntにする
+                    num = 10 * sfen[i].toString().toInt() + sfen[i + 1].toString().toInt()
                     i += 2
                 } else {
                     //次が数字じゃないなら普通に取る
-                    num = sfen[i++].toInt()
+                    num = sfen[i++].toString().toInt()
                 }
             } else { //駒なら持ち駒を変更
                 val piece = charToPiece[sfen[i++]]!!
