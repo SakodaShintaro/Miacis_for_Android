@@ -148,75 +148,7 @@ class BattleActivity : AppCompatActivity() {
 
         // ボタンの初期化
         findViewById<Button>(R.id.button_menu).setOnClickListener {
-            val items = arrayOf("トップ画面に戻る", "盤面を初期化", "自動検討モード切り替え", "sfenを入力", "局面のsfenをクリップボードにコピー", "対局成績のクリア")
-            AlertDialog.Builder(this)
-                .setTitle("メニュー")
-                .setItems(items) { _, which ->
-                    when (which) {
-                        0 -> {
-                            finish()
-                        }
-                        1 -> {
-                            pos.init()
-                            showPosition()
-                        }
-                        2 -> {
-                            autoThink = !autoThink
-                            Snackbar.make(
-                                findViewById(R.id.constraintLayout),
-                                if (autoThink) "自動検討をオンにしました" else "自動検討をオフにしました",
-                                Snackbar.LENGTH_SHORT
-                            ).show()
-                            if (mode == CONSIDERATION && autoThink) {
-                                think()
-                            }
-                        }
-                        3 -> {
-                            val editText = EditText(this)
-                            editText.hint = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1"
-                            AlertDialog.Builder(this)
-                                .setView(editText)
-                                .setPositiveButton("OK") { _, _ ->
-                                    pos.fromStr(editText.text.toString())
-                                    showPosition()
-                                }
-                                .show()
-                        }
-                        4 -> {
-                            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                            val clip: ClipData = ClipData.newPlainText("sfen", pos.toStr())
-                            clipboard.setPrimaryClip(clip)
-                            Snackbar.make(
-                                findViewById(R.id.constraintLayout),
-                                "現局面のSFENをクリップボードへコピーしました",
-                                Snackbar.LENGTH_SHORT
-                            ).show()
-                        }
-                        5 -> {
-                            AlertDialog.Builder(this)
-                                .setMessage("本当に戦績を削除しますか?")
-                                .setNegativeButton("キャンセル") { _, _ -> }
-                                .setPositiveButton("OK") { _, _ ->
-                                    // (0, 0, 0)を書き出す
-                                    val sharedPref = getPreferences(Context.MODE_PRIVATE)
-                                    with(sharedPref.edit()) {
-                                        putInt(getString(R.string.result_user_win), 0)
-                                        putInt(getString(R.string.result_user_draw), 0)
-                                        putInt(getString(R.string.result_user_lose), 0)
-                                        apply()
-                                    }
-
-                                    Snackbar.make(
-                                        findViewById(R.id.constraintLayout),
-                                        "戦績を削除しました",
-                                        Snackbar.LENGTH_SHORT
-                                    ).show()
-                                }
-                                .show()
-                        }
-                    }
-                }
-                .show()
+            showMenu()
         }
         findViewById<Button>(R.id.button_undo).setOnClickListener {
             pos.undo()
@@ -574,6 +506,80 @@ class BattleActivity : AppCompatActivity() {
 
         //barchart更新
         barChart.invalidate()
+    }
+
+    private fun showMenu() {
+        AlertDialog.Builder(this)
+            .setTitle("メニュー")
+            .setItems(items) { _, which ->
+                when (which) {
+                    Menu.BACK_TO_TOP.ordinal -> { finish() }
+                    Menu.INIT_POSITION.ordinal -> {
+                        pos.init()
+                        showPosition()
+                    }
+                    Menu.SWITCH_AUTO_CONSIDERATION.ordinal -> {
+                        autoThink = !autoThink
+                        Snackbar.make(
+                            findViewById(R.id.constraintLayout),
+                            if (autoThink) "自動検討をオンにしました" else "自動検討をオフにしました",
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                        if (mode == CONSIDERATION && autoThink) {
+                            think()
+                        }
+                    }
+                    Menu.INPUT_SFEN.ordinal -> {
+                        val editText = EditText(this)
+                        editText.hint = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1"
+                        AlertDialog.Builder(this)
+                            .setView(editText)
+                            .setPositiveButton("OK") { _, _ ->
+                                pos.fromStr(editText.text.toString())
+                                showPosition()
+                            }
+                            .show()
+                    }
+                    Menu.OUTPUT_SFEN.ordinal -> {
+                        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+                        val clip: ClipData = ClipData.newPlainText("sfen", pos.toStr())
+                        clipboard.setPrimaryClip(clip)
+                        Snackbar.make(
+                            findViewById(R.id.constraintLayout),
+                            "現局面のSFENをクリップボードへコピーしました",
+                            Snackbar.LENGTH_SHORT
+                        ).show()
+                    }
+                    Menu.CLEAR_RESULT.ordinal -> {
+                        AlertDialog.Builder(this)
+                            .setMessage("本当に戦績を削除しますか?")
+                            .setNegativeButton("キャンセル") { _, _ -> }
+                            .setPositiveButton("OK") { _, _ ->
+                                // (0, 0, 0)を書き出す
+                                val sharedPref = getPreferences(Context.MODE_PRIVATE)
+                                with(sharedPref.edit()) {
+                                    putInt(getString(R.string.result_user_win), 0)
+                                    putInt(getString(R.string.result_user_draw), 0)
+                                    putInt(getString(R.string.result_user_lose), 0)
+                                    apply()
+                                }
+
+                                Snackbar.make(
+                                    findViewById(R.id.constraintLayout),
+                                    "戦績を削除しました",
+                                    Snackbar.LENGTH_SHORT
+                                ).show()
+                            }
+                            .show()
+                    }
+                    else -> {
+                        if (BuildConfig.DEBUG) {
+                            error("Assertion failed")
+                        }
+                    }
+                }
+            }
+            .show()
     }
 
     private fun xy2square(x: Int, y: Int): Square {
