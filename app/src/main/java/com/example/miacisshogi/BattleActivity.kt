@@ -285,12 +285,14 @@ class BattleActivity : AppCompatActivity() {
         if (pos.isLegalMove(move)) {
             pos.doMove(move)
 
-            if (pos.getFinishStatus() != Position.NOT_FINISHED) {
-                finishProcess()
-            } else if (player[pos.color] == MIACIS) {
+            if (player[pos.color] == MIACIS && pos.getFinishStatus() == Position.NOT_FINISHED) {
                 showPosition()
                 val bestMove = think()
                 pos.doMove(bestMove)
+            }
+
+            if (pos.getFinishStatus() != Position.NOT_FINISHED) {
+                finishProcess()
             }
         }
 
@@ -341,6 +343,7 @@ class BattleActivity : AppCompatActivity() {
                 else -> "あなたの負け\n${resultHistory}"
             }
         }
+
         AlertDialog.Builder(this)
             .setTitle(resultStr)
             .setPositiveButton("OK") { _, _ -> }
