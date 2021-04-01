@@ -73,7 +73,7 @@ class BattleActivity : AppCompatActivity() {
 
         if (mode != CONSIDERATION) {
             binding.tableLayout.visibility = View.INVISIBLE
-            binding.barChartExample.visibility = View.INVISIBLE
+            binding.barChart.visibility = View.INVISIBLE
             binding.buttonUndo.isEnabled = false
             binding.buttonThink.isEnabled = false
             binding.switchAutoThink.isEnabled = false
@@ -357,7 +357,7 @@ class BattleActivity : AppCompatActivity() {
             mode = CONSIDERATION
             player = arrayOf(HUMAN, HUMAN)
             binding.tableLayout.visibility = View.VISIBLE
-            binding.barChartExample.visibility = View.VISIBLE
+            binding.barChart.visibility = View.VISIBLE
             binding.buttonUndo.isEnabled = true
             binding.buttonThink.isEnabled = true
             binding.switchAutoThink.isEnabled = true
@@ -496,7 +496,7 @@ class BattleActivity : AppCompatActivity() {
         barData.setDrawValues(false)
 
         //BarChartにBarData格納
-        val barChart = binding.barChartExample
+        val barChart = binding.barChart
         barChart.data = barData
         barChart.legend.isEnabled = false
         barChart.description.isEnabled = false
