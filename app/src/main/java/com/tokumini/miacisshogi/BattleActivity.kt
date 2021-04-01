@@ -10,17 +10,19 @@ import android.os.Bundle
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.View
-import android.widget.*
+import android.widget.EditText
+import android.widget.ImageView
 import android.widget.TableLayout
+import android.widget.TableRow
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.appcompat.widget.SwitchCompat
-import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
 import com.github.mikephil.charting.data.BarDataSet
 import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
 import com.google.android.material.snackbar.Snackbar
+import com.tokumini.miacisshogi.databinding.ActivityBattleBinding
 
 
 class BattleActivity : AppCompatActivity() {
@@ -32,6 +34,7 @@ class BattleActivity : AppCompatActivity() {
         private const val backGroundTransparent = 0x00000000
     }
 
+    private lateinit var binding: ActivityBattleBinding
     private lateinit var squareImageViews: ArrayList<ImageView>
     private lateinit var handImageViews: Array<ArrayList<ImageView>>
     private lateinit var handTextViews: Array<ArrayList<TextView>>
@@ -47,7 +50,8 @@ class BattleActivity : AppCompatActivity() {
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-        setContentView(R.layout.activity_battle)
+        binding = ActivityBattleBinding.inflate(layoutInflater)
+        setContentView(binding.root)
 
         //盤面の準備
         pos = Position()
@@ -61,25 +65,24 @@ class BattleActivity : AppCompatActivity() {
             HUMAN_TURN_BLACK -> player = arrayOf(HUMAN, MIACIS)
             HUMAN_TURN_WHITE -> {
                 player = arrayOf(MIACIS, HUMAN)
-                val boardView = findViewById<ImageView>(R.id.board)
-                boardView.setImageResource(R.drawable.board2)
+                binding.board.setImageResource(R.drawable.board2)
                 showInverse = true
             }
             CONSIDERATION -> player = arrayOf(HUMAN, HUMAN)
         }
 
         if (mode != CONSIDERATION) {
-            findViewById<TableLayout>(R.id.tableLayout).visibility = View.INVISIBLE
-            findViewById<BarChart>(R.id.barChartExample).visibility = View.INVISIBLE
-            findViewById<Button>(R.id.button_undo).isEnabled = false
-            findViewById<Button>(R.id.button_think).isEnabled = false
-            findViewById<SwitchCompat>(R.id.switch_auto_think).isEnabled = false
+            binding.tableLayout.visibility = View.INVISIBLE
+            binding.barChartExample.visibility = View.INVISIBLE
+            binding.buttonUndo.isEnabled = false
+            binding.buttonThink.isEnabled = false
+            binding.switchAutoThink.isEnabled = false
         }
 
         //マス画像の初期化
         //ここで9 x 9のImageViewを作り、置かれている駒に応じて適切な画像を選択して置く
         squareImageViews = ArrayList()
-        val frame = findViewById<FrameLayout>(R.id.frame)
+        val frame = binding.frame
         for (i in 0..8) {
             for (j in 0..8) {
                 val imageView = ImageView(this)
@@ -104,7 +107,7 @@ class BattleActivity : AppCompatActivity() {
         }
 
         //手駒画像の初期化
-        val handFrameList = arrayOf<FrameLayout>(findViewById(R.id.frame_hand_down), findViewById(R.id.frame_hand_up))
+        val handFrameList = arrayOf(binding.frameHandDown, binding.frameHandUp)
         handImageViews = Array(ColorNum) { ArrayList() }
         handTextViews = Array(ColorNum) { ArrayList() }
 
@@ -147,27 +150,27 @@ class BattleActivity : AppCompatActivity() {
         }
 
         // ボタンの初期化
-        findViewById<Button>(R.id.button_menu).setOnClickListener {
+        binding.buttonMenu.setOnClickListener {
             showMenu()
         }
-        findViewById<Button>(R.id.button_undo).setOnClickListener {
+        binding.buttonUndo.setOnClickListener {
             pos.undo()
             if (mode == CONSIDERATION && autoThink) {
                 think()
             }
             showPosition()
         }
-        findViewById<Button>(R.id.button_think).setOnClickListener {
+        binding.buttonThink.setOnClickListener {
             think()
         }
-        findViewById<SwitchCompat>(R.id.switch_auto_think).setOnCheckedChangeListener { _, isChecked ->
+        binding.switchAutoThink.setOnCheckedChangeListener { _, isChecked ->
             autoThink = isChecked
             think()
         }
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
-        val boardFrame = findViewById<FrameLayout>(R.id.frame)
+        val boardFrame = binding.frame
         val boardX = boardFrame.width * marginRate
         val boardWidth = boardFrame.width - 2 * boardX
         val boardHeight = boardWidth * 1.07
@@ -175,8 +178,8 @@ class BattleActivity : AppCompatActivity() {
         val squareHeight = boardHeight / 9
         val boardY = boardFrame.height / 2 - boardHeight * 0.45 + boardFrame.y
 
-        val upHandFrame = findViewById<FrameLayout>(R.id.frame_hand_up)
-        val downHandFrame = findViewById<FrameLayout>(R.id.frame_hand_down)
+        val upHandFrame = binding.frameHandUp
+        val downHandFrame = binding.frameHandDown
         val handFrames = arrayOf(downHandFrame, upHandFrame)
         val heightRate = 1.5
 
@@ -353,11 +356,11 @@ class BattleActivity : AppCompatActivity() {
             //対局モードから検討モードへ移行する
             mode = CONSIDERATION
             player = arrayOf(HUMAN, HUMAN)
-            findViewById<TableLayout>(R.id.tableLayout).visibility = View.VISIBLE
-            findViewById<BarChart>(R.id.barChartExample).visibility = View.VISIBLE
-            findViewById<Button>(R.id.button_undo).isEnabled = true
-            findViewById<Button>(R.id.button_think).isEnabled = true
-            findViewById<SwitchCompat>(R.id.switch_auto_think).isEnabled = true
+            binding.tableLayout.visibility = View.VISIBLE
+            binding.barChartExample.visibility = View.VISIBLE
+            binding.buttonUndo.isEnabled = true
+            binding.buttonThink.isEnabled = true
+            binding.switchAutoThink.isEnabled = true
         }
     }
 
@@ -445,7 +448,7 @@ class BattleActivity : AppCompatActivity() {
         val policy = searcher.policy
         val policyAndMove = policy.zip(moveList).sortedBy { pair -> -pair.first }
 
-        val tableLayout = findViewById<TableLayout>(R.id.tableLayout)
+        val tableLayout = binding.tableLayout
 
         //以前の内容を削除
         tableLayout.removeAllViews()
@@ -493,7 +496,7 @@ class BattleActivity : AppCompatActivity() {
         barData.setDrawValues(false)
 
         //BarChartにBarData格納
-        val barChart = findViewById<BarChart>(R.id.barChartExample)
+        val barChart = binding.barChartExample
         barChart.data = barData
         barChart.legend.isEnabled = false
         barChart.description.isEnabled = false
@@ -541,7 +544,7 @@ class BattleActivity : AppCompatActivity() {
                         val clip: ClipData = ClipData.newPlainText("sfen", pos.toStr())
                         clipboard.setPrimaryClip(clip)
                         Snackbar.make(
-                            findViewById(R.id.constraintLayout),
+                            binding.constraintLayout,
                             "現局面のSFENをクリップボードへコピーしました",
                             Snackbar.LENGTH_SHORT
                         ).show()
@@ -561,7 +564,7 @@ class BattleActivity : AppCompatActivity() {
                                 }
 
                                 Snackbar.make(
-                                    findViewById(R.id.constraintLayout),
+                                    binding.constraintLayout,
                                     "戦績を削除しました",
                                     Snackbar.LENGTH_SHORT
                                 ).show()
