@@ -10,11 +10,7 @@ import android.os.Bundle
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.View
-import android.widget.EditText
-import android.widget.ImageView
-import android.widget.TableLayout
-import android.widget.TableRow
-import android.widget.TextView
+import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
@@ -23,6 +19,7 @@ import com.github.mikephil.charting.data.BarEntry
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
 import com.google.android.material.snackbar.Snackbar
 import com.tokumini.miacisshogi.databinding.ActivityBattleBinding
+import kotlinx.coroutines.*
 
 
 class BattleActivity : AppCompatActivity() {
@@ -47,6 +44,8 @@ class BattleActivity : AppCompatActivity() {
     private var mode: Int = CONSIDERATION
     private var showInverse: Boolean = false
     private var autoThink: Boolean = false
+    private val job = Job()
+    private val scope = CoroutineScope(Dispatchers.Main + job)
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -57,7 +56,7 @@ class BattleActivity : AppCompatActivity() {
         pos = Position()
 
         //探索部の準備
-        searcher = Search(this, 10)
+        searcher = Search(this, 0)
 
         //ターンの制御
         mode = intent?.extras?.get(TURN_STR) as Int
@@ -143,10 +142,10 @@ class BattleActivity : AppCompatActivity() {
 
         // Miacisの手番なら実行
         if (player[pos.color] == MIACIS) {
-            val bestMove = think()
-            holdPiece = bestMove.subject()
-            moveFrom = bestMove.from()
-            doMove(bestMove)
+            scope.launch {
+                val bestMove = think()
+                doMove(bestMove)
+            }
         }
 
         // ボタンの初期化
@@ -156,16 +155,16 @@ class BattleActivity : AppCompatActivity() {
         binding.buttonUndo.setOnClickListener {
             pos.undo()
             if (mode == CONSIDERATION && autoThink) {
-                think()
+                scope.launch { think() }
             }
             showPosition()
         }
         binding.buttonThink.setOnClickListener {
-            think()
+            scope.launch { think() }
         }
         binding.switchAutoThink.setOnCheckedChangeListener { _, isChecked ->
             autoThink = isChecked
-            think()
+            scope.launch { think() }
         }
     }
 
@@ -283,26 +282,42 @@ class BattleActivity : AppCompatActivity() {
     }
 
     private fun doMove(move: Move) {
-        if (pos.isLegalMove(move)) {
-            pos.doMove(move)
-
-            if (player[pos.color] == MIACIS && pos.getFinishStatus() == Position.NOT_FINISHED) {
-                showPosition()
-                val bestMove = think()
-                pos.doMove(bestMove)
-            }
-
-            if (pos.getFinishStatus() != Position.NOT_FINISHED) {
-                finishProcess()
-            }
+        if (!pos.isLegalMove(move)) {
+            //適当にエラー処理
+            return
         }
 
-        if (mode == CONSIDERATION && autoThink) {
-            think()
-        }
+        //盤面を動かす
+        pos.doMove(move)
 
         //盤面を再描画
         showPosition()
+
+        //終了判定
+        if (pos.getFinishStatus() != Position.NOT_FINISHED) {
+            finishProcess()
+            return
+        }
+
+        //対戦モードのとき、手番がCPU側に移ったことを確認して思考開始
+        if (player[pos.color] == MIACIS && pos.getFinishStatus() == Position.NOT_FINISHED) {
+            scope.launch {
+                val bestMove = think()
+                pos.doMove(bestMove)
+                showPosition()
+
+                //終了判定
+                if (pos.getFinishStatus() != Position.NOT_FINISHED) {
+                    finishProcess()
+                }
+            }
+            return
+        }
+
+        //検討モードのとき、自動思考モードがオンであれば思考開始
+        if (mode == CONSIDERATION && autoThink) {
+            scope.launch { think() }
+        }
     }
 
     private fun finishProcess() {
@@ -442,33 +457,36 @@ class BattleActivity : AppCompatActivity() {
         holdPiece = EMPTY
     }
 
-    private fun think(): Move {
-        val bestMove = searcher.search(pos)
-        val moveList = pos.generateAllMoves()
-        val policy = searcher.policy
-        val policyAndMove = policy.zip(moveList).sortedBy { pair -> -pair.first }
+    private suspend fun think(): Move {
+        return withContext(Dispatchers.Default) {
+            val bestMove = searcher.search(pos)
+            val moveList = pos.generateAllMoves()
+            val policy = searcher.policy
+            val policyAndMove = policy.zip(moveList).sortedBy { pair -> -pair.first }
 
-        val tableLayout = binding.tableLayout
+            val tableLayout = binding.tableLayout
+            tableLayout.post {
+                //以前の内容を削除
+                tableLayout.removeAllViews()
 
-        //以前の内容を削除
-        tableLayout.removeAllViews()
+                //見出し
+                val labelRow = layoutInflater.inflate(R.layout.table_row, null) as TableRow
+                labelRow.findViewById<TextView>(R.id.rowtext1).text = "指し手"
+                labelRow.findViewById<TextView>(R.id.rowtext2).text = "方策確率"
+                tableLayout.addView(labelRow, TableLayout.LayoutParams())
 
-        //見出し
-        val labelRow = layoutInflater.inflate(R.layout.table_row, null) as TableRow
-        labelRow.findViewById<TextView>(R.id.rowtext1).text = "指し手"
-        labelRow.findViewById<TextView>(R.id.rowtext2).text = "方策確率"
-        tableLayout.addView(labelRow, TableLayout.LayoutParams())
-
-        //各指し手
-        for (i in policy.indices) {
-            val tableRow = layoutInflater.inflate(R.layout.table_row, null) as TableRow
-            tableRow.findViewById<TextView>(R.id.rowtext1).text = policyAndMove[i].second.toPrettyStr()
-            tableRow.findViewById<TextView>(R.id.rowtext2).text = "%5.1f%%".format((policyAndMove[i].first * 100))
-            tableLayout.addView(tableRow, TableLayout.LayoutParams())
+                //各指し手
+                for (i in policyAndMove.indices) {
+                    val tableRow = layoutInflater.inflate(R.layout.table_row, null) as TableRow
+                    tableRow.findViewById<TextView>(R.id.rowtext1).text = policyAndMove[i].second.toPrettyStr()
+                    tableRow.findViewById<TextView>(R.id.rowtext2).text =
+                        "%5.1f%%".format((policyAndMove[i].first * 100))
+                    tableLayout.addView(tableRow, TableLayout.LayoutParams())
+                }
+            }
+            showValue(searcher.value)
+            bestMove
         }
-
-        showValue(searcher.value)
-        return bestMove
     }
 
     private fun showValue(value: Array<Float>) {
@@ -497,20 +515,22 @@ class BattleActivity : AppCompatActivity() {
 
         //BarChartにBarData格納
         val barChart = binding.barChart
-        barChart.data = barData
-        barChart.legend.isEnabled = false
-        barChart.description.isEnabled = false
-        barChart.setScaleEnabled(false)
-        barChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
-        barChart.xAxis.axisMaximum = MAX_SCORE
-        barChart.xAxis.axisMinimum = MIN_SCORE
-        barChart.axisLeft.axisMaximum = 1.1f
-        barChart.axisLeft.axisMinimum = 0.0f
-        barChart.axisRight.axisMaximum = 1.1f
-        barChart.axisRight.axisMinimum = 0.0f
+        barChart.post {
+            barChart.data = barData
+            barChart.legend.isEnabled = false
+            barChart.description.isEnabled = false
+            barChart.setScaleEnabled(false)
+            barChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+            barChart.xAxis.axisMaximum = MAX_SCORE
+            barChart.xAxis.axisMinimum = MIN_SCORE
+            barChart.axisLeft.axisMaximum = 1.1f
+            barChart.axisLeft.axisMinimum = 0.0f
+            barChart.axisRight.axisMaximum = 1.1f
+            barChart.axisRight.axisMinimum = 0.0f
 
-        //barchart更新
-        barChart.invalidate()
+            //barchart更新
+            barChart.invalidate()
+        }
     }
 
     private fun showMenu() {
