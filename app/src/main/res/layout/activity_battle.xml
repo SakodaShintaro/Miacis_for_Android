@@ -64,36 +64,54 @@
         android:id="@+id/button_menu"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
         android:text="メニュー"
-        app:layout_constraintEnd_toStartOf="@+id/button_undo"
-        app:layout_constraintHorizontal_bias="0.5"
-        app:layout_constraintHorizontal_chainStyle="spread"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@+id/frame_hand_down" />
+        app:layout_constraintEnd_toStartOf="@+id/button_undo"
+        app:layout_constraintHorizontal_chainStyle="spread"
+        app:layout_constraintTop_toBottomOf="@+id/frame_hand_down"
+        />
 
     <Button
         android:id="@+id/button_undo"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
         android:text="一手戻る"
-        app:layout_constraintEnd_toStartOf="@+id/button_think"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/button_menu"
-        app:layout_constraintTop_toBottomOf="@+id/frame_hand_down" />
+        app:layout_constraintEnd_toStartOf="@+id/button_think"
+        app:layout_constraintTop_toTopOf="@+id/button_menu"
+        app:layout_constraintBottom_toBottomOf="@+id/button_menu"
+        />
 
     <Button
         android:id="@+id/button_think"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:layout_marginStart="16dp"
-        android:layout_marginEnd="16dp"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
         android:text="検討"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintHorizontal_bias="0.5"
         app:layout_constraintStart_toEndOf="@+id/button_undo"
-        app:layout_constraintTop_toBottomOf="@+id/frame_hand_down" />
+        app:layout_constraintEnd_toStartOf="@+id/switch_auto_think"
+        app:layout_constraintTop_toTopOf="@+id/button_undo"
+        app:layout_constraintBottom_toBottomOf="@+id/button_undo"
+        />
+
+    <androidx.appcompat.widget.SwitchCompat
+        android:id="@+id/switch_auto_think"
+        android:layout_width="wrap_content"
+        android:layout_height="wrap_content"
+        android:layout_marginStart="4dp"
+        android:layout_marginEnd="4dp"
+        android:text="自動\n検討"
+        android:textSize="10sp"
+        app:layout_constraintStart_toEndOf="@+id/button_think"
+        app:layout_constraintEnd_toEndOf="parent"
+        app:layout_constraintTop_toTopOf="@+id/button_think"
+        app:layout_constraintBottom_toBottomOf="@+id/button_think"
+        />
 
     <ScrollView
         android:id="@+id/scrollView"

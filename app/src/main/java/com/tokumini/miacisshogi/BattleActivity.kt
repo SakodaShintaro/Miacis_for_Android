@@ -13,6 +13,7 @@ import android.view.View
 import android.widget.*
 import android.widget.TableLayout
 import androidx.appcompat.app.AppCompatActivity
+import androidx.appcompat.widget.SwitchCompat
 import com.github.mikephil.charting.charts.BarChart
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.BarData
@@ -72,6 +73,7 @@ class BattleActivity : AppCompatActivity() {
             findViewById<BarChart>(R.id.barChartExample).visibility = View.INVISIBLE
             findViewById<Button>(R.id.button_undo).isEnabled = false
             findViewById<Button>(R.id.button_think).isEnabled = false
+            findViewById<SwitchCompat>(R.id.switch_auto_think).isEnabled = false
         }
 
         //マス画像の初期化
@@ -156,6 +158,10 @@ class BattleActivity : AppCompatActivity() {
             showPosition()
         }
         findViewById<Button>(R.id.button_think).setOnClickListener {
+            think()
+        }
+        findViewById<SwitchCompat>(R.id.switch_auto_think).setOnCheckedChangeListener { _, isChecked ->
+            autoThink = isChecked
             think()
         }
     }
@@ -351,6 +357,7 @@ class BattleActivity : AppCompatActivity() {
             findViewById<BarChart>(R.id.barChartExample).visibility = View.VISIBLE
             findViewById<Button>(R.id.button_undo).isEnabled = true
             findViewById<Button>(R.id.button_think).isEnabled = true
+            findViewById<SwitchCompat>(R.id.switch_auto_think).isEnabled = true
         }
     }
 
@@ -508,24 +515,15 @@ class BattleActivity : AppCompatActivity() {
             .setTitle("メニュー")
             .setItems(items) { _, which ->
                 when (which) {
-                    Menu.BACK_TO_TOP.ordinal -> { finish() }
+                    Menu.BACK_TO_TOP.ordinal -> {
+                        finish()
+                    }
                     Menu.RESIGN.ordinal -> {
                         finishProcess()
                     }
                     Menu.INIT_POSITION.ordinal -> {
                         pos.init()
                         showPosition()
-                    }
-                    Menu.SWITCH_AUTO_CONSIDERATION.ordinal -> {
-                        autoThink = !autoThink
-                        Snackbar.make(
-                            findViewById(R.id.constraintLayout),
-                            if (autoThink) "自動検討をオンにしました" else "自動検討をオフにしました",
-                            Snackbar.LENGTH_SHORT
-                        ).show()
-                        if (mode == CONSIDERATION && autoThink) {
-                            think()
-                        }
                     }
                     Menu.INPUT_SFEN.ordinal -> {
                         val editText = EditText(this)
