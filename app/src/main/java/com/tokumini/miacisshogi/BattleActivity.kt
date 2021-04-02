@@ -460,35 +460,37 @@ class BattleActivity : AppCompatActivity() {
     private suspend fun think(): Move {
         return withContext(Dispatchers.Default) {
             val bestMove = searcher.search(pos)
-            val moveList = pos.generateAllMoves()
-            val policy = searcher.policy
-            val policyAndMove = policy.zip(moveList).sortedBy { pair -> -pair.first }
-
-            val tableLayout = binding.tableLayout
-            tableLayout.post {
-                //以前の内容を削除
-                tableLayout.removeAllViews()
-
-                //見出し
-                val labelRow = layoutInflater.inflate(R.layout.table_row, null) as TableRow
-                labelRow.setBackgroundColor(Color.LTGRAY)
-                labelRow.findViewById<TextView>(R.id.rowtext0).text = "順位"
-                labelRow.findViewById<TextView>(R.id.rowtext1).text = "指し手"
-                labelRow.findViewById<TextView>(R.id.rowtext2).text = "方策確率"
-                tableLayout.addView(labelRow, TableLayout.LayoutParams())
-
-                //各指し手
-                for (i in policyAndMove.indices) {
-                    val tableRow = layoutInflater.inflate(R.layout.table_row, null) as TableRow
-                    tableRow.findViewById<TextView>(R.id.rowtext0).text = (i + 1).toString()
-                    tableRow.findViewById<TextView>(R.id.rowtext1).text = policyAndMove[i].second.toPrettyStr()
-                    tableRow.findViewById<TextView>(R.id.rowtext2).text =
-                        "%5.1f%%".format((policyAndMove[i].first * 100))
-                    tableLayout.addView(tableRow, TableLayout.LayoutParams())
-                }
-            }
+            showPolicy(searcher.policy)
             showValue(searcher.value)
             bestMove
+        }
+    }
+
+    private fun showPolicy(policy: Array<Float>) {
+        val moveList = pos.generateAllMoves()
+        val policyAndMove = policy.zip(moveList).sortedBy { pair -> -pair.first }
+        val tableLayout = binding.tableLayout
+        tableLayout.post {
+            //以前の内容を削除
+            tableLayout.removeAllViews()
+
+            //見出し
+            val labelRow = layoutInflater.inflate(R.layout.table_row, null) as TableRow
+            labelRow.setBackgroundColor(Color.LTGRAY)
+            labelRow.findViewById<TextView>(R.id.rowtext0).text = "順位"
+            labelRow.findViewById<TextView>(R.id.rowtext1).text = "指し手"
+            labelRow.findViewById<TextView>(R.id.rowtext2).text = "方策確率"
+            tableLayout.addView(labelRow, TableLayout.LayoutParams())
+
+            //各指し手
+            for (i in policyAndMove.indices) {
+                val tableRow = layoutInflater.inflate(R.layout.table_row, null) as TableRow
+                tableRow.findViewById<TextView>(R.id.rowtext0).text = (i + 1).toString()
+                tableRow.findViewById<TextView>(R.id.rowtext1).text = policyAndMove[i].second.toPrettyStr()
+                tableRow.findViewById<TextView>(R.id.rowtext2).text =
+                    "%5.1f%%".format((policyAndMove[i].first * 100))
+                tableLayout.addView(tableRow, TableLayout.LayoutParams())
+            }
         }
     }
 
