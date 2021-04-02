@@ -557,8 +557,20 @@ class BattleActivity : AppCompatActivity() {
                         AlertDialog.Builder(this)
                             .setView(editText)
                             .setPositiveButton("OK") { _, _ ->
-                                pos.fromStr(editText.text.toString())
-                                showPosition()
+                                var sfen = editText.text.toString()
+                                sfen = sfen.trim('\n')
+                                sfen = sfen.removePrefix("sfen ")
+                                println(sfen)
+                                if (isValidSfen(sfen)) {
+                                    pos.fromStr(sfen)
+                                    showPosition()
+                                } else {
+                                    Snackbar.make(
+                                        binding.constraintLayout,
+                                        "SFEN文字列が不正です",
+                                        Snackbar.LENGTH_SHORT
+                                    ).show()
+                                }
                             }
                             .show()
                     }

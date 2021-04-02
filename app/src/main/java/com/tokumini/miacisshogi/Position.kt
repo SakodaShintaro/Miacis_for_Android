@@ -1,6 +1,5 @@
 package com.tokumini.miacisshogi
 
-import android.util.Log
 import kotlin.random.Random
 
 class Position {
@@ -599,14 +598,6 @@ class Position {
             board[sq.ordinal] = EMPTY
         }
 
-        //コマごとの分岐を簡単に書くためmapを準備
-        val charToPiece = mapOf(
-            'P' to BLACK_PAWN, 'L' to BLACK_LANCE, 'N' to BLACK_KNIGHT, 'S' to BLACK_SILVER,
-            'G' to BLACK_GOLD, 'B' to BLACK_BISHOP, 'R' to BLACK_ROOK, 'K' to BLACK_KING,
-            'p' to WHITE_PAWN, 'l' to WHITE_LANCE, 'n' to WHITE_KNIGHT, 's' to WHITE_SILVER,
-            'g' to WHITE_GOLD, 'b' to WHITE_BISHOP, 'r' to WHITE_ROOK, 'k' to WHITE_KING,
-        )
-
         val split = sfen.split(' ')
         //SFENは "盤面 手番 持ち駒 手数"(http://shogidokoro.starfree.jp/usi.html)
         if (split.size != 4) {
@@ -632,7 +623,7 @@ class Position {
                     in '1'..'9' -> { f -= c - '0' }
                     '+' -> { promote = true }
                     else -> {
-                        val piece = charToPiece[c]
+                        val piece = sfenCharToPiece[c]
                         if (piece == null) {
                             init()
                             return
@@ -683,7 +674,7 @@ class Position {
                     num = strHand[i++].toString().toInt()
                 }
             } else { //駒なら持ち駒を変更
-                val piece = charToPiece[strHand[i++]]
+                val piece = sfenCharToPiece[strHand[i++]]
                 if (piece == null) {
                     init()
                     return

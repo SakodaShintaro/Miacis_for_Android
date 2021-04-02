@@ -66,7 +66,7 @@ const val HAND_PIECE_KIND_NUM = 7
 const val INPUT_CHANNEL_NUM = (PIECE_KIND_NUM + HAND_PIECE_KIND_NUM) * 2
 
 fun kind(p: Int): Int {
-    return p and PIECE_KIND_MASK;
+    return p and PIECE_KIND_MASK
 }
 
 fun kindWithPromotion(p: Int): Int {
@@ -74,7 +74,7 @@ fun kindWithPromotion(p: Int): Int {
 }
 
 fun promote(p: Int): Int {
-    return (p or PROMOTE);
+    return (p or PROMOTE)
 }
 
 fun pieceToColor(p: Int): Int {
@@ -94,7 +94,7 @@ fun toWhite(p: Int): Int {
 }
 
 fun coloredPiece(c: Int, p: Int): Int {
-    return if (c == BLACK) toBlack(p) else toWhite(p);
+    return if (c == BLACK) toBlack(p) else toWhite(p)
 }
 
 fun piece2oppositeColorPiece(p: Int): Int {
@@ -242,6 +242,87 @@ val PieceToSfenStrWithoutSpace = mapOf(
     WHITE_BISHOP_PROMOTE to "+b",
     WHITE_ROOK_PROMOTE to "+r"
 )
+
+//sfen形式のcharから駒への変換
+val sfenCharToPiece = mapOf(
+    'P' to BLACK_PAWN, 'L' to BLACK_LANCE, 'N' to BLACK_KNIGHT, 'S' to BLACK_SILVER,
+    'G' to BLACK_GOLD, 'B' to BLACK_BISHOP, 'R' to BLACK_ROOK, 'K' to BLACK_KING,
+    'p' to WHITE_PAWN, 'l' to WHITE_LANCE, 'n' to WHITE_KNIGHT, 's' to WHITE_SILVER,
+    'g' to WHITE_GOLD, 'b' to WHITE_BISHOP, 'r' to WHITE_ROOK, 'k' to WHITE_KING,
+)
+
+fun isValidSfen(sfen: String): Boolean {
+    val split = sfen.split(' ')
+    //SFENは "盤面 手番 持ち駒 手数"(http://shogidokoro.starfree.jp/usi.html)
+    if (split.size != 4) {
+        return false
+    }
+
+    val (strBoard, strTurn, strHand, strTurnNum) = split
+
+    //盤上の設定
+    val strs = strBoard.split('/')
+    if (strs.size != BOARD_WIDTH) {
+        return false
+    }
+    //各段を処理
+    for (i in strs.indices) {
+        val r = Rank.Rank1.ordinal + i
+        var f = File.File9.ordinal
+        var promote = false
+        for (j in strs[i].indices) {
+            when (val c = strs[i][j]) {
+                in '1'..'9' -> { f -= c - '0' }
+                '+' -> { promote = true }
+                else -> {
+                    val piece = sfenCharToPiece[c] ?: return false
+
+                    //成のフラグを降ろす
+                    promote = false
+                }
+            }
+        }
+    }
+
+    //手番
+    when (strTurn) {
+        "b" -> BLACK
+        "w" -> WHITE
+        else -> {
+            return false
+        }
+    }
+
+    //持ち駒
+    var num = 1
+    var i = 0
+    while (i < strHand.length) {
+        if (strHand[i] == '-') {
+            break
+        }
+        if (strHand[i] in '1'..'9') { //数字なら枚数の取得
+            if (strHand[i + 1] in '0'..'9') {
+                //次の文字も数字の場合が一応あるはず(歩が10枚以上)
+                //charをいったんStringにしてからIntにする
+                num = 10 * strHand[i].toString().toInt() + strHand[i + 1].toString().toInt()
+                i += 2
+            } else {
+                //次が数字じゃないなら普通に取る
+                num = strHand[i++].toString().toInt()
+            }
+        } else { //駒なら持ち駒を変更
+            val piece = sfenCharToPiece[strHand[i++]] ?: return false
+
+            //枚数を1に戻す
+            num = 1
+        }
+    }
+
+    //手数
+    val turnNumberOrNull = strTurnNum.toIntOrNull() ?: return false
+
+    return true
+}
 
 val PieceList = arrayListOf(
     BLACK_PAWN,
