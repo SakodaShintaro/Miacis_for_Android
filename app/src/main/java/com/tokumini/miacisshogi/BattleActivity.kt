@@ -1,10 +1,7 @@
 package com.tokumini.miacisshogi
 
 import android.app.AlertDialog
-import android.content.ClipData
-import android.content.ClipboardManager
-import android.content.Context
-import android.content.DialogInterface
+import android.content.*
 import android.graphics.Color
 import android.os.Bundle
 import android.view.MotionEvent
@@ -541,71 +538,89 @@ class BattleActivity : AppCompatActivity() {
     }
 
     private fun showMenu() {
-        AlertDialog.Builder(this)
-            .setTitle("メニュー")
-            .setItems(items) { _, which ->
-                when (which) {
-                    Menu.BACK_TO_TOP.ordinal -> {
-                        finish()
-                    }
-                    Menu.RESIGN.ordinal -> {
-                        finishProcess()
-                    }
-                    Menu.INIT_POSITION.ordinal -> {
-                        pos.init()
-                        showPosition()
-                    }
-                    Menu.INPUT_SFEN.ordinal -> {
-                        val editText = EditText(this)
-                        editText.hint = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1"
-                        AlertDialog.Builder(this)
-                            .setView(editText)
-                            .setPositiveButton("OK") { _, _ ->
-                                var sfen = editText.text.toString()
-                                sfen = sfen.trim('\n')
-                                sfen = sfen.removePrefix("sfen ")
-                                println(sfen)
-                                if (isValidSfen(sfen)) {
-                                    pos.fromStr(sfen)
-                                    showPosition()
-                                } else {
-                                    showSnackbar("SFEN文字列が不正です")
-                                }
-                            }
-                            .show()
-                    }
-                    Menu.OUTPUT_SFEN.ordinal -> {
-                        val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
-                        val clip: ClipData = ClipData.newPlainText("sfen", pos.toStr())
-                        clipboard.setPrimaryClip(clip)
-                        showSnackbar("現局面のSFENをクリップボードへコピーしました")
-                    }
-                    Menu.CLEAR_RESULT.ordinal -> {
-                        AlertDialog.Builder(this)
-                            .setMessage("本当に戦績を削除しますか?")
-                            .setNegativeButton("キャンセル") { _, _ -> }
-                            .setPositiveButton("OK") { _, _ ->
-                                // (0, 0, 0)を書き出す
-                                val sharedPref = getPreferences(Context.MODE_PRIVATE)
-                                with(sharedPref.edit()) {
-                                    putInt(getString(R.string.result_user_win), 0)
-                                    putInt(getString(R.string.result_user_draw), 0)
-                                    putInt(getString(R.string.result_user_lose), 0)
-                                    apply()
-                                }
+        fun backToTop() {
+            val intent = Intent(this, MainActivity::class.java)
+            startActivity(intent)
+        }
 
-                                showSnackbar("戦績を削除しました")
-                            }
-                            .show()
-                    }
-                    else -> {
-                        if (BuildConfig.DEBUG) {
-                            error("Assertion failed")
-                        }
+        fun initPosition() {
+            pos.init()
+            showPosition()
+        }
+
+        fun inputSfen() {
+            val editText = EditText(this)
+            editText.hint = "lnsgkgsnl/1r5b1/ppppppppp/9/9/9/PPPPPPPPP/1B5R1/LNSGKGSNL b - 1"
+            AlertDialog.Builder(this)
+                .setView(editText)
+                .setPositiveButton("OK") { _, _ ->
+                    var sfen = editText.text.toString()
+                    sfen = sfen.trim('\n')
+                    sfen = sfen.removePrefix("sfen ")
+                    println(sfen)
+                    if (isValidSfen(sfen)) {
+                        pos.fromStr(sfen)
+                        showPosition()
+                    } else {
+                        showSnackbar("SFEN文字列が不正です")
                     }
                 }
-            }
-            .show()
+                .show()
+        }
+
+        fun outputSfen() {
+            val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
+            val clip: ClipData = ClipData.newPlainText("sfen", pos.toStr())
+            clipboard.setPrimaryClip(clip)
+            showSnackbar("現局面のSFENをクリップボードへコピーしました")
+        }
+
+        fun clearResult() {
+            AlertDialog.Builder(this)
+                .setMessage("本当に戦績を削除しますか?")
+                .setNegativeButton("キャンセル") { _, _ -> }
+                .setPositiveButton("OK") { _, _ ->
+                    // (0, 0, 0)を書き出す
+                    val sharedPref = getPreferences(Context.MODE_PRIVATE)
+                    with(sharedPref.edit()) {
+                        putInt(getString(R.string.result_user_win), 0)
+                        putInt(getString(R.string.result_user_draw), 0)
+                        putInt(getString(R.string.result_user_lose), 0)
+                        apply()
+                    }
+
+                    showSnackbar("戦績を削除しました")
+                }
+                .show()
+        }
+        
+        if (mode != CONSIDERATION) {
+            AlertDialog.Builder(this)
+                .setTitle("メニュー")
+                .setItems(itemsInBattleMode) { _, which ->
+                    when (which) {
+                        MenuInBattleMode.BACK_TO_TOP.ordinal -> backToTop()
+                        MenuInBattleMode.RESIGN.ordinal -> finishProcess()
+                        MenuInBattleMode.OUTPUT_SFEN.ordinal -> outputSfen()
+                        MenuInBattleMode.CLEAR_RESULT.ordinal -> clearResult()
+                    }
+                }
+                .show()
+        } else {
+            AlertDialog.Builder(this)
+                .setTitle("メニュー")
+                .setItems(itemsInConsiderationMode) { _, which ->
+                    when (which) {
+                        MenuInConsiderationMode.BACK_TO_TOP.ordinal -> backToTop()
+                        MenuInConsiderationMode.RESIGN.ordinal -> finishProcess()
+                        MenuInConsiderationMode.INIT_POSITION.ordinal -> initPosition()
+                        MenuInConsiderationMode.INPUT_SFEN.ordinal -> inputSfen()
+                        MenuInConsiderationMode.OUTPUT_SFEN.ordinal -> outputSfen()
+                        MenuInConsiderationMode.CLEAR_RESULT.ordinal -> clearResult()
+                    }
+                }
+                .show()
+        }
     }
 
     private fun showSnackbar(text: String) {
