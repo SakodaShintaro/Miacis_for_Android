@@ -14,32 +14,33 @@
         android:text="対局設定"
         android:textColor="@color/black"
         android:textSize="36sp"
+        app:layout_constraintTop_toTopOf="parent"
         app:layout_constraintBottom_toTopOf="@id/textView_Turn"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <TextView
         android:id="@+id/textView_Turn"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:text="手番"
+        android:textAlignment="center"
         android:textColor="@color/black"
-        android:textSize="36sp"
+        android:textSize="24sp"
+        app:layout_constraintTop_toBottomOf="@id/textView"
         app:layout_constraintBottom_toTopOf="@id/textView_random_turn"
-        app:layout_constraintEnd_toStartOf="@id/radio_turn"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/textView" />
+        app:layout_constraintEnd_toStartOf="@id/radio_turn" />
 
     <RadioGroup
         android:id="@+id/radio_turn"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
+        app:layout_constraintTop_toBottomOf="@+id/textView"
         app:layout_constraintBottom_toTopOf="@id/textView_random_turn"
-        app:layout_constraintEnd_toEndOf="parent"
         app:layout_constraintStart_toEndOf="@id/textView_Turn"
-        app:layout_constraintTop_toBottomOf="@+id/textView">
+        app:layout_constraintEnd_toEndOf="parent">
 
         <RadioButton
             android:id="@+id/radio_black"
@@ -62,25 +63,26 @@
 
     <TextView
         android:id="@+id/textView_random_turn"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="CPUがランダムに指す手数"
+        android:text="CPUがランダム\nに指す手数"
+        android:textAlignment="center"
         android:textColor="@color/black"
         android:textSize="24sp"
+        app:layout_constraintTop_toBottomOf="@id/textView_Turn"
         app:layout_constraintBottom_toTopOf="@+id/button_battle_start"
-        app:layout_constraintEnd_toStartOf="@id/numPicker"
         app:layout_constraintStart_toStartOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/textView_Turn" />
+        app:layout_constraintEnd_toEndOf="@+id/textView_Turn" />
 
     <NumberPicker
         android:id="@+id/numPicker"
-        android:layout_width="wrap_content"
+        android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/textView_Turn"
         app:layout_constraintBottom_toTopOf="@+id/button_battle_start"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toEndOf="@id/textView_random_turn"
-        app:layout_constraintTop_toBottomOf="@id/textView_Turn" />
+        app:layout_constraintStart_toStartOf="@+id/radio_turn"
+        app:layout_constraintEnd_toEndOf="parent" />
 
     <Button
         android:id="@+id/button_battle_start"
@@ -89,9 +91,10 @@
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
         android:text="対局開始"
+        android:textSize="32sp"
         app:layout_constraintTop_toBottomOf="@+id/textView_random_turn"
         app:layout_constraintBottom_toBottomOf="parent"
-        app:layout_constraintEnd_toEndOf="parent"
-        app:layout_constraintStart_toStartOf="parent" />
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toEndOf="parent" />
 
 </androidx.constraintlayout.widget.ConstraintLayout>
