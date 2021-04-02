@@ -266,6 +266,7 @@ fun isValidSfen(sfen: String): Boolean {
         return false
     }
     //各段を処理
+    val kingNum = arrayOf(0, 0)
     for (i in strs.indices) {
         val r = Rank.Rank1.ordinal + i
         var f = File.File9.ordinal
@@ -277,11 +278,21 @@ fun isValidSfen(sfen: String): Boolean {
                 else -> {
                     val piece = sfenCharToPiece[c] ?: return false
 
+                    if (kind(piece) == KING) {
+                        kingNum[pieceToColor(piece)]++
+                    }
+
                     //成のフラグを降ろす
                     promote = false
                 }
             }
         }
+    }
+
+    //とりあえず玉はそれぞれ1枚に限定
+    //その他の駒も枚数の制約はあるけどとりあえず無視
+    if (kingNum[BLACK] != 1 || kingNum[WHITE] != 1) {
+        return false
     }
 
     //手番
@@ -312,6 +323,11 @@ fun isValidSfen(sfen: String): Boolean {
             }
         } else { //駒なら持ち駒を変更
             val piece = sfenCharToPiece[strHand[i++]] ?: return false
+
+            //持ち駒に玉が来てはいけない
+            if (kind(piece) == KING) {
+                return false
+            }
 
             //枚数を1に戻す
             num = 1
