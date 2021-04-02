@@ -565,11 +565,7 @@ class BattleActivity : AppCompatActivity() {
                                     pos.fromStr(sfen)
                                     showPosition()
                                 } else {
-                                    Snackbar.make(
-                                        binding.constraintLayout,
-                                        "SFEN文字列が不正です",
-                                        Snackbar.LENGTH_SHORT
-                                    ).show()
+                                    showSnackbar("SFEN文字列が不正です")
                                 }
                             }
                             .show()
@@ -578,11 +574,7 @@ class BattleActivity : AppCompatActivity() {
                         val clipboard = getSystemService(Context.CLIPBOARD_SERVICE) as ClipboardManager
                         val clip: ClipData = ClipData.newPlainText("sfen", pos.toStr())
                         clipboard.setPrimaryClip(clip)
-                        Snackbar.make(
-                            binding.constraintLayout,
-                            "現局面のSFENをクリップボードへコピーしました",
-                            Snackbar.LENGTH_SHORT
-                        ).show()
+                        showSnackbar("現局面のSFENをクリップボードへコピーしました")
                     }
                     Menu.CLEAR_RESULT.ordinal -> {
                         AlertDialog.Builder(this)
@@ -598,11 +590,7 @@ class BattleActivity : AppCompatActivity() {
                                     apply()
                                 }
 
-                                Snackbar.make(
-                                    binding.constraintLayout,
-                                    "戦績を削除しました",
-                                    Snackbar.LENGTH_SHORT
-                                ).show()
+                                showSnackbar("戦績を削除しました")
                             }
                             .show()
                     }
@@ -614,6 +602,14 @@ class BattleActivity : AppCompatActivity() {
                 }
             }
             .show()
+    }
+
+    private fun showSnackbar(text: String) {
+        Snackbar.make(
+            binding.constraintLayout,
+            text,
+            Snackbar.LENGTH_SHORT
+        ).show()
     }
 
     private fun xy2square(x: Int, y: Int): Square {
