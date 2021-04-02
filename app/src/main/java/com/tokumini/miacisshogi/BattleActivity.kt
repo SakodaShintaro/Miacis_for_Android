@@ -471,6 +471,8 @@ class BattleActivity : AppCompatActivity() {
 
                 //見出し
                 val labelRow = layoutInflater.inflate(R.layout.table_row, null) as TableRow
+                labelRow.setBackgroundColor(Color.LTGRAY)
+                labelRow.findViewById<TextView>(R.id.rowtext0).text = "順位"
                 labelRow.findViewById<TextView>(R.id.rowtext1).text = "指し手"
                 labelRow.findViewById<TextView>(R.id.rowtext2).text = "方策確率"
                 tableLayout.addView(labelRow, TableLayout.LayoutParams())
@@ -478,6 +480,7 @@ class BattleActivity : AppCompatActivity() {
                 //各指し手
                 for (i in policyAndMove.indices) {
                     val tableRow = layoutInflater.inflate(R.layout.table_row, null) as TableRow
+                    tableRow.findViewById<TextView>(R.id.rowtext0).text = (i + 1).toString()
                     tableRow.findViewById<TextView>(R.id.rowtext1).text = policyAndMove[i].second.toPrettyStr()
                     tableRow.findViewById<TextView>(R.id.rowtext2).text =
                         "%5.1f%%".format((policyAndMove[i].first * 100))
