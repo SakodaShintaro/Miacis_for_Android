@@ -56,7 +56,8 @@ class BattleActivity : AppCompatActivity() {
         pos = Position()
 
         //探索部の準備
-        searcher = Search(this, 0)
+        val randomTurn = intent?.extras?.get(KEY_RANDOM_TURN) as Int
+        searcher = Search(this, randomTurn)
 
         //ターンの制御
         mode = intent?.extras?.get(TURN_STR) as Int

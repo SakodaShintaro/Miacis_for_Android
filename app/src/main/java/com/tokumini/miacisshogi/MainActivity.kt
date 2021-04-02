@@ -16,6 +16,11 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
 
+        findViewById<Button>(R.id.button_battle).setOnClickListener {
+            val intent = Intent(this, BattleSettingActivity::class.java)
+            startActivity(intent)
+        }
+
         findViewById<Button>(R.id.button_consideration).setOnClickListener {
             val intent = Intent(this, BattleActivity::class.java)
             intent.putExtra(TURN_STR, CONSIDERATION)
