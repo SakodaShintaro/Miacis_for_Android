@@ -30,7 +30,7 @@ class BattleSettingActivity : AppCompatActivity() {
             }
 
             val intent = Intent(this, BattleActivity::class.java)
-            intent.putExtra(TURN_STR, mode)
+            intent.putExtra(KEY_BATTLE_MODE, mode)
             intent.putExtra(KEY_RANDOM_TURN, binding.numPicker.value)
             startActivity(intent)
         }

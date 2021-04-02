@@ -56,11 +56,12 @@ class BattleActivity : AppCompatActivity() {
         pos = Position()
 
         //探索部の準備
-        val randomTurn = intent?.extras?.get(KEY_RANDOM_TURN) as Int
+        var randomTurn = intent?.extras?.get(KEY_RANDOM_TURN)
+        randomTurn = if (randomTurn == null) 0 else randomTurn as Int
         searcher = Search(this, randomTurn)
 
         //ターンの制御
-        mode = intent?.extras?.get(TURN_STR) as Int
+        mode = intent?.extras?.get(KEY_BATTLE_MODE) as Int
         when (mode) {
             HUMAN_TURN_BLACK -> player = arrayOf(HUMAN, MIACIS)
             HUMAN_TURN_WHITE -> {
