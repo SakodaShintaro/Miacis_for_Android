@@ -1,5 +1,6 @@
 package com.tokumini.miacisshogi
 
+import android.util.Log
 import kotlin.random.Random
 
 class Position {
@@ -606,66 +607,87 @@ class Position {
             'g' to WHITE_GOLD, 'b' to WHITE_BISHOP, 'r' to WHITE_ROOK, 'k' to WHITE_KING,
         )
 
-        //sfen文字列を走査するイテレータ(ダサいやり方な気がするけどパッと思いつくのはこれくらい)
-        var i = 0
+        val split = sfen.split(' ')
+        //SFENは "盤面 手番 持ち駒 手数"(http://shogidokoro.starfree.jp/usi.html)
+        if (split.size != 4) {
+            init()
+            return
+        }
+
+        val (strBoard, strTurn, strHand, strTurnNum) = split
 
         //盤上の設定
-        var r = Rank.Rank1.ordinal
-        var f = File.File9.ordinal
-        while (i < sfen.length) {
-            if (sfen[i] == '/') {
-                //次の段へ移る
-                f = File.File9.ordinal
-                r++
-            } else if (sfen[i] == ' ') {
-                //手番の設定へ
-                break
-            } else if (sfen[i] in '1'..'9') {
-                //空マス分飛ばす
-                f -= sfen[i] - '0'
-            } else if (sfen[i] == '+') {
-                //次の文字が示す駒を成らせてboard_に設置
-                board[FRToSquare[f--][r].ordinal] = promote(charToPiece[sfen[++i]]!!)
-            } else {
-                //玉だったらking_sq_を設定
-                if (charToPiece[sfen[i]] == BLACK_KING) {
-                    kingSq[BLACK] = FRToSquare[f][r]
-                } else if (charToPiece[sfen[i]] == WHITE_KING) {
-                    kingSq[WHITE] = FRToSquare[f][r]
+        val strs = strBoard.split('/')
+        if (strs.size != BOARD_WIDTH) {
+            init()
+            return
+        }
+        //各段を処理
+        for (i in strs.indices) {
+            val r = Rank.Rank1.ordinal + i
+            var f = File.File9.ordinal
+            var promote = false
+            for (j in strs[i].indices) {
+                when (val c = strs[i][j]) {
+                    in '1'..'9' -> { f -= c - '0' }
+                    '+' -> { promote = true }
+                    else -> {
+                        val piece = charToPiece[c]
+                        if (piece == null) {
+                            init()
+                            return
+                        }
+
+                        //玉だったら位置を設定
+                        if (kind(piece) == KING) {
+                            kingSq[pieceToColor(piece)] = FRToSquare[f][r]
+                        }
+
+                        //文字が示す駒をboard_に設置
+                        board[FRToSquare[f--][r].ordinal] = if (promote) promote(piece) else piece
+
+                        //成のフラグを降ろす
+                        promote = false
+                    }
                 }
-                //文字が示す駒をboard_に設置
-                board[FRToSquare[f--][r].ordinal] = charToPiece[sfen[i]]!!
             }
-            i++
         }
 
         //手番の設定
-        color = if (sfen[++i] == 'b') BLACK else WHITE
-
-        //空白を飛ばす
-        i += 2
+        color = when (strTurn) {
+            "b" -> BLACK
+            "w" -> WHITE
+            else -> {
+                init()
+                return
+            }
+        }
 
         //持ち駒
         hand[BLACK].clear()
         hand[WHITE].clear()
         var num = 1
-        while (sfen[i] != ' ') {
-            if (sfen[i] == '-') {
-                i++
+        var i = 0
+        while (i < strHand.length) {
+            if (strHand[i] == '-') {
                 break
             }
-            if (sfen[i] in '1'..'9') { //数字なら枚数の取得
-                if (sfen[i + 1] in '0'..'9') {
+            if (strHand[i] in '1'..'9') { //数字なら枚数の取得
+                if (strHand[i + 1] in '0'..'9') {
                     //次の文字も数字の場合が一応あるはず(歩が10枚以上)
                     //charをいったんStringにしてからIntにする
-                    num = 10 * sfen[i].toString().toInt() + sfen[i + 1].toString().toInt()
+                    num = 10 * strHand[i].toString().toInt() + strHand[i + 1].toString().toInt()
                     i += 2
                 } else {
                     //次が数字じゃないなら普通に取る
-                    num = sfen[i++].toString().toInt()
+                    num = strHand[i++].toString().toInt()
                 }
             } else { //駒なら持ち駒を変更
-                val piece = charToPiece[sfen[i++]]!!
+                val piece = charToPiece[strHand[i++]]
+                if (piece == null) {
+                    init()
+                    return
+                }
                 hand[pieceToColor(piece)].set(kind(piece), num)
 
                 //枚数を1に戻す
@@ -674,11 +696,12 @@ class Position {
         }
 
         //手数
-        turnNumber = 0
-        while (++i < sfen.length) {
-            turnNumber *= 10
-            turnNumber += sfen[i] - '0'
+        val turnNumberOrNull = strTurnNum.toIntOrNull()
+        if (turnNumberOrNull == null) {
+            init()
+            return
         }
+        turnNumber = turnNumberOrNull
 
         //ハッシュ値の初期化
         initHashValue()
