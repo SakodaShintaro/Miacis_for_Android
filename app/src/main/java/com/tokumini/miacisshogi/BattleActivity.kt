@@ -17,6 +17,7 @@ import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
 import com.google.android.material.snackbar.Snackbar
 import com.tokumini.miacisshogi.databinding.ActivityBattleBinding
 import kotlinx.coroutines.*
+import kotlin.math.max
 
 
 class BattleActivity : AppCompatActivity() {
@@ -43,6 +44,9 @@ class BattleActivity : AppCompatActivity() {
     private var autoThink: Boolean = false
     private val job = Job()
     private val scope = CoroutineScope(Dispatchers.Main + job)
+    private val oneTurnData: MutableList<OneTurnData> = mutableListOf()
+    private var oneTurnDataIndex: Int = 0
+    private var isThisPositionThinked = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -73,6 +77,7 @@ class BattleActivity : AppCompatActivity() {
             binding.tableLayout.visibility = View.INVISIBLE
             binding.barChart.visibility = View.INVISIBLE
             binding.buttonUndo.isEnabled = false
+            binding.buttonRedo.isEnabled = false
             binding.buttonThink.isEnabled = false
             binding.switchAutoThink.isEnabled = false
         }
@@ -153,11 +158,14 @@ class BattleActivity : AppCompatActivity() {
         }
         binding.buttonUndo.setOnClickListener {
             pos.undo()
+            isThisPositionThinked = false
+            oneTurnDataIndex = max(oneTurnDataIndex - 1, 0)
             if (mode == CONSIDERATION && autoThink) {
                 scope.launch { think() }
             }
             showPosition()
         }
+        binding.buttonRedo.setOnClickListener { redo() }
         binding.buttonThink.setOnClickListener {
             scope.launch { think() }
         }
@@ -289,6 +297,9 @@ class BattleActivity : AppCompatActivity() {
         //盤面を動かす
         pos.doMove(move)
 
+        //検討したフラグを降ろす
+        isThisPositionThinked = false
+
         //盤面を再描画
         showPosition()
 
@@ -305,11 +316,61 @@ class BattleActivity : AppCompatActivity() {
                 pos.doMove(bestMove)
                 showPosition()
 
+                addOneTurnData(bestMove)
+
                 //終了判定
                 if (pos.getFinishStatus() != Position.NOT_FINISHED) {
                     finishProcess()
                 }
             }
+            addOneTurnData(move)
+            return
+        }
+
+        //検討モードのとき、自動思考モードがオンであれば思考開始
+        if (mode == CONSIDERATION && autoThink) {
+            scope.launch { think() }
+        }
+
+        addOneTurnData(move)
+    }
+
+    private fun addOneTurnData(move: Move) {
+        //データを積む
+        while (oneTurnData.size > oneTurnDataIndex) {
+            oneTurnData.removeLast()
+        }
+        if (isThisPositionThinked) {
+            oneTurnData.add(OneTurnData(move, searcher.value))
+        } else {
+            oneTurnData.add(OneTurnData(move, Array(BIN_SIZE){0.0f}))
+        }
+        oneTurnDataIndex++
+    }
+
+    private fun redo() {
+        if (oneTurnDataIndex >= oneTurnData.size) {
+            return
+        }
+
+        val move = oneTurnData[oneTurnDataIndex].move
+
+        oneTurnDataIndex++
+
+        if (!pos.isLegalMove(move)) {
+            //適当にエラー処理
+            return
+        }
+
+        //盤面を動かす
+        pos.doMove(move)
+
+        //盤面を再描画
+        showPosition()
+
+        //終了判定
+        if (pos.getFinishStatus() != Position.NOT_FINISHED) {
+            finishProcess()
             return
         }
 
@@ -373,6 +434,7 @@ class BattleActivity : AppCompatActivity() {
             binding.tableLayout.visibility = View.VISIBLE
             binding.barChart.visibility = View.VISIBLE
             binding.buttonUndo.isEnabled = true
+            binding.buttonRedo.isEnabled = true
             binding.buttonThink.isEnabled = true
             binding.switchAutoThink.isEnabled = true
         }
@@ -461,6 +523,7 @@ class BattleActivity : AppCompatActivity() {
             val bestMove = searcher.search(pos)
             showPolicy(searcher.policy)
             showValue(searcher.value)
+            isThisPositionThinked = true
             bestMove
         }
     }
