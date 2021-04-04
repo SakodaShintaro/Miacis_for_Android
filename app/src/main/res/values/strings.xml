@@ -3,4 +3,6 @@
     <string name="result_user_win">result_use_win</string>
     <string name="result_user_draw">result_use_draw</string>
     <string name="result_user_lose">result_use_lose</string>
+    <string name="default_turn">default_turn</string>
+    <string name="random_turn">random_turn</string>
 </resources>
