@@ -87,7 +87,7 @@
     <Button
         android:id="@+id/button_battle_start"
         android:layout_width="0dp"
-        android:layout_height="60dp"
+        android:layout_height="80dp"
         android:layout_marginStart="32dp"
         android:layout_marginEnd="32dp"
         android:text="対局開始"
