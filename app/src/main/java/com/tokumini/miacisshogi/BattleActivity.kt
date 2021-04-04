@@ -195,8 +195,8 @@ class BattleActivity : AppCompatActivity() {
             val showIndex = if (showInverse) 1 - c else c
             val handFrame = handFrames[showIndex]
             if (handFrame.y <= pointY && pointY <= handFrame.y + handFrame.height * heightRate) {
-                //手番と違う方の駒台に触っていたらリセット
-                if (pos.color != c) {
+                //手番と違う方の駒台に触っていた、あるいはすでに駒を持っている状態だったらリセット
+                if (pos.color != c || holdPiece != EMPTY) {
                     showPosition()
                     return true
                 }
