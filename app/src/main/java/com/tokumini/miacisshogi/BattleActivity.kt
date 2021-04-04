@@ -10,10 +10,9 @@ import android.view.View
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.github.mikephil.charting.components.XAxis
-import com.github.mikephil.charting.data.BarData
-import com.github.mikephil.charting.data.BarDataSet
-import com.github.mikephil.charting.data.BarEntry
+import com.github.mikephil.charting.data.*
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
+import com.github.mikephil.charting.interfaces.datasets.IScatterDataSet
 import com.google.android.material.snackbar.Snackbar
 import com.tokumini.miacisshogi.databinding.ActivityBattleBinding
 import kotlinx.coroutines.*
@@ -46,7 +45,6 @@ class BattleActivity : AppCompatActivity() {
     private val scope = CoroutineScope(Dispatchers.Main + job)
     private val oneTurnData: MutableList<OneTurnData> = mutableListOf()
     private var oneTurnDataIndex: Int = 0
-    private var isThisPositionThinked = false
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -76,6 +74,8 @@ class BattleActivity : AppCompatActivity() {
         if (mode != CONSIDERATION) {
             binding.tableLayout.visibility = View.INVISIBLE
             binding.barChart.visibility = View.INVISIBLE
+            binding.scatterChart.visibility = View.INVISIBLE
+            binding.radioGraphMode.visibility = View.INVISIBLE
             binding.buttonUndo.isEnabled = false
             binding.buttonRedo.isEnabled = false
             binding.buttonThink.isEnabled = false
@@ -158,7 +158,6 @@ class BattleActivity : AppCompatActivity() {
         }
         binding.buttonUndo.setOnClickListener {
             pos.undo()
-            isThisPositionThinked = false
             oneTurnDataIndex = max(oneTurnDataIndex - 1, 0)
             if (mode == CONSIDERATION && autoThink) {
                 scope.launch { think() }
@@ -171,6 +170,19 @@ class BattleActivity : AppCompatActivity() {
         }
         binding.switchAutoThink.setOnCheckedChangeListener { _, isChecked ->
             autoThink = isChecked
+            scope.launch { think() }
+        }
+        binding.radioGraphMode.setOnCheckedChangeListener { radioGroup: RadioGroup, i: Int ->
+            when (binding.radioGraphMode.checkedRadioButtonId) {
+                R.id.radio_curr_value -> {
+                    binding.barChart.visibility = View.VISIBLE
+                    binding.scatterChart.visibility = View.INVISIBLE
+                }
+                R.id.radio_value_history -> {
+                    binding.barChart.visibility = View.INVISIBLE
+                    binding.scatterChart.visibility = View.VISIBLE
+                }
+            }
             scope.launch { think() }
         }
     }
@@ -297,9 +309,6 @@ class BattleActivity : AppCompatActivity() {
         //盤面を動かす
         pos.doMove(move)
 
-        //検討したフラグを降ろす
-        isThisPositionThinked = false
-
         //盤面を再描画
         showPosition()
 
@@ -340,11 +349,7 @@ class BattleActivity : AppCompatActivity() {
         while (oneTurnData.size > oneTurnDataIndex) {
             oneTurnData.removeLast()
         }
-        if (isThisPositionThinked) {
-            oneTurnData.add(OneTurnData(move, searcher.value))
-        } else {
-            oneTurnData.add(OneTurnData(move, Array(BIN_SIZE){0.0f}))
-        }
+        oneTurnData.add(OneTurnData(move, searcher.value.clone()))
         oneTurnDataIndex++
     }
 
@@ -429,10 +434,21 @@ class BattleActivity : AppCompatActivity() {
 
         if (mode != CONSIDERATION) {
             //対局モードから検討モードへ移行する
+            //valueが常に片方の視点からになっていておかしいので変える
+            for (i in oneTurnData.indices) {
+                if (player[i % 2] == HUMAN) {
+                    println(i)
+                    oneTurnData[i].value.reverse()
+                }
+            }
+
+            //その他の変更
             mode = CONSIDERATION
             player = arrayOf(HUMAN, HUMAN)
             binding.tableLayout.visibility = View.VISIBLE
             binding.barChart.visibility = View.VISIBLE
+            binding.scatterChart.visibility = View.INVISIBLE
+            binding.radioGraphMode.visibility = View.VISIBLE
             binding.buttonUndo.isEnabled = true
             binding.buttonRedo.isEnabled = true
             binding.buttonThink.isEnabled = true
@@ -522,8 +538,10 @@ class BattleActivity : AppCompatActivity() {
         return withContext(Dispatchers.Default) {
             val bestMove = searcher.search(pos)
             showPolicy(searcher.policy)
-            showValue(searcher.value)
-            isThisPositionThinked = true
+            when (binding.radioGraphMode.checkedRadioButtonId) {
+                R.id.radio_curr_value -> showValue(searcher.value)
+                R.id.radio_value_history -> showValue2(searcher.value)
+            }
             bestMove
         }
     }
@@ -597,6 +615,71 @@ class BattleActivity : AppCompatActivity() {
 
             //barchart更新
             barChart.invalidate()
+        }
+    }
+
+    private fun showValue2(value: Array<Float>) {
+        val currValue = value.clone()
+        if (pos.color == WHITE) {
+            currValue.reverse()
+        }
+
+        //Entryにデータ格納
+        val probBin = 20
+        val probWidth = 1.0f / probBin
+        val entryList = List(probBin){mutableListOf<Entry>()}
+
+        for (i in oneTurnData.indices) {
+            val v = oneTurnData[i].value.clone()
+            if (i % 2 == 1) {
+                v.reverse()
+            }
+            for (j in 0 until BIN_SIZE) {
+                val prob = v[j]
+                val index = (prob / probWidth).toInt()
+                val y = MIN_SCORE + VALUE_WIDTH * (j + 0.5f)
+                entryList[index].add(Entry(i.toFloat(), y))
+            }
+        }
+
+        for (j in 0 until BIN_SIZE) {
+            val prob = currValue[j]
+            val index = (prob / probWidth).toInt()
+            val y = MIN_SCORE + VALUE_WIDTH * (j + 0.5f)
+            entryList[index].add(Entry(oneTurnData.size.toFloat(), y))
+        }
+
+        //DataSetのリスト
+        val scatterDataSets = mutableListOf<IScatterDataSet>()
+        for (i in 0 until probBin) {
+            val scatterDataSet = ScatterDataSet(entryList[i], "value")
+            val n = 255 - (255.0 / (probBin - 1) * i).toInt()
+            scatterDataSet.color = Color.rgb(n, n, 255)
+            scatterDataSet.formSize = 1.0f / BIN_SIZE / 10 / 10
+            scatterDataSets.add(scatterDataSet)
+        }
+
+        //格納
+        val scatterData = ScatterData(scatterDataSets)
+        scatterData.setDrawValues(false)
+
+        //ChartにData格納
+        val scatterChart = binding.scatterChart
+        scatterChart.post {
+            scatterChart.data = scatterData
+            scatterChart.legend.isEnabled = false
+            scatterChart.description.isEnabled = false
+            scatterChart.setScaleEnabled(false)
+            scatterChart.xAxis.position = XAxis.XAxisPosition.BOTTOM
+//            scatterChart.xAxis.axisMaximum = MAX_SCORE
+//            scatterChart.xAxis.axisMinimum = MIN_SCORE
+//            scatterChart.axisLeft.axisMaximum = 1.1f
+//            scatterChart.axisLeft.axisMinimum = 0.0f
+//            scatterChart.axisRight.axisMaximum = 1.1f
+//            scatterChart.axisRight.axisMinimum = 0.0f
+
+            //chart更新
+            scatterChart.invalidate()
         }
     }
 

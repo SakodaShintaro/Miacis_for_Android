@@ -209,6 +209,10 @@ class Search(context: Context, val randomTurn: Int) {
 
         // モデルをロード
         module = Module.load(assetFilePath(context, "shogi_cat_bl10_ch256_cpu.model"))
+
+        // Policy, Valueを仮に初期化
+        policy = Array(POLICY_DIM) { 0.0f }
+        value = Array(BIN_SIZE) { 0.0f }
     }
 
     fun search(pos: Position): Move {
