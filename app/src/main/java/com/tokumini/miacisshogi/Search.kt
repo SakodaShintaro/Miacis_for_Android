@@ -228,7 +228,10 @@ class Search(context: Context, val randomTurn: Int) {
 
         // 合法手だけマスク
         val moveList = pos.generateAllMoves()
-        policy = Array(moveList.size) { it -> rawPolicy[moveList[it].toLabel()] }
+        if (moveList.isEmpty()) {
+            return NULL_MOVE
+        }
+        policy = Array(moveList.size) { rawPolicy[moveList[it].toLabel()] }
         policy = softmax(policy, 1.0f)
 
         // valueを取得

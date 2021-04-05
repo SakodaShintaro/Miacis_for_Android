@@ -172,7 +172,7 @@ class BattleActivity : AppCompatActivity() {
             autoThink = isChecked
             scope.launch { think() }
         }
-        binding.radioGraphMode.setOnCheckedChangeListener { radioGroup: RadioGroup, i: Int ->
+        binding.radioGraphMode.setOnCheckedChangeListener { _: RadioGroup, _: Int ->
             when (binding.radioGraphMode.checkedRadioButtonId) {
                 R.id.radio_curr_value -> {
                     binding.barChart.visibility = View.VISIBLE
@@ -437,7 +437,6 @@ class BattleActivity : AppCompatActivity() {
             //valueが常に片方の視点からになっていておかしいので変える
             for (i in oneTurnData.indices) {
                 if (player[i % 2] == HUMAN) {
-                    println(i)
                     oneTurnData[i].value.reverse()
                 }
             }
@@ -703,7 +702,6 @@ class BattleActivity : AppCompatActivity() {
                     var sfen = editText.text.toString()
                     sfen = sfen.trim('\n')
                     sfen = sfen.removePrefix("sfen ")
-                    println(sfen)
                     if (isValidSfen(sfen)) {
                         pos.fromStr(sfen)
                         showPosition()
