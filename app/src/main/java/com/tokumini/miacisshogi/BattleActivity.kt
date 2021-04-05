@@ -472,9 +472,7 @@ class BattleActivity : AppCompatActivity() {
             binding.buttonThink.isEnabled = true
             binding.switchAutoThink.isEnabled = true
 
-            if (autoThink) {
-                scope.launch { think() }
-            }
+            scope.launch { think() }
 
             when (binding.radioGraphMode.checkedRadioButtonId) {
                 R.id.radio_curr_value -> {
