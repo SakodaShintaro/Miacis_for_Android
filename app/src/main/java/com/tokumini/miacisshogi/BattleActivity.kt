@@ -72,17 +72,6 @@ class BattleActivity : AppCompatActivity() {
             CONSIDERATION -> player = arrayOf(HUMAN, HUMAN)
         }
 
-        if (mode != CONSIDERATION) {
-            binding.tableLayout.visibility = View.INVISIBLE
-            binding.barChart.visibility = View.INVISIBLE
-            binding.scatterChart.visibility = View.INVISIBLE
-            binding.radioGraphMode.visibility = View.INVISIBLE
-            binding.buttonUndo.isEnabled = false
-            binding.buttonRedo.isEnabled = false
-            binding.buttonThink.isEnabled = false
-            binding.switchAutoThink.isEnabled = false
-        }
-
         //マス画像の初期化
         //ここで9 x 9のImageViewを作り、置かれている駒に応じて適切な画像を選択して置く
         squareImageViews = ArrayList()
@@ -182,6 +171,7 @@ class BattleActivity : AppCompatActivity() {
             scope.launch { think() }
         }
         binding.switchAutoThink.isChecked = sharedPref.getBoolean(getString(R.string.switch_auto_think), false)
+        autoThink = binding.switchAutoThink.isChecked
         binding.radioGraphMode.setOnCheckedChangeListener { _: RadioGroup, _: Int ->
             when (binding.radioGraphMode.checkedRadioButtonId) {
                 R.id.radio_curr_value -> {
@@ -193,7 +183,24 @@ class BattleActivity : AppCompatActivity() {
                     binding.scatterChart.visibility = View.VISIBLE
                 }
             }
+            with(sharedPref.edit()) {
+                putInt(getString(R.string.radio_graph_mode), binding.radioGraphMode.checkedRadioButtonId)
+                apply()
+            }
             scope.launch { think() }
+        }
+        binding.radioGraphMode.check(sharedPref.getInt(getString(R.string.radio_graph_mode), R.id.radio_value_history))
+
+        //対局モードのときはこのタイミングで表示を下げる
+        if (mode != CONSIDERATION) {
+            binding.tableLayout.visibility = View.INVISIBLE
+            binding.barChart.visibility = View.INVISIBLE
+            binding.scatterChart.visibility = View.INVISIBLE
+            binding.radioGraphMode.visibility = View.INVISIBLE
+            binding.buttonUndo.isEnabled = false
+            binding.buttonRedo.isEnabled = false
+            binding.buttonThink.isEnabled = false
+            binding.switchAutoThink.isEnabled = false
         }
     }
 
@@ -455,13 +462,26 @@ class BattleActivity : AppCompatActivity() {
             mode = CONSIDERATION
             player = arrayOf(HUMAN, HUMAN)
             binding.tableLayout.visibility = View.VISIBLE
-            binding.barChart.visibility = View.VISIBLE
-            binding.scatterChart.visibility = View.INVISIBLE
             binding.radioGraphMode.visibility = View.VISIBLE
             binding.buttonUndo.isEnabled = true
             binding.buttonRedo.isEnabled = true
             binding.buttonThink.isEnabled = true
             binding.switchAutoThink.isEnabled = true
+
+            if (autoThink) {
+                scope.launch { think() }
+            }
+
+            when (binding.radioGraphMode.checkedRadioButtonId) {
+                R.id.radio_curr_value -> {
+                    binding.barChart.visibility = View.VISIBLE
+                    binding.scatterChart.visibility = View.INVISIBLE
+                }
+                R.id.radio_value_history -> {
+                    binding.barChart.visibility = View.INVISIBLE
+                    binding.scatterChart.visibility = View.VISIBLE
+                }
+            }
         }
     }
 
@@ -636,7 +656,7 @@ class BattleActivity : AppCompatActivity() {
         //Entryにデータ格納
         val probBin = 20
         val probWidth = 1.0f / probBin
-        val entryList = List(probBin){mutableListOf<Entry>()}
+        val entryList = List(probBin) { mutableListOf<Entry>() }
 
         for (i in oneTurnData.indices) {
             val v = oneTurnData[i].value.clone()
@@ -651,11 +671,13 @@ class BattleActivity : AppCompatActivity() {
             }
         }
 
-        for (j in 0 until BIN_SIZE) {
-            val prob = currValue[j]
-            val index = min((prob / probWidth).toInt(), probBin - 1)
-            val y = MIN_SCORE + VALUE_WIDTH * (j + 0.5f)
-            entryList[index].add(Entry((oneTurnData.size + 1).toFloat(), y))
+        if (oneTurnDataIndex == oneTurnData.size) {
+            for (j in 0 until BIN_SIZE) {
+                val prob = currValue[j]
+                val index = min((prob / probWidth).toInt(), probBin - 1)
+                val y = MIN_SCORE + VALUE_WIDTH * (j + 0.5f)
+                entryList[index].add(Entry((oneTurnData.size + 1).toFloat(), y))
+            }
         }
 
         //DataSetのリスト
@@ -747,7 +769,7 @@ class BattleActivity : AppCompatActivity() {
                 }
                 .show()
         }
-        
+
         if (mode != CONSIDERATION) {
             AlertDialog.Builder(this)
                 .setTitle("メニュー")

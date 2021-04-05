@@ -6,4 +6,5 @@
     <string name="default_turn">default_turn</string>
     <string name="random_turn">random_turn</string>
     <string name="switch_auto_think">switch_auto_think</string>
+    <string name="radio_graph_mode">radio_graph_mode</string>
 </resources>
