@@ -64,6 +64,12 @@ class Position {
         init()
     }
 
+    fun copy(): Position {
+        val copy = Position()
+        copy.fromStr(this.toStr())
+        return copy
+    }
+
     //初期化
     fun init() {
         //盤上の初期化

@@ -160,8 +160,8 @@ class BattleActivity : AppCompatActivity() {
         binding.buttonThink.setOnClickListener {
             scope.launch { think() }
         }
-//        binding.switchAutoThink.isChecked = sharedPref.getBoolean(getString(R.string.switch_auto_think), false)
-//        autoThink = binding.switchAutoThink.isChecked
+        binding.switchAutoThink.isChecked = sharedPref.getBoolean(getString(R.string.switch_auto_think), false)
+        autoThink = binding.switchAutoThink.isChecked
         binding.switchAutoThink.setOnCheckedChangeListener { _, isChecked ->
             autoThink = isChecked
             // 書き出す
@@ -578,7 +578,7 @@ class BattleActivity : AppCompatActivity() {
     }
 
     private fun showPolicy(policy: Array<Float>) {
-        val moveList = pos.generateAllMoves()
+        val moveList = pos.copy().generateAllMoves()
         val policyAndMove = policy.zip(moveList).sortedBy { pair -> -pair.first }
         val tableLayout = binding.tableLayout
         tableLayout.post {
