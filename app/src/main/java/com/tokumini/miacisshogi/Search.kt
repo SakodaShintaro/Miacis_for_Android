@@ -228,7 +228,11 @@ class Search(context: Context, val randomTurn: Int) {
 
         // 合法手だけマスク
         val moveList = pos.generateAllMoves()
+
+        // 合法手がなかったら投了
         if (moveList.isEmpty()) {
+            value = Array(BIN_SIZE) { 0.0f }
+            value[0] = 1.0f
             return NULL_MOVE
         }
         policy = Array(moveList.size) { rawPolicy[moveList[it].toLabel()] }

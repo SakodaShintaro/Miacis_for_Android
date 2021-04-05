@@ -17,6 +17,7 @@ import com.google.android.material.snackbar.Snackbar
 import com.tokumini.miacisshogi.databinding.ActivityBattleBinding
 import kotlinx.coroutines.*
 import kotlin.math.max
+import kotlin.math.min
 
 
 class BattleActivity : AppCompatActivity() {
@@ -539,7 +540,7 @@ class BattleActivity : AppCompatActivity() {
             showPolicy(searcher.policy)
             when (binding.radioGraphMode.checkedRadioButtonId) {
                 R.id.radio_curr_value -> showValue(searcher.value)
-                R.id.radio_value_history -> showValue2(searcher.value)
+                R.id.radio_value_history -> showValueHistory(searcher.value)
             }
             bestMove
         }
@@ -617,7 +618,7 @@ class BattleActivity : AppCompatActivity() {
         }
     }
 
-    private fun showValue2(value: Array<Float>) {
+    private fun showValueHistory(value: Array<Float>) {
         val currValue = value.clone()
         if (pos.color == WHITE) {
             currValue.reverse()
@@ -635,17 +636,17 @@ class BattleActivity : AppCompatActivity() {
             }
             for (j in 0 until BIN_SIZE) {
                 val prob = v[j]
-                val index = (prob / probWidth).toInt()
+                val index = min((prob / probWidth).toInt(), probBin - 1)
                 val y = MIN_SCORE + VALUE_WIDTH * (j + 0.5f)
-                entryList[index].add(Entry(i.toFloat(), y))
+                entryList[index].add(Entry((i + 1).toFloat(), y))
             }
         }
 
         for (j in 0 until BIN_SIZE) {
             val prob = currValue[j]
-            val index = (prob / probWidth).toInt()
+            val index = min((prob / probWidth).toInt(), probBin - 1)
             val y = MIN_SCORE + VALUE_WIDTH * (j + 0.5f)
-            entryList[index].add(Entry(oneTurnData.size.toFloat(), y))
+            entryList[index].add(Entry((oneTurnData.size + 1).toFloat(), y))
         }
 
         //DataSetのリスト
