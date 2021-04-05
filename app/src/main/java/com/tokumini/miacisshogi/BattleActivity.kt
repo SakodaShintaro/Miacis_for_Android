@@ -153,6 +153,8 @@ class BattleActivity : AppCompatActivity() {
             }
         }
 
+        val sharedPref = getPreferences(Context.MODE_PRIVATE)
+
         // ボタンの初期化
         binding.buttonMenu.setOnClickListener {
             showMenu()
@@ -171,8 +173,15 @@ class BattleActivity : AppCompatActivity() {
         }
         binding.switchAutoThink.setOnCheckedChangeListener { _, isChecked ->
             autoThink = isChecked
+            // 書き出す
+            with(sharedPref.edit()) {
+                putBoolean(getString(R.string.switch_auto_think), isChecked)
+                apply()
+            }
+
             scope.launch { think() }
         }
+        binding.switchAutoThink.isChecked = sharedPref.getBoolean(getString(R.string.switch_auto_think), false)
         binding.radioGraphMode.setOnCheckedChangeListener { _: RadioGroup, _: Int ->
             when (binding.radioGraphMode.checkedRadioButtonId) {
                 R.id.radio_curr_value -> {
