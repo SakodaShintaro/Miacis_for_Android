@@ -184,8 +184,11 @@ class Search(context: Context, val randomTurn: Int) {
     val draw_turn = 10
     val shape = longArrayOf(1, 42, 9, 9)
     val C_PUCT = 2.5f
-    lateinit var policy: Array<Float>
-    lateinit var value: Array<Float>
+    var policy: Array<Float> = Array(POLICY_DIM) { 0.0f }
+    var value: Array<Float> = Array(BIN_SIZE) { 0.0f }
+    var cacheMove: Move = NULL_MOVE
+    var preTurn: Int = -1
+    var preHash: Long = -1
 
     init {
         // assetファイルからパスを取得する関数
@@ -209,13 +212,13 @@ class Search(context: Context, val randomTurn: Int) {
 
         // モデルをロード
         module = Module.load(assetFilePath(context, "shogi_cat_bl10_ch256_cpu.model"))
-
-        // Policy, Valueを仮に初期化
-        policy = Array(POLICY_DIM) { 0.0f }
-        value = Array(BIN_SIZE) { 0.0f }
     }
 
     fun search(pos: Position): Move {
+        if (pos.turnNumber == preTurn && pos.hashValue == preHash) {
+            return cacheMove
+        }
+
         // 入力のshape
         val feature = pos.makeFeature()
         val tensor = Tensor.fromBlob(feature.toFloatArray(), shape)
@@ -245,9 +248,12 @@ class Search(context: Context, val randomTurn: Int) {
         }
         value = softmax(value, 1.0f)
 
-        if (pos.turnNumber < randomTurn) {
+        preTurn = pos.turnNumber
+        preHash = pos.hashValue
+
+        cacheMove = if (pos.turnNumber < randomTurn) {
             val index = randomChoose(policy)
-            return moveList[index]
+            moveList[index]
         } else {
             // 最も確率が高いものを取得する
             var maxScore = -10000.0f
@@ -259,8 +265,9 @@ class Search(context: Context, val randomTurn: Int) {
                 }
             }
 
-            return bestMove
+            bestMove
         }
+        return cacheMove
     }
 
     fun think(root: Position): Move {

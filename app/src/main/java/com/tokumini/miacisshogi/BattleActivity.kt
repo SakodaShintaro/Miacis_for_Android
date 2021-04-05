@@ -160,6 +160,8 @@ class BattleActivity : AppCompatActivity() {
         binding.buttonThink.setOnClickListener {
             scope.launch { think() }
         }
+//        binding.switchAutoThink.isChecked = sharedPref.getBoolean(getString(R.string.switch_auto_think), false)
+//        autoThink = binding.switchAutoThink.isChecked
         binding.switchAutoThink.setOnCheckedChangeListener { _, isChecked ->
             autoThink = isChecked
             // 書き出す
@@ -168,10 +170,10 @@ class BattleActivity : AppCompatActivity() {
                 apply()
             }
 
-            scope.launch { think() }
+            if (autoThink) {
+                scope.launch { think() }
+            }
         }
-        binding.switchAutoThink.isChecked = sharedPref.getBoolean(getString(R.string.switch_auto_think), false)
-        autoThink = binding.switchAutoThink.isChecked
         binding.radioGraphMode.setOnCheckedChangeListener { _: RadioGroup, _: Int ->
             when (binding.radioGraphMode.checkedRadioButtonId) {
                 R.id.radio_curr_value -> {
@@ -187,7 +189,9 @@ class BattleActivity : AppCompatActivity() {
                 putInt(getString(R.string.radio_graph_mode), binding.radioGraphMode.checkedRadioButtonId)
                 apply()
             }
-            scope.launch { think() }
+            if (autoThink) {
+                scope.launch { think() }
+            }
         }
         binding.radioGraphMode.check(sharedPref.getInt(getString(R.string.radio_graph_mode), R.id.radio_value_history))
 
@@ -604,17 +608,19 @@ class BattleActivity : AppCompatActivity() {
     }
 
     private fun showValue(value: Array<Float>) {
+        val currValue = value.clone()
+
         //対応するxの値を作成
         val x = Array(BIN_SIZE) { MIN_SCORE + VALUE_WIDTH * (it + 0.5f) }
 
         if (pos.color == WHITE) {
-            value.reverse()
+            currValue.reverse()
         }
 
         //Entryにデータ格納
         val entryList = mutableListOf<BarEntry>()
         for (i in x.indices) {
-            entryList.add(BarEntry(x[i], value[i]))
+            entryList.add(BarEntry(x[i], currValue[i]))
         }
 
         //BarDataSetのリスト

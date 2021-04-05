@@ -193,7 +193,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="現評価値"
-            android:textSize="12sp" />
+            android:maxLines="1"
+            android:textSize="11sp" />
 
         <RadioButton
             android:id="@+id/radio_value_history"
@@ -201,7 +202,8 @@
             android:layout_height="wrap_content"
             android:layout_weight="1"
             android:text="推移グラフ"
-            android:textSize="12sp" />
+            android:maxLines="1"
+            android:textSize="11sp" />
     </RadioGroup>
 
 </androidx.constraintlayout.widget.ConstraintLayout>
