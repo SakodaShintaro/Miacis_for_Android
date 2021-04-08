@@ -158,7 +158,15 @@ class BattleActivity : AppCompatActivity() {
             }
             showPosition()
         }
+        binding.buttonUndo.setOnLongClickListener {
+            moveToTurn(1)
+            true
+        }
         binding.buttonRedo.setOnClickListener { redo() }
+        binding.buttonRedo.setOnLongClickListener {
+            moveToTurn(oneTurnData.size + 1)
+            true
+        }
         binding.buttonThink.setOnClickListener {
             scope.launch { think() }
         }
@@ -198,9 +206,8 @@ class BattleActivity : AppCompatActivity() {
         binding.radioGraphMode.check(sharedPref.getInt(getString(R.string.radio_graph_mode), R.id.radio_value_history))
         binding.scatterChart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
             override fun onValueSelected(e: Entry, h: Highlight?) {
-                val x = e.x.toString()
-                val y = e.y
                 //Entryのクリックなのでxは整数で得られる(Float型ではある)
+                moveToTurn(e.x.toInt())
             }
 
             override fun onNothingSelected() {}
@@ -414,6 +421,56 @@ class BattleActivity : AppCompatActivity() {
         //検討モードのとき、自動思考モードがオンであれば思考開始
         if (mode == CONSIDERATION && autoThink) {
             scope.launch { think() }
+        }
+    }
+
+    private fun moveToTurn(turn: Int) {
+        //turn手目に移動する
+        if (turn <= pos.turnNumber) {
+            //undoを繰り返す
+            val undoNum = pos.turnNumber - turn
+            repeat(undoNum) {
+                pos.undo()
+                oneTurnDataIndex = max(oneTurnDataIndex - 1, 0)
+            }
+            if (mode == CONSIDERATION && autoThink) {
+                scope.launch { think() }
+            }
+            showPosition()
+        } else {
+            //redoを繰り返す
+            val redoNum = turn - pos.turnNumber
+            repeat(redoNum) {
+                if (oneTurnDataIndex >= oneTurnData.size) {
+                    return
+                }
+
+                val move = oneTurnData[oneTurnDataIndex].move
+
+                oneTurnDataIndex++
+
+                if (!pos.isLegalMove(move)) {
+                    //適当にエラー処理
+                    return
+                }
+
+                //盤面を動かす
+                pos.doMove(move)
+            }
+
+            //盤面を再描画
+            showPosition()
+
+            //終了判定
+            if (pos.getFinishStatus() != Position.NOT_FINISHED) {
+                finishProcess()
+                return
+            }
+
+            //検討モードのとき、自動思考モードがオンであれば思考開始
+            if (mode == CONSIDERATION && autoThink) {
+                scope.launch { think() }
+            }
         }
     }
 
