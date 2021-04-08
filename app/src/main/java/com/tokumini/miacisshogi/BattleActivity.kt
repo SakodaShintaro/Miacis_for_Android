@@ -146,6 +146,21 @@ class BattleActivity : AppCompatActivity() {
 
         val sharedPref = getPreferences(Context.MODE_PRIVATE)
 
+        val arrayAdapter = ArrayAdapter(this, R.layout.spinner_item, arrayOf("初期局面"))
+        arrayAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
+        binding.spinnerMoves.adapter = arrayAdapter
+        binding.spinnerMoves.onItemSelectedListener = object : AdapterView.OnItemSelectedListener {
+            override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
+                //なぜか設定したタイミングでも呼ばれてしまうため、ターン数が同じ場合は動かさないようにする処理を入れることでごまかす
+                //moveToTurnに突入しても局面は変わらないが、余計なthinkが入るため突入もさせない
+                if (position != pos.turnNumber - 1 && mode == CONSIDERATION) {
+                    moveToTurn(position + 1)
+                }
+            }
+
+            override fun onNothingSelected(parent: AdapterView<*>) {}
+        }
+
         // ボタンの初期化
         binding.buttonMenu.setOnClickListener {
             showMenu()
@@ -390,6 +405,12 @@ class BattleActivity : AppCompatActivity() {
         }
         oneTurnData.add(OneTurnData(move, searcher.value.clone()))
         oneTurnDataIndex++
+
+        //指し手の表示
+        val arrayAdapter = ArrayAdapter(this, R.layout.spinner_item, Array(oneTurnData.size + 1){ "%3d:%s".format(it, if (it == 0) "初期局面" else oneTurnData[it - 1].move.toPrettyStr())})
+        arrayAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
+        binding.spinnerMoves.adapter = arrayAdapter
+        binding.spinnerMoves.setSelection(pos.turnNumber - 1)
     }
 
     private fun redo() {
@@ -629,7 +650,7 @@ class BattleActivity : AppCompatActivity() {
         }
 
         //手数の表示
-        binding.positionInfo.text = "手数:%d".format(pos.turnNumber)
+        binding.positionInfo.text = "次の手数:%d".format(pos.turnNumber)
 
         //行動のための変数を初期化
         moveFrom = Square.WALLAA
