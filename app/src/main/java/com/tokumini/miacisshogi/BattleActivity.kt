@@ -11,8 +11,10 @@ import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
 import com.github.mikephil.charting.components.XAxis
 import com.github.mikephil.charting.data.*
+import com.github.mikephil.charting.highlight.Highlight
 import com.github.mikephil.charting.interfaces.datasets.IBarDataSet
 import com.github.mikephil.charting.interfaces.datasets.IScatterDataSet
+import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.google.android.material.snackbar.Snackbar
 import com.tokumini.miacisshogi.databinding.ActivityBattleBinding
 import kotlinx.coroutines.*
@@ -194,6 +196,15 @@ class BattleActivity : AppCompatActivity() {
             }
         }
         binding.radioGraphMode.check(sharedPref.getInt(getString(R.string.radio_graph_mode), R.id.radio_value_history))
+        binding.scatterChart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
+            override fun onValueSelected(e: Entry, h: Highlight?) {
+                val x = e.x.toString()
+                val y = e.y
+                //Entryのクリックなのでxは整数で得られる(Float型ではある)
+            }
+
+            override fun onNothingSelected() {}
+        })
 
         //対局モードのときはこのタイミングで表示を下げる
         if (mode != CONSIDERATION) {
