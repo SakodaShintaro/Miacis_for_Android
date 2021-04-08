@@ -222,7 +222,8 @@ class BattleActivity : AppCompatActivity() {
         binding.scatterChart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
             override fun onValueSelected(e: Entry, h: Highlight?) {
                 //Entryのクリックなのでxは整数で得られる(Float型ではある)
-                moveToTurn(e.x.toInt())
+                //0-originでxは得られるので、Positionのターン数として指定するのはその+1
+                moveToTurn(e.x.toInt() + 1)
             }
 
             override fun onNothingSelected() {}
@@ -650,7 +651,7 @@ class BattleActivity : AppCompatActivity() {
         }
 
         //手数の表示
-        binding.positionInfo.text = "次の手数:%d".format(pos.turnNumber)
+        binding.positionInfo.text = "手数:%d".format(pos.turnNumber - 1)
 
         //行動のための変数を初期化
         moveFrom = Square.WALLAA
@@ -763,7 +764,7 @@ class BattleActivity : AppCompatActivity() {
                 val prob = v[j]
                 val index = min((prob / probWidth).toInt(), probBin - 1)
                 val y = MIN_SCORE + VALUE_WIDTH * (j + 0.5f)
-                entryList[index].add(Entry((i + 1).toFloat(), y))
+                entryList[index].add(Entry((i).toFloat(), y))
             }
         }
 
@@ -772,7 +773,7 @@ class BattleActivity : AppCompatActivity() {
                 val prob = currValue[j]
                 val index = min((prob / probWidth).toInt(), probBin - 1)
                 val y = MIN_SCORE + VALUE_WIDTH * (j + 0.5f)
-                entryList[index].add(Entry((oneTurnData.size + 1).toFloat(), y))
+                entryList[index].add(Entry((oneTurnData.size).toFloat(), y))
             }
         }
 
