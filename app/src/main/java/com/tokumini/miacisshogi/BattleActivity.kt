@@ -560,6 +560,9 @@ class BattleActivity : AppCompatActivity() {
             squareImageViews[square2sqid(to)].setBackgroundColor(backGroundMovedColor)
         }
 
+        //手数の表示
+        binding.positionInfo.text = "手数:%d".format(pos.turnNumber)
+
         //行動のための変数を初期化
         moveFrom = Square.WALLAA
         holdPiece = EMPTY
