@@ -7,4 +7,8 @@ Google Playのリンク:https://play.google.com/store/apps/details?id=com.tokumi
 
 アイコンの画像は[きふわらべ氏の描いたイラスト](https://twitter.com/muzudho1/status/1257682356703424513)を許可をいただいて利用しています。
 
-ソースコードのライセンスはBSD-3となっています（詳しくはLICENCEファイルを参照してください）
+ライブラリとしてPyTorchのAndroid向けライブラリを利用しています。[PyTorchのライセンス](https://github.com/pytorch/pytorch/blob/master/LICENSE)はBSD-3です。
+
+またグラフを描画するライブラリとして[MPAndroidChart](https://github.com/PhilJay/MPAndroidChart)を利用しています。[MPAndroidChartのライセンス](https://github.com/PhilJay/MPAndroidChart/blob/master/LICENSE)はApache Licenseであり、Miacis for AndroidはApache Licenseのコードを利用しています。
+
+Miacis for Android自体のソースコードのライセンスはBSD-3となっています（詳しくはLICENCEファイルを参照してください）
