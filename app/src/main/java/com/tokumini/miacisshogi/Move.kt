@@ -202,6 +202,7 @@ val DECLARE_MOVE = Move(MOVE_DECLARE)
 //これコンストラクタとかで書いた方がいい気がするけどうまく書き直せなかった
 //まぁ動けばいいのかなぁ
 fun stringToMove(input: String): Move {
+    println("input = $input")
     if ('A' <= input[0] && input[0] <= 'Z') { //持ち駒を打つ手
         val to = FRToSquare[input[2] - '0'][input[3] - 'a' + 1]
 
@@ -218,6 +219,7 @@ fun stringToMove(input: String): Move {
 
         return dropMove(to, p)
     } else { //盤上の駒を動かす手
+        println("input = $input")
         val from = FRToSquare[input[0] - '0'][input[1] - 'a' + 1]
         val to = FRToSquare[input[2] - '0'][input[3] - 'a' + 1]
         val promote = (input.length == 5 && input[4] == '+')

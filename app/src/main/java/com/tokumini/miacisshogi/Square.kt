@@ -15,7 +15,7 @@ enum class Square {
     SquareNum,
 }
 
-enum class File {
+enum class FILE {
     File0, File1, File2, File3, File4, File5, File6, File7, File8, File9, FileA, FileNum,
 }
 
@@ -46,17 +46,17 @@ val SquareToRank = arrayListOf(
 )
 
 val SquareToFile = arrayListOf(
-    File.File0, File.File0, File.File0, File.File0, File.File0, File.File0, File.File0, File.File0, File.File0, File.File0, File.File0,
-    File.File1, File.File1, File.File1, File.File1, File.File1, File.File1, File.File1, File.File1, File.File1, File.File1, File.File1,
-    File.File2, File.File2, File.File2, File.File2, File.File2, File.File2, File.File2, File.File2, File.File2, File.File2, File.File2,
-    File.File3, File.File3, File.File3, File.File3, File.File3, File.File3, File.File3, File.File3, File.File3, File.File3, File.File3,
-    File.File4, File.File4, File.File4, File.File4, File.File4, File.File4, File.File4, File.File4, File.File4, File.File4, File.File4,
-    File.File5, File.File5, File.File5, File.File5, File.File5, File.File5, File.File5, File.File5, File.File5, File.File5, File.File5,
-    File.File6, File.File6, File.File6, File.File6, File.File6, File.File6, File.File6, File.File6, File.File6, File.File6, File.File6,
-    File.File7, File.File7, File.File7, File.File7, File.File7, File.File7, File.File7, File.File7, File.File7, File.File7, File.File7,
-    File.File8, File.File8, File.File8, File.File8, File.File8, File.File8, File.File8, File.File8, File.File8, File.File8, File.File8,
-    File.File9, File.File9, File.File9, File.File9, File.File9, File.File9, File.File9, File.File9, File.File9, File.File9, File.File9,
-    File.FileA, File.FileA, File.FileA, File.FileA, File.FileA, File.FileA, File.FileA, File.FileA, File.FileA, File.FileA, File.FileA,
+    FILE.File0, FILE.File0, FILE.File0, FILE.File0, FILE.File0, FILE.File0, FILE.File0, FILE.File0, FILE.File0, FILE.File0, FILE.File0,
+    FILE.File1, FILE.File1, FILE.File1, FILE.File1, FILE.File1, FILE.File1, FILE.File1, FILE.File1, FILE.File1, FILE.File1, FILE.File1,
+    FILE.File2, FILE.File2, FILE.File2, FILE.File2, FILE.File2, FILE.File2, FILE.File2, FILE.File2, FILE.File2, FILE.File2, FILE.File2,
+    FILE.File3, FILE.File3, FILE.File3, FILE.File3, FILE.File3, FILE.File3, FILE.File3, FILE.File3, FILE.File3, FILE.File3, FILE.File3,
+    FILE.File4, FILE.File4, FILE.File4, FILE.File4, FILE.File4, FILE.File4, FILE.File4, FILE.File4, FILE.File4, FILE.File4, FILE.File4,
+    FILE.File5, FILE.File5, FILE.File5, FILE.File5, FILE.File5, FILE.File5, FILE.File5, FILE.File5, FILE.File5, FILE.File5, FILE.File5,
+    FILE.File6, FILE.File6, FILE.File6, FILE.File6, FILE.File6, FILE.File6, FILE.File6, FILE.File6, FILE.File6, FILE.File6, FILE.File6,
+    FILE.File7, FILE.File7, FILE.File7, FILE.File7, FILE.File7, FILE.File7, FILE.File7, FILE.File7, FILE.File7, FILE.File7, FILE.File7,
+    FILE.File8, FILE.File8, FILE.File8, FILE.File8, FILE.File8, FILE.File8, FILE.File8, FILE.File8, FILE.File8, FILE.File8, FILE.File8,
+    FILE.File9, FILE.File9, FILE.File9, FILE.File9, FILE.File9, FILE.File9, FILE.File9, FILE.File9, FILE.File9, FILE.File9, FILE.File9,
+    FILE.FileA, FILE.FileA, FILE.FileA, FILE.FileA, FILE.FileA, FILE.FileA, FILE.FileA, FILE.FileA, FILE.FileA, FILE.FileA, FILE.FileA,
 )
 
 //斜め方向右上がり
@@ -123,7 +123,7 @@ const val DIR_LDD = DIR_LD + DIR_D
 const val DIR_LUU = DIR_LU + DIR_U
 
 fun isOnBoard(pos: Square): Boolean {
-    return (Rank.Rank1 <= SquareToRank[pos.ordinal] && SquareToRank[pos.ordinal] <= Rank.Rank9 && File.File1 <= SquareToFile[pos.ordinal] && SquareToFile[pos.ordinal] <= File.File9);
+    return (Rank.Rank1 <= SquareToRank[pos.ordinal] && SquareToRank[pos.ordinal] <= Rank.Rank9 && FILE.File1 <= SquareToFile[pos.ordinal] && SquareToFile[pos.ordinal] <= FILE.File9);
 }
 
 fun directionAtoB(A: Square, B: Square):Int {
@@ -227,8 +227,8 @@ val rankToString = arrayListOf(
 )
 
 val fileToSfenString = arrayListOf(
-    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9"
+    "0", "1", "2", "3", "4", "5", "6", "7", "8", "9", "X"
 )
 val rankToSfenString = arrayListOf(
-    "X", "a", "b", "c", "d", "e", "f", "g", "h", "X"
+    "X", "a", "b", "c", "d", "e", "f", "g", "h", "i", "X"
 )

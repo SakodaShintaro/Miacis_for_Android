@@ -269,7 +269,7 @@ fun isValidSfen(sfen: String): Boolean {
     val kingNum = arrayOf(0, 0)
     for (i in strs.indices) {
         val r = Rank.Rank1.ordinal + i
-        var f = File.File9.ordinal
+        var f = FILE.File9.ordinal
         var promote = false
         for (j in strs[i].indices) {
             when (val c = strs[i][j]) {

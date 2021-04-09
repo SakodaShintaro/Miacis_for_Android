@@ -18,6 +18,8 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.google.android.material.snackbar.Snackbar
 import com.tokumini.miacisshogi.databinding.ActivityBattleBinding
 import kotlinx.coroutines.*
+import java.io.BufferedReader
+import java.io.File
 import kotlin.math.max
 import kotlin.math.min
 
@@ -887,6 +889,8 @@ class BattleActivity : AppCompatActivity() {
                         MenuInConsiderationMode.BACK_TO_TOP.ordinal -> backToTop()
                         MenuInConsiderationMode.RESIGN.ordinal -> finishProcess()
                         MenuInConsiderationMode.INIT_POSITION.ordinal -> initPosition()
+                        MenuInConsiderationMode.SAVE_KIFU.ordinal -> saveKifu()
+                        MenuInConsiderationMode.LOAD_KIFU.ordinal -> loadKifu("filename.txt")
                         MenuInConsiderationMode.INPUT_SFEN.ordinal -> inputSfen()
                         MenuInConsiderationMode.OUTPUT_SFEN.ordinal -> outputSfen()
                         MenuInConsiderationMode.CLEAR_RESULT.ordinal -> clearResult()
@@ -894,6 +898,48 @@ class BattleActivity : AppCompatActivity() {
                 }
                 .show()
         }
+    }
+
+    private fun saveKifu() {
+        val file = "filename.txt"
+        val currTurn = pos.turnNumber
+        repeat(currTurn - 1) {
+            pos.undo()
+        }
+        var str = pos.toStr()
+        for (i in oneTurnData) {
+            str += "\t"
+            str += i.move.toSfenStr()
+        }
+        for (i in 0 until oneTurnData.size) {
+            if (pos.turnNumber == currTurn) {
+                break
+            }
+            pos.doMove(oneTurnData[i].move)
+        }
+        File(applicationContext.filesDir, file).writer().use {
+            it.write(str)
+        }
+    }
+
+    private fun loadKifu(filename: String) {
+        val readFile = File(applicationContext.filesDir, filename)
+
+        if(!readFile.exists()){
+            return
+        }
+
+        val preAutoThink = autoThink
+        autoThink = false
+
+        val str = readFile.bufferedReader().use(BufferedReader::readText)
+        val split = str.split("\t")
+        pos.fromStr(split[0])
+        for (i in 1 until split.size) {
+            val move = pos.transformValidMove(stringToMove(split[i]))
+            doMove(move)
+        }
+        autoThink = preAutoThink
     }
 
     private fun showSnackbar(text: String) {

@@ -156,7 +156,7 @@ class Position {
         println("９８７６５４３２１")
         println("------------------")
         for (r in Rank.Rank1.ordinal..Rank.Rank9.ordinal) {
-            for (f in File.File9.ordinal..File.File1.ordinal) {
+            for (f in FILE.File9.ordinal..FILE.File1.ordinal) {
                 print(PieceToSfenStrWithSpace[board[FRToSquare[f][r].ordinal]])
             }
             println("|${r}")
@@ -404,7 +404,7 @@ class Position {
         var score = 0
         var num = 0
         for (r in lowerBound.ordinal..upperBound.ordinal) {
-            for (f in File.File1.ordinal..File.File9.ordinal) {
+            for (f in FILE.File1.ordinal..FILE.File9.ordinal) {
                 val p = board[FRToSquare[f][r].ordinal]
                 if (pieceToColor(p) != color || kind(p) == KING) {
                     continue
@@ -622,7 +622,7 @@ class Position {
         //各段を処理
         for (i in strs.indices) {
             val r = Rank.Rank1.ordinal + i
-            var f = File.File9.ordinal
+            var f = FILE.File9.ordinal
             var promote = false
             for (j in strs[i].indices) {
                 when (val c = strs[i][j]) {
@@ -716,7 +716,7 @@ class Position {
         var result = String()
         for (r in Rank.Rank1.ordinal..Rank.Rank9.ordinal) {
             var emptyNum = 0
-            for (f in File.File9.ordinal downTo File.File1.ordinal) {
+            for (f in FILE.File9.ordinal downTo FILE.File1.ordinal) {
                 if (board[FRToSquare[f][r].ordinal] == EMPTY) {
                     emptyNum++
                 } else {
