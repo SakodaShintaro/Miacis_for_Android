@@ -25,5 +25,10 @@ class MainActivity : AppCompatActivity() {
             intent.putExtra(KEY_BATTLE_MODE, CONSIDERATION)
             startActivity(intent)
         }
+
+        findViewById<Button>(R.id.button_load_kifu).setOnClickListener {
+            val intent = Intent(this, LoadKifuActivity::class.java)
+            startActivity(intent)
+        }
     }
 }

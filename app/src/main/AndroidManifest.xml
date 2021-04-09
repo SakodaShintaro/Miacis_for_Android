@@ -21,6 +21,8 @@
                   android:screenOrientation="portrait"/>
         <activity android:name="com.tokumini.miacisshogi.BattleActivity"
                   android:screenOrientation="portrait"/>
+        <activity android:name="com.tokumini.miacisshogi.LoadKifuActivity"
+                  android:screenOrientation="portrait"/>
     </application>
 
 </manifest>
