@@ -370,12 +370,14 @@ class BattleActivity : AppCompatActivity() {
         //盤面を動かす
         pos.doMove(move)
 
+        //データを足す
+        addOneTurnData(move)
+
         //盤面を再描画
         showPosition()
 
         //終了判定
         if (pos.getFinishStatus() != Position.NOT_FINISHED) {
-            addOneTurnData(move)
             finishProcess()
             return
         }
@@ -385,16 +387,14 @@ class BattleActivity : AppCompatActivity() {
             scope.launch {
                 val bestMove = think()
                 pos.doMove(bestMove)
-                showPosition()
-
                 addOneTurnData(bestMove)
+                showPosition()
 
                 //終了判定
                 if (pos.getFinishStatus() != Position.NOT_FINISHED) {
                     finishProcess()
                 }
             }
-            addOneTurnData(move)
             return
         }
 
@@ -402,8 +402,6 @@ class BattleActivity : AppCompatActivity() {
         if (mode == CONSIDERATION && autoThink) {
             scope.launch { think() }
         }
-
-        addOneTurnData(move)
     }
 
     private fun addOneTurnData(move: Move) {
@@ -430,12 +428,6 @@ class BattleActivity : AppCompatActivity() {
             //次の領域を確保
             oneTurnData.add(OneTurnData(NULL_MOVE, Array(BIN_SIZE) { 0.0f }))
         }
-
-        //指し手の表示
-        val arrayAdapter = ArrayAdapter(this, R.layout.spinner_item, Array(oneTurnData.size){ "%3d:%s".format(it, if (it == 0) "初期局面" else oneTurnData[it - 1].move.toPrettyStr())})
-        arrayAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
-        binding.spinnerMoves.adapter = arrayAdapter
-        binding.spinnerMoves.setSelection(pos.turnNumber)
     }
 
     private fun redo() {
@@ -671,6 +663,12 @@ class BattleActivity : AppCompatActivity() {
 
         //手数の表示
         binding.positionInfo.text = "手数:%d".format(pos.turnNumber)
+
+        //指し手の表示
+        val arrayAdapter = ArrayAdapter(this, R.layout.spinner_item, Array(oneTurnData.size){ "%3d:%s".format(it, if (it == 0) "初期局面" else oneTurnData[it - 1].move.toPrettyStr())})
+        arrayAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
+        binding.spinnerMoves.adapter = arrayAdapter
+        binding.spinnerMoves.setSelection(pos.turnNumber)
 
         //行動のための変数を初期化
         moveFrom = Square.WALLAA
@@ -915,9 +913,9 @@ class BattleActivity : AppCompatActivity() {
                     pos.undo()
                 }
                 var str = pos.toStr()
-                for (i in oneTurnData) {
+                for (i in 0 until oneTurnData.size - 1) {
                     str += "\t"
-                    str += i.move.toSfenStr()
+                    str += oneTurnData[i].move.toSfenStr()
                 }
                 for (i in 0 until oneTurnData.size) {
                     if (pos.turnNumber == currTurn) {
