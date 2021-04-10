@@ -1,3 +1,3 @@
 package com.tokumini.miacisshogi
 
-data class OneTurnData(val move: Move, val value: Array<Float>) {}
+data class OneTurnData(var move: Move, var value: Array<Float>) {}

@@ -214,8 +214,7 @@ class Search(context: Context, val randomTurn: Int) {
         module = Module.load(assetFilePath(context, "shogi_cat_bl10_ch256_cpu.model"))
     }
 
-    fun search(position: Position): Move {
-        val pos = position.copy()
+    fun search(pos: Position): Move {
         if (pos.turnNumber == preTurn && pos.hashValue == preHash) {
             return cacheMove
         }

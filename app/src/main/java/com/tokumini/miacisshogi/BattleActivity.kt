@@ -48,7 +48,7 @@ class BattleActivity : AppCompatActivity() {
     private var autoThink: Boolean = false
     private val job = Job()
     private val scope = CoroutineScope(Dispatchers.Main + job)
-    private val oneTurnData: MutableList<OneTurnData> = mutableListOf()
+    private val oneTurnData = MutableList(1) { OneTurnData(NULL_MOVE, Array(BIN_SIZE) { 0.0f }) }
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -185,7 +185,7 @@ class BattleActivity : AppCompatActivity() {
         }
         binding.buttonRedo.setOnClickListener { redo() }
         binding.buttonRedo.setOnLongClickListener {
-            moveToTurn(oneTurnData.size)
+            moveToTurn(oneTurnData.size - 1)
             true
         }
         binding.buttonThink.setOnClickListener {
@@ -408,29 +408,38 @@ class BattleActivity : AppCompatActivity() {
 
     private fun addOneTurnData(move: Move) {
         //データを積む
-        if (oneTurnData.size >= pos.turnNumber) { //先のデータがある場合は慎重に場合分け
+        //valueは空で初期化する
+        if (oneTurnData.size > pos.turnNumber) { //先のデータがある場合は慎重に場合分け
             if (oneTurnData[pos.turnNumber - 1].move == move) {
                 //同じ手を指す場合は消さない
             } else {
                 //違う手の場合、リセットして詰む
-                while (oneTurnData.size >= pos.turnNumber) {
+                while (oneTurnData.size > pos.turnNumber) {
                     oneTurnData.removeLast()
                 }
-                oneTurnData.add(OneTurnData(move, searcher.value.clone()))
+                //書き換える
+                oneTurnData[pos.turnNumber - 1].move = move
+
+                //次の領域を確保
+                oneTurnData.add(OneTurnData(NULL_MOVE, Array(BIN_SIZE) { 0.0f }))
             }
         } else {
-            oneTurnData.add(OneTurnData(move, searcher.value.clone()))
+            //書き換える
+            oneTurnData[pos.turnNumber - 1].move = move
+
+            //次の領域を確保
+            oneTurnData.add(OneTurnData(NULL_MOVE, Array(BIN_SIZE) { 0.0f }))
         }
 
         //指し手の表示
-        val arrayAdapter = ArrayAdapter(this, R.layout.spinner_item, Array(oneTurnData.size + 1){ "%3d:%s".format(it, if (it == 0) "初期局面" else oneTurnData[it - 1].move.toPrettyStr())})
+        val arrayAdapter = ArrayAdapter(this, R.layout.spinner_item, Array(oneTurnData.size){ "%3d:%s".format(it, if (it == 0) "初期局面" else oneTurnData[it - 1].move.toPrettyStr())})
         arrayAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
         binding.spinnerMoves.adapter = arrayAdapter
         binding.spinnerMoves.setSelection(pos.turnNumber)
     }
 
     private fun redo() {
-        if (pos.turnNumber >= oneTurnData.size) {
+        if (pos.turnNumber > oneTurnData.size) {
             return
         }
 
@@ -475,7 +484,7 @@ class BattleActivity : AppCompatActivity() {
             //redoを繰り返す
             val redoNum = turn - pos.turnNumber
             repeat(redoNum) {
-                if (pos.turnNumber >= oneTurnData.size) {
+                if (pos.turnNumber >= oneTurnData.size - 1) {
                     return
                 }
 
@@ -670,11 +679,14 @@ class BattleActivity : AppCompatActivity() {
 
     private suspend fun think(): Move {
         return withContext(Dispatchers.Default) {
-            val bestMove = searcher.search(pos)
+            //posが書き換わっていく可能性があるためコピーを取る
+            val currPosition = pos.copy()
+            val bestMove = searcher.search(currPosition)
             showPolicy(searcher.policy)
+            oneTurnData[currPosition.turnNumber].value = searcher.value
             when (binding.radioGraphMode.checkedRadioButtonId) {
                 R.id.radio_curr_value -> showValue(searcher.value)
-                R.id.radio_value_history -> showValueHistory(searcher.value)
+                R.id.radio_value_history -> showValueHistory()
             }
             bestMove
         }
@@ -754,12 +766,7 @@ class BattleActivity : AppCompatActivity() {
         }
     }
 
-    private fun showValueHistory(value: Array<Float>) {
-        val currValue = value.clone()
-        if (pos.color == WHITE) {
-            currValue.reverse()
-        }
-
+    private fun showValueHistory() {
         //Entryにデータ格納
         val probBin = 20
         val probWidth = 1.0f / probBin
@@ -775,15 +782,6 @@ class BattleActivity : AppCompatActivity() {
                 val index = min((prob / probWidth).toInt(), probBin - 1)
                 val y = MIN_SCORE + VALUE_WIDTH * (j + 0.5f)
                 entryList[index].add(Entry((i).toFloat(), y))
-            }
-        }
-
-        if (pos.turnNumber == oneTurnData.size) {
-            for (j in 0 until BIN_SIZE) {
-                val prob = currValue[j]
-                val index = min((prob / probWidth).toInt(), probBin - 1)
-                val y = MIN_SCORE + VALUE_WIDTH * (j + 0.5f)
-                entryList[index].add(Entry((oneTurnData.size).toFloat(), y))
             }
         }
 
@@ -825,11 +823,6 @@ class BattleActivity : AppCompatActivity() {
         fun backToTop() {
             val intent = Intent(this, MainActivity::class.java)
             startActivity(intent)
-        }
-
-        fun initPosition() {
-            pos.init()
-            showPosition()
         }
 
         fun inputSfen() {
