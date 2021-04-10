@@ -18,6 +18,7 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.google.android.material.snackbar.Snackbar
 import com.tokumini.miacisshogi.databinding.ActivityBattleBinding
 import kotlinx.coroutines.*
+import org.threeten.bp.LocalDateTime
 import java.io.BufferedReader
 import java.io.File
 import kotlin.math.max
@@ -908,25 +909,38 @@ class BattleActivity : AppCompatActivity() {
     }
 
     private fun saveKifu() {
-        val file = "filename.txt"
-        val currTurn = pos.turnNumber
-        repeat(currTurn - 1) {
-            pos.undo()
-        }
-        var str = pos.toStr()
-        for (i in oneTurnData) {
-            str += "\t"
-            str += i.move.toSfenStr()
-        }
-        for (i in 0 until oneTurnData.size) {
-            if (pos.turnNumber == currTurn) {
-                break
+        val timeStr = LocalDateTime.now().toString()
+        val prettyStr = timeStr.removeSuffix(timeStr.takeLast(4))
+        val defaultFileName = "$prettyStr.txt"
+
+        val editText = EditText(this)
+        editText.setText(defaultFileName)
+        AlertDialog.Builder(this)
+            .setView(editText)
+            .setPositiveButton("OK") { _, _ ->
+                val filename = editText.text.toString().replace(' ', '_')
+
+                val currTurn = pos.turnNumber
+                repeat(currTurn - 1) {
+                    pos.undo()
+                }
+                var str = pos.toStr()
+                for (i in oneTurnData) {
+                    str += "\t"
+                    str += i.move.toSfenStr()
+                }
+                for (i in 0 until oneTurnData.size) {
+                    if (pos.turnNumber == currTurn) {
+                        break
+                    }
+                    pos.doMove(oneTurnData[i].move)
+                }
+                File(applicationContext.filesDir, filename).writer().use {
+                    it.write(str)
+                }
+                showSnackbar("棋譜を保存しました")
             }
-            pos.doMove(oneTurnData[i].move)
-        }
-        File(applicationContext.filesDir, file).writer().use {
-            it.write(str)
-        }
+            .show()
     }
 
     private fun loadKifu(filename: String) {
