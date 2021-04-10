@@ -228,8 +228,7 @@ class BattleActivity : AppCompatActivity() {
         binding.scatterChart.setOnChartValueSelectedListener(object : OnChartValueSelectedListener {
             override fun onValueSelected(e: Entry, h: Highlight?) {
                 //Entryのクリックなのでxは整数で得られる(Float型ではある)
-                //0-originでxは得られるので、Positionのターン数として指定するのはその+1
-                moveToTurn(e.x.toInt() + 1)
+                moveToTurn(e.x.toInt())
             }
 
             override fun onNothingSelected() {}
