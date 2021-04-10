@@ -21,7 +21,6 @@ import kotlinx.coroutines.*
 import org.threeten.bp.LocalDateTime
 import java.io.BufferedReader
 import java.io.File
-import kotlin.math.max
 import kotlin.math.min
 
 
@@ -50,7 +49,6 @@ class BattleActivity : AppCompatActivity() {
     private val job = Job()
     private val scope = CoroutineScope(Dispatchers.Main + job)
     private val oneTurnData: MutableList<OneTurnData> = mutableListOf()
-    private var oneTurnDataIndex: Int = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -156,8 +154,8 @@ class BattleActivity : AppCompatActivity() {
             override fun onItemSelected(parent: AdapterView<*>, view: View?, position: Int, id: Long) {
                 //なぜか設定したタイミングでも呼ばれてしまうため、ターン数が同じ場合は動かさないようにする処理を入れることでごまかす
                 //moveToTurnに突入しても局面は変わらないが、余計なthinkが入るため突入もさせない
-                if (position != pos.turnNumber - 1 && mode == CONSIDERATION) {
-                    moveToTurn(position + 1)
+                if (position != pos.turnNumber && mode == CONSIDERATION) {
+                    moveToTurn(position)
                 }
             }
 
@@ -176,19 +174,18 @@ class BattleActivity : AppCompatActivity() {
         }
         binding.buttonUndo.setOnClickListener {
             pos.undo()
-            oneTurnDataIndex = max(oneTurnDataIndex - 1, 0)
             if (mode == CONSIDERATION && autoThink) {
                 scope.launch { think() }
             }
             showPosition()
         }
         binding.buttonUndo.setOnLongClickListener {
-            moveToTurn(1)
+            moveToTurn(0)
             true
         }
         binding.buttonRedo.setOnClickListener { redo() }
         binding.buttonRedo.setOnLongClickListener {
-            moveToTurn(oneTurnData.size + 1)
+            moveToTurn(oneTurnData.size)
             true
         }
         binding.buttonThink.setOnClickListener {
@@ -411,27 +408,33 @@ class BattleActivity : AppCompatActivity() {
 
     private fun addOneTurnData(move: Move) {
         //データを積む
-        while (oneTurnData.size > oneTurnDataIndex) {
-            oneTurnData.removeLast()
+        if (oneTurnData.size >= pos.turnNumber) { //先のデータがある場合は慎重に場合分け
+            if (oneTurnData[pos.turnNumber - 1].move == move) {
+                //同じ手を指す場合は消さない
+            } else {
+                //違う手の場合、リセットして詰む
+                while (oneTurnData.size >= pos.turnNumber) {
+                    oneTurnData.removeLast()
+                }
+                oneTurnData.add(OneTurnData(move, searcher.value.clone()))
+            }
+        } else {
+            oneTurnData.add(OneTurnData(move, searcher.value.clone()))
         }
-        oneTurnData.add(OneTurnData(move, searcher.value.clone()))
-        oneTurnDataIndex++
 
         //指し手の表示
         val arrayAdapter = ArrayAdapter(this, R.layout.spinner_item, Array(oneTurnData.size + 1){ "%3d:%s".format(it, if (it == 0) "初期局面" else oneTurnData[it - 1].move.toPrettyStr())})
         arrayAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
         binding.spinnerMoves.adapter = arrayAdapter
-        binding.spinnerMoves.setSelection(pos.turnNumber - 1)
+        binding.spinnerMoves.setSelection(pos.turnNumber)
     }
 
     private fun redo() {
-        if (oneTurnDataIndex >= oneTurnData.size) {
+        if (pos.turnNumber >= oneTurnData.size) {
             return
         }
 
-        val move = oneTurnData[oneTurnDataIndex].move
-
-        oneTurnDataIndex++
+        val move = oneTurnData[pos.turnNumber].move
 
         if (!pos.isLegalMove(move)) {
             //適当にエラー処理
@@ -463,7 +466,6 @@ class BattleActivity : AppCompatActivity() {
             val undoNum = pos.turnNumber - turn
             repeat(undoNum) {
                 pos.undo()
-                oneTurnDataIndex = max(oneTurnDataIndex - 1, 0)
             }
             if (mode == CONSIDERATION && autoThink) {
                 scope.launch { think() }
@@ -473,13 +475,11 @@ class BattleActivity : AppCompatActivity() {
             //redoを繰り返す
             val redoNum = turn - pos.turnNumber
             repeat(redoNum) {
-                if (oneTurnDataIndex >= oneTurnData.size) {
+                if (pos.turnNumber >= oneTurnData.size) {
                     return
                 }
 
-                val move = oneTurnData[oneTurnDataIndex].move
-
-                oneTurnDataIndex++
+                val move = oneTurnData[pos.turnNumber].move
 
                 if (!pos.isLegalMove(move)) {
                     //適当にエラー処理
@@ -661,7 +661,7 @@ class BattleActivity : AppCompatActivity() {
         }
 
         //手数の表示
-        binding.positionInfo.text = "手数:%d".format(pos.turnNumber - 1)
+        binding.positionInfo.text = "手数:%d".format(pos.turnNumber)
 
         //行動のための変数を初期化
         moveFrom = Square.WALLAA
@@ -778,7 +778,7 @@ class BattleActivity : AppCompatActivity() {
             }
         }
 
-        if (oneTurnDataIndex == oneTurnData.size) {
+        if (pos.turnNumber == oneTurnData.size) {
             for (j in 0 until BIN_SIZE) {
                 val prob = currValue[j]
                 val index = min((prob / probWidth).toInt(), probBin - 1)
@@ -918,7 +918,7 @@ class BattleActivity : AppCompatActivity() {
                 val filename = editText.text.toString().replace(' ', '_')
 
                 val currTurn = pos.turnNumber
-                repeat(currTurn - 1) {
+                repeat(currTurn) {
                     pos.undo()
                 }
                 var str = pos.toStr()

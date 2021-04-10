@@ -132,7 +132,7 @@ class Position {
         color = BLACK
 
         //手数
-        turnNumber = 1
+        turnNumber = 0
 
         //玉の位置
         kingSq[BLACK] = Square.SQ59
