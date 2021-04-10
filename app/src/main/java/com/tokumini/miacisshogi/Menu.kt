@@ -23,7 +23,6 @@ enum class MenuInConsiderationMode {
     RESIGN,
     INIT_POSITION,
     SAVE_KIFU,
-    LOAD_KIFU,
     INPUT_SFEN,
     OUTPUT_SFEN,
     CLEAR_RESULT,
@@ -36,7 +35,6 @@ val itemsInConsiderationMode = Array(MenuInConsiderationMode.MENU_ITEM_SIZE.ordi
         MenuInConsiderationMode.RESIGN.ordinal -> "投了"
         MenuInConsiderationMode.INIT_POSITION.ordinal -> "盤面を初期化"
         MenuInConsiderationMode.SAVE_KIFU.ordinal -> "棋譜を保存"
-        MenuInConsiderationMode.LOAD_KIFU.ordinal -> "棋譜を読み込み"
         MenuInConsiderationMode.INPUT_SFEN.ordinal -> "SFENを入力"
         MenuInConsiderationMode.OUTPUT_SFEN.ordinal -> "現局面のSFENをクリップボードへコピー"
         MenuInConsiderationMode.CLEAR_RESULT.ordinal -> "対局成績の初期化"

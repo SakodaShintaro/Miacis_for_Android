@@ -898,7 +898,6 @@ class BattleActivity : AppCompatActivity() {
                         MenuInConsiderationMode.RESIGN.ordinal -> finishProcess()
                         MenuInConsiderationMode.INIT_POSITION.ordinal -> initPosition()
                         MenuInConsiderationMode.SAVE_KIFU.ordinal -> saveKifu()
-                        MenuInConsiderationMode.LOAD_KIFU.ordinal -> loadKifu("filename.txt")
                         MenuInConsiderationMode.INPUT_SFEN.ordinal -> inputSfen()
                         MenuInConsiderationMode.OUTPUT_SFEN.ordinal -> outputSfen()
                         MenuInConsiderationMode.CLEAR_RESULT.ordinal -> clearResult()
