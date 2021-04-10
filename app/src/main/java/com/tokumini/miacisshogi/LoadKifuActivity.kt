@@ -11,6 +11,8 @@ import androidx.appcompat.app.AppCompatActivity
 import androidx.recyclerview.widget.RecyclerView
 import java.io.File
 
+val KEY_LOAD_KIFU_FILE = "key_load_kifu_file"
+
 class ItemAdapter(private val context: Context, private val data: List<String>) :
     RecyclerView.Adapter<ItemAdapter.ItemViewHolder>() {
     lateinit var listener: OnItemClickListener
@@ -68,6 +70,7 @@ class LoadKifuActivity: AppCompatActivity() {
                 override fun onItemClickListener(view: View, position: Int, clickedText: String, context: Context) {
                     val intent = Intent(context, BattleActivity::class.java)
                     intent.putExtra(KEY_BATTLE_MODE, CONSIDERATION)
+                    intent.putExtra(KEY_LOAD_KIFU_FILE, clickedText)
                     startActivity(intent)
                 }
             })

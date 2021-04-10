@@ -163,6 +163,12 @@ class BattleActivity : AppCompatActivity() {
             override fun onNothingSelected(parent: AdapterView<*>) {}
         }
 
+        //過去棋譜のロード
+        val file = intent?.extras?.get(KEY_LOAD_KIFU_FILE)
+        if (file != null) {
+            loadKifu(file as String)
+        }
+
         // ボタンの初期化
         binding.buttonMenu.setOnClickListener {
             showMenu()
