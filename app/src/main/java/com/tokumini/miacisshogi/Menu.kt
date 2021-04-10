@@ -20,8 +20,6 @@ val itemsInBattleMode = Array(MenuInBattleMode.MENU_ITEM_SIZE.ordinal) {
 
 enum class MenuInConsiderationMode {
     BACK_TO_TOP,
-    RESIGN,
-    INIT_POSITION,
     SAVE_KIFU,
     INPUT_SFEN,
     OUTPUT_SFEN,
@@ -32,8 +30,6 @@ enum class MenuInConsiderationMode {
 val itemsInConsiderationMode = Array(MenuInConsiderationMode.MENU_ITEM_SIZE.ordinal) {
     when (it) {
         MenuInConsiderationMode.BACK_TO_TOP.ordinal -> "トップ画面に戻る"
-        MenuInConsiderationMode.RESIGN.ordinal -> "投了"
-        MenuInConsiderationMode.INIT_POSITION.ordinal -> "盤面を初期化"
         MenuInConsiderationMode.SAVE_KIFU.ordinal -> "棋譜を保存"
         MenuInConsiderationMode.INPUT_SFEN.ordinal -> "SFENを入力"
         MenuInConsiderationMode.OUTPUT_SFEN.ordinal -> "現局面のSFENをクリップボードへコピー"

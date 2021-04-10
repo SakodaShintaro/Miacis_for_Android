@@ -895,8 +895,6 @@ class BattleActivity : AppCompatActivity() {
                 .setItems(itemsInConsiderationMode) { _, which ->
                     when (which) {
                         MenuInConsiderationMode.BACK_TO_TOP.ordinal -> backToTop()
-                        MenuInConsiderationMode.RESIGN.ordinal -> finishProcess()
-                        MenuInConsiderationMode.INIT_POSITION.ordinal -> initPosition()
                         MenuInConsiderationMode.SAVE_KIFU.ordinal -> saveKifu()
                         MenuInConsiderationMode.INPUT_SFEN.ordinal -> inputSfen()
                         MenuInConsiderationMode.OUTPUT_SFEN.ordinal -> outputSfen()
