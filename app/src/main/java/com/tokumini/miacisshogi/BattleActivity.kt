@@ -377,6 +377,7 @@ class BattleActivity : AppCompatActivity() {
 
         //終了判定
         if (pos.getFinishStatus() != Position.NOT_FINISHED) {
+            addOneTurnData(move)
             finishProcess()
             return
         }
