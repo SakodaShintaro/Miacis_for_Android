@@ -384,18 +384,7 @@ class BattleActivity : AppCompatActivity() {
 
         //対戦モードのとき、手番がCPU側に移ったことを確認して思考開始
         if (player[pos.color] == MIACIS && pos.getFinishStatus() == Position.NOT_FINISHED) {
-            scope.launch {
-                val bestMove = think()
-                pos.doMove(bestMove)
-                addOneTurnData(bestMove)
-                showPosition()
-
-                //終了判定
-                if (pos.getFinishStatus() != Position.NOT_FINISHED) {
-                    finishProcess()
-                }
-            }
-            return
+            scope.launch { doMove(think()) }
         }
 
         //検討モードのとき、自動思考モードがオンであれば思考開始
