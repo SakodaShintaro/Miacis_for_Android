@@ -21,6 +21,7 @@ import kotlinx.coroutines.*
 import org.threeten.bp.LocalDateTime
 import java.io.BufferedReader
 import java.io.File
+import kotlin.math.max
 import kotlin.math.min
 
 
@@ -169,16 +170,8 @@ class BattleActivity : AppCompatActivity() {
         }
 
         // ボタンの初期化
-        binding.buttonMenu.setOnClickListener {
-            showMenu()
-        }
-        binding.buttonUndo.setOnClickListener {
-            pos.undo()
-            if (mode == CONSIDERATION && autoThink) {
-                scope.launch { think() }
-            }
-            showPosition()
-        }
+        binding.buttonMenu.setOnClickListener { showMenu() }
+        binding.buttonUndo.setOnClickListener { moveToTurn(max(pos.turnNumber - 1, 0)) }
         binding.buttonUndo.setOnLongClickListener {
             moveToTurn(0)
             true
@@ -669,7 +662,7 @@ class BattleActivity : AppCompatActivity() {
             val currPosition = pos.copy()
             val bestMove = searcher.search(currPosition)
             showPolicy(searcher.policy)
-            oneTurnData[currPosition.turnNumber].value = searcher.value
+            oneTurnData[currPosition.turnNumber].value = searcher.value.clone()
             when (binding.radioGraphMode.checkedRadioButtonId) {
                 R.id.radio_curr_value -> showValue(searcher.value)
                 R.id.radio_value_history -> showValueHistory()

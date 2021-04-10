@@ -219,17 +219,11 @@ class Search(context: Context, val randomTurn: Int) {
             return cacheMove
         }
 
-        // 入力のshape
-        val feature = pos.makeFeature()
-        val tensor = Tensor.fromBlob(feature.toFloatArray(), shape)
+        // キャッシュのための情報更新
+        preTurn = pos.turnNumber
+        preHash = pos.hashValue
 
-        // 結果
-        val output = module.forward(IValue.from(tensor))
-        val tuple = output.toTuple()
-        val rawPolicy = tuple[0].toTensor().dataAsFloatArray
-        val rawValue = tuple[1].toTensor().dataAsFloatArray
-
-        // 合法手だけマスク
+        // 合法手だけマスクしたいので取得
         val moveList = pos.generateAllMoves()
 
         // 合法手がなかったら投了
@@ -238,6 +232,16 @@ class Search(context: Context, val randomTurn: Int) {
             value[0] = 1.0f
             return NULL_MOVE
         }
+
+        // 推論
+        val feature = pos.makeFeature()
+        val tensor = Tensor.fromBlob(feature.toFloatArray(), shape)
+        val output = module.forward(IValue.from(tensor))
+        val tuple = output.toTuple()
+        val rawPolicy = tuple[0].toTensor().dataAsFloatArray
+        val rawValue = tuple[1].toTensor().dataAsFloatArray
+
+        // policyを取得
         policy = Array(moveList.size) { rawPolicy[moveList[it].toLabel()] }
         policy = softmax(policy, 1.0f)
 
@@ -247,9 +251,6 @@ class Search(context: Context, val randomTurn: Int) {
             value[i] = rawValue[i]
         }
         value = softmax(value, 1.0f)
-
-        preTurn = pos.turnNumber
-        preHash = pos.hashValue
 
         cacheMove = if (pos.turnNumber < randomTurn) {
             val index = randomChoose(policy)
