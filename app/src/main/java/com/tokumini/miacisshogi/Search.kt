@@ -24,7 +24,7 @@ fun valueToIndex(value: Float): Int {
 }
 
 fun onehotDist(value: Float): Array<Float> {
-    var result = Array(BIN_SIZE) { 0.0f }
+    val result = Array(BIN_SIZE) { 0.0f }
     result[valueToIndex(value)] = 1.0f
     return result
 }
@@ -271,56 +271,54 @@ class Search(context: Context, val randomTurn: Int) {
         return cacheMove
     }
 
-    fun think(root: Position): Move {
-        //制限の設定
-        val node_limit_ = 10
-
+    fun think(root: Position, nodeLimit: Int): Move {
         //古いハッシュを削除
         hash_table_.deleteOldHash(root, true)
 
-        //キューの初期化:TODO
-
         //ルートノードの展開
         hash_table_.root_index = expand(root)
-        val curr_node = hash_table_[hash_table_.root_index]
+        val currNode = hash_table_[hash_table_.root_index]
 
         //合法手が0だったら投了
-        if (curr_node.moves.isEmpty()) {
+        if (currNode.moves.isEmpty()) {
             return NULL_MOVE
         }
 
-        //探索を実行: TODO
+        //探索を実行
+        repeat(nodeLimit) {
+            oneStepSearch(root)
+        }
 
         //行動選択
         val temperature = 0
         if (root.turnNumber <= randomTurn) {
-            var distribution = Array(curr_node.moves.size) { 0.0f }
+            var distribution = Array(currNode.moves.size) { 0.0f }
             if (temperature == 0) {
                 //探索回数を正規化した分布に従って行動選択
-                for (i in curr_node.moves.indices) {
-                    distribution[i] = curr_node.N[i].toFloat() / curr_node.sum_N
+                for (i in currNode.moves.indices) {
+                    distribution[i] = currNode.N[i].toFloat() / currNode.sum_N
                 }
             } else {
                 //価値のソフトマックス分布に従って行動選択
-                val Q = Array(curr_node.moves.size) { 0.0f }
-                for (i in curr_node.moves.indices) {
-                    Q[i] = hash_table_.expQfromNext(curr_node, i)
+                val Q = Array(currNode.moves.size) { 0.0f }
+                for (i in currNode.moves.indices) {
+                    Q[i] = hash_table_.expQfromNext(currNode, i)
                 }
                 distribution = softmax(Q, temperature / 1000.0f)
             }
 
-            return curr_node.moves[randomChoose(distribution)]
+            return currNode.moves[randomChoose(distribution)]
         } else {
             //探索回数最大の手を選択
             var bestIndex = -1
             var bestNum = 0
-            for (i in curr_node.N.indices) {
-                if (curr_node.N[i] > bestNum) {
+            for (i in currNode.N.indices) {
+                if (currNode.N[i] > bestNum) {
                     bestIndex = i
-                    bestNum = curr_node.N[i]
+                    bestNum = currNode.N[i]
                 }
             }
-            return curr_node.moves[bestIndex]
+            return currNode.moves[bestIndex]
         }
     }
 
@@ -353,8 +351,8 @@ class Search(context: Context, val randomTurn: Int) {
 
     private fun oneStepSearch(pos: Position) {
         //選択
-        val curr_indices = Stack<Int>()
-        val curr_actions = Stack<Int>()
+        val currIndices = Stack<Int>()
+        val currActions = Stack<Int>()
 
         var index = hash_table_.root_index
 
@@ -371,13 +369,13 @@ class Search(context: Context, val randomTurn: Int) {
             }
 
             //状態を記録
-            curr_indices.push(index)
+            currIndices.push(index)
 
             //選択
             val action = selectMaxUcbChild(hash_table_[index])
 
             //取った行動を記録
-            curr_actions.push(action)
+            currActions.push(action)
 
             //遷移
             pos.doMove(hash_table_[index].moves[action])
@@ -386,75 +384,74 @@ class Search(context: Context, val randomTurn: Int) {
             index = hash_table_[index].child_indices[action]
         }
 
-        if (curr_indices.empty()) {
+        if (currIndices.empty()) {
             println("curr_indices.empty")
+            assert(false)
         }
 
         //expandNode内でこれらの情報は壊れる可能性があるので保存しておく
-        index = curr_indices.peek()
-        val action = curr_actions.peek()
-        val move_num = curr_actions.size
+        index = currIndices.peek()
+        val action = currActions.peek()
+        val moveSize = currActions.size
 
         //今の局面を展開
-        val leaf_index = expand(pos)
-        if (leaf_index == -1) {
+        val leafIndex = expand(pos)
+        if (leafIndex == -1) {
             //置換表に空きがなかった場合こうなる
             //ここには来ないように制御しているはずだが、現状ときどき来ているっぽい
             //別に止める必要はないので進行
         } else {
             //葉の直前ノードを更新
-            hash_table_[index].child_indices[action] = leaf_index
+            hash_table_[index].child_indices[action] = leafIndex
         }
 
         //局面を戻す
-        repeat(move_num) {
+        repeat(moveSize) {
             pos.undo()
         }
 
         //バックアップ
-        val leaf = leaf_index
-        val value = hash_table_[leaf].value
+        val value = hash_table_[leafIndex].value
 
-        //バックアップ
-        while (!curr_actions.empty()) {
-            val index = curr_indices.peek()
-            curr_indices.pop()
+        while (!currActions.empty()) {
+            val currIndex = currIndices.peek()
+            currIndices.pop()
 
-            val action = curr_actions.peek()
-            curr_actions.pop()
+            val currAction = currActions.peek()
+            currActions.pop()
 
             //手番が変わるので反転
             value.reverse()
 
             // 探索結果の反映
-            val node = hash_table_[index]
+            val node = hash_table_[currIndex]
             //探索回数の更新
-            node.N[action]++
+            node.N[currAction]++
             node.sum_N++
 
             //価値の更新
-            val curr_v = node.value
+            val currV = node.value
             val alpha = 1.0f / (node.sum_N + 1)
             for (i in 0 until BIN_SIZE) {
-                node.value[i] += alpha * (value[i] - curr_v[i])
+                node.value[i] += alpha * (value[i] - currV[i])
             }
         }
     }
 
     private fun selectMaxUcbChild(node: HashEntry): Int {
-        var best_num = -1
-        var best_index = -1
+        var bestNum = -1
+        var bestIndex = -1
         for (i in 0 until node.moves.size) {
-            if (node.N[i] > best_num) {
-                best_num = node.N[i]
-                best_index = i
+            if (node.N[i] > bestNum) {
+                bestNum = node.N[i]
+                bestIndex = i
             }
         }
-        val best_value = expOfValueDist(hash_table_.QfromNextValue(node, best_index))
-        val best_value_index = min(valueToIndex(best_value) + 1, BIN_SIZE - 1)
-        val reversed_best_value_index = BIN_SIZE - best_value_index
-        var max_index = -1
-        var max_value = -100000f
+        val bestValue = expOfValueDist(hash_table_.QfromNextValue(node, bestIndex))
+        val bestValueIndex = min(valueToIndex(bestValue) + 1, BIN_SIZE - 1)
+        val reversedBestValueIndex = BIN_SIZE - bestValueIndex
+        var maxIndex = -1
+        var maxValue = -100000f
 
         val sum = node.sum_N
 
@@ -464,17 +461,17 @@ class Search(context: Context, val randomTurn: Int) {
             if (node.child_indices[i] == NOT_EXPANDED) {
                 P = 0.0f
             } else {
-                for (j in 0 until reversed_best_value_index) {
+                for (j in 0 until reversedBestValueIndex) {
                     P += hash_table_[node.child_indices[i]].value[j]
                 }
             }
             val ucb = C_PUCT * node.nn_policy[i] * U + P
-            if (ucb > max_value) {
-                max_value = ucb
-                max_index = i
+            if (ucb > maxValue) {
+                maxValue = ucb
+                maxIndex = i
             }
         }
-        return max_index
+        return maxIndex
     }
 
     private fun expand(pos: Position): Int {
@@ -494,22 +491,26 @@ class Search(context: Context, val randomTurn: Int) {
         }
 
         //ノードを取得
-        val curr_node = hash_table_[index]
+        val currNode = hash_table_[index]
 
         // 候補手の展開
-        curr_node.moves = pos.generateAllMoves()
-        curr_node.child_indices = Array(curr_node.moves.size) { NOT_EXPANDED }
-        curr_node.N = Array(curr_node.moves.size) { 0 }
-        curr_node.sum_N = 0
-        curr_node.evaled = false
-        curr_node.nn_policy
-        curr_node.value
+        currNode.moves = pos.generateAllMoves()
+        currNode.child_indices = Array(currNode.moves.size) { NOT_EXPANDED }
+        currNode.N = Array(currNode.moves.size) { 0 }
+        currNode.sum_N = 0
+        currNode.evaled = false
+        currNode.nn_policy
+        currNode.value
 
         //ノードを評価
         if (pos.getFinishStatus() == 1 || pos.turnNumber > draw_turn) {
-            curr_node.value = Array(BIN_SIZE) { 0.0f }
-            //TODO:どこかonethotで立てる
-            curr_node.evaled = true
+            currNode.value = when (pos.getFinishStatus()) {
+                Position.WIN -> onehotDist(MAX_SCORE)
+                Position.DRAW -> onehotDist((MAX_SCORE + MIN_SCORE) / 2)
+                Position.LOSE -> onehotDist(MIN_SCORE)
+                else -> onehotDist(-1.0f)
+            }
+            currNode.evaled = true
         } else {
             //計算
             val thisFeature = pos.makeFeature()
@@ -521,19 +522,19 @@ class Search(context: Context, val randomTurn: Int) {
             val scores = policy.dataAsFloatArray
 
             //ルートノードへ書き込み
-            curr_node.nn_policy = Array(curr_node.moves.size) { 0.0f }
-            for (i in curr_node.nn_policy.indices) {
-                curr_node.nn_policy[i] = scores[curr_node.moves[i].toLabel()]
+            currNode.nn_policy = Array(currNode.moves.size) { 0.0f }
+            for (i in currNode.nn_policy.indices) {
+                currNode.nn_policy[i] = scores[currNode.moves[i].toLabel()]
             }
-            curr_node.nn_policy = softmax(curr_node.nn_policy, 1.0f)
+            currNode.nn_policy = softmax(currNode.nn_policy, 1.0f)
 
-            curr_node.value = Array(BIN_SIZE) { 0.0f }
-            for (i in curr_node.value.indices) {
-                curr_node.value[i] = value.dataAsFloatArray[i]
+            currNode.value = Array(BIN_SIZE) { 0.0f }
+            for (i in currNode.value.indices) {
+                currNode.value[i] = value.dataAsFloatArray[i]
             }
 
-            //Softmaxが必要じゃね: TODO
-            curr_node.evaled = true
+            currNode.value = softmax(currNode.value, 1.0f)
+            currNode.evaled = true
         }
 
         return index
