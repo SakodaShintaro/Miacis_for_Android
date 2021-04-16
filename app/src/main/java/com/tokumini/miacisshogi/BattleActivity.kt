@@ -18,6 +18,7 @@ import com.github.mikephil.charting.listener.OnChartValueSelectedListener
 import com.google.android.material.snackbar.Snackbar
 import com.tokumini.miacisshogi.databinding.ActivityBattleBinding
 import kotlinx.coroutines.*
+import kotlinx.coroutines.sync.Mutex
 import org.threeten.bp.LocalDateTime
 import java.io.BufferedReader
 import java.io.File
@@ -51,6 +52,7 @@ class BattleActivity : AppCompatActivity() {
     private val scope = CoroutineScope(Dispatchers.Main + job)
     private val oneTurnData = MutableList(1) { OneTurnData(NULL_MOVE, Array(BIN_SIZE) { 0.0f }) }
     private var searchNum = 0
+    private val searchMutex = Mutex()
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -658,7 +660,12 @@ class BattleActivity : AppCompatActivity() {
         binding.positionInfo.text = "手数:%d".format(pos.turnNumber)
 
         //指し手の表示
-        val arrayAdapter = ArrayAdapter(this, R.layout.spinner_item, Array(oneTurnData.size){ "%3d:%s".format(it, if (it == 0) "初期局面" else oneTurnData[it - 1].move.toPrettyStr())})
+        val arrayAdapter = ArrayAdapter(
+            this,
+            R.layout.spinner_item,
+            Array(oneTurnData.size) {
+                "%3d:%s".format(it, if (it == 0) "初期局面" else oneTurnData[it - 1].move.toPrettyStr())
+            })
         arrayAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
         binding.spinnerMoves.adapter = arrayAdapter
         binding.spinnerMoves.setSelection(pos.turnNumber)
@@ -672,7 +679,9 @@ class BattleActivity : AppCompatActivity() {
         return withContext(Dispatchers.Default) {
             //posが書き換わっていく可能性があるためコピーを取る
             val currPosition = pos.copy()
+            searchMutex.lock()
             val bestMove = searcher.search(currPosition, searchNum)
+            searchMutex.unlock()
             showPolicy(searcher.policy)
             oneTurnData[currPosition.turnNumber].value = searcher.value.clone()
             when (binding.radioGraphMode.checkedRadioButtonId) {
@@ -685,7 +694,13 @@ class BattleActivity : AppCompatActivity() {
 
     private fun showPolicy(policy: Array<Float>) {
         val moveList = pos.copy().generateAllMoves()
-        val policyAndMove = policy.zip(moveList).sortedBy { pair -> -pair.first }
+        val rootEntry = searcher.hashTable.rootEntry()
+        val N = if (searchNum == 0) Array(moveList.size) { 0 } else rootEntry.N
+
+        class MoveWithInfo(val move: Move, val policy: Float, val N: Int)
+
+        val list = List(moveList.size) { MoveWithInfo(moveList[it], policy[it], N[it]) }
+        val sortedList = list.sortedBy { -it.policy }
         val tableLayout = binding.tableLayout
         tableLayout.post {
             //以前の内容を削除
@@ -697,15 +712,17 @@ class BattleActivity : AppCompatActivity() {
             labelRow.findViewById<TextView>(R.id.rowtext0).text = "順位"
             labelRow.findViewById<TextView>(R.id.rowtext1).text = "指し手"
             labelRow.findViewById<TextView>(R.id.rowtext2).text = "方策確率"
+            labelRow.findViewById<TextView>(R.id.rowtext3).text = "探索回数"
             tableLayout.addView(labelRow, TableLayout.LayoutParams())
 
             //各指し手
-            for (i in policyAndMove.indices) {
+            for (i in sortedList.indices) {
                 val tableRow = layoutInflater.inflate(R.layout.table_row, null) as TableRow
                 tableRow.findViewById<TextView>(R.id.rowtext0).text = (i + 1).toString()
-                tableRow.findViewById<TextView>(R.id.rowtext1).text = policyAndMove[i].second.toPrettyStr()
+                tableRow.findViewById<TextView>(R.id.rowtext1).text = sortedList[i].move.toPrettyStr()
                 tableRow.findViewById<TextView>(R.id.rowtext2).text =
-                    "%5.1f%%".format((policyAndMove[i].first * 100))
+                    "%5.1f%%".format((sortedList[i].policy * 100))
+                tableRow.findViewById<TextView>(R.id.rowtext3).text = sortedList[i].N.toString()
                 tableLayout.addView(tableRow, TableLayout.LayoutParams())
             }
         }
@@ -927,7 +944,7 @@ class BattleActivity : AppCompatActivity() {
     private fun loadKifu(filename: String) {
         val readFile = File(applicationContext.filesDir, filename)
 
-        if(!readFile.exists()){
+        if (!readFile.exists()) {
             return
         }
 

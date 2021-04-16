@@ -57,6 +57,10 @@ class HashTable {
     var used_num_ = 0
     var age_ = 0
 
+    fun rootEntry(): HashEntry {
+        return table_[root_index]
+    }
+
     fun saveUsedHash(pos: Position, index: Int) {
         //エントリの世代を合わせれば情報を持ち越すことができる
         table_[index].age = age_
