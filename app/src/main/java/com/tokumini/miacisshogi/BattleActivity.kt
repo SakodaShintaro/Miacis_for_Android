@@ -680,15 +680,21 @@ class BattleActivity : AppCompatActivity() {
         return withContext(Dispatchers.Default) {
             //posが書き換わっていく可能性があるためコピーを取る
             val currPosition = pos.copy()
+            if (searchNum > 0) {
+                binding.textViewThinkResultCover.text = "思考中..."
+                binding.textViewThinkResultCover.setBackgroundColor(Color.rgb(255, 255, 255))
+            }
             searchMutex.lock()
             val bestMove = searcher.search(currPosition, searchNum)
             searchMutex.unlock()
-            showPolicy(searcher.policy)
+            showPolicy(searcher.policy.clone())
             oneTurnData[currPosition.turnNumber].value = searcher.value.clone()
             when (binding.radioGraphMode.checkedRadioButtonId) {
                 R.id.radio_curr_value -> showValue(searcher.value)
                 R.id.radio_value_history -> showValueHistory()
             }
+            binding.textViewThinkResultCover.text = ""
+            binding.textViewThinkResultCover.setBackgroundColor(backGroundTransparent)
             bestMove
         }
     }
@@ -696,7 +702,7 @@ class BattleActivity : AppCompatActivity() {
     private fun showPolicy(policy: Array<Float>) {
         val moveList = pos.copy().generateAllMoves()
         val rootEntry = searcher.hashTable.rootEntry()
-        val N = if (searchNum == 0) Array(moveList.size) { 0 } else rootEntry.N
+        val N = if (searchNum == 0) Array(moveList.size) { 0 } else rootEntry.N.clone()
 
         class MoveWithInfo(val move: Move, val policy: Float, val N: Int)
 
