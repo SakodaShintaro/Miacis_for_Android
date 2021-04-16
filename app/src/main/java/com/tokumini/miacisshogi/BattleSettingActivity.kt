@@ -42,7 +42,7 @@ class BattleSettingActivity : AppCompatActivity() {
             with(sharedPref.edit()) {
                 putInt(getString(R.string.default_turn), binding.radioTurn.checkedRadioButtonId)
                 putInt(getString(R.string.random_turn), binding.numPickerRandomTurn.value)
-                putInt(KEY_SEARCH_NUM, binding.numPickerRandomTurn.value)
+                putInt(KEY_SEARCH_NUM, binding.numPickerSearchNum.value)
                 apply()
             }
 
