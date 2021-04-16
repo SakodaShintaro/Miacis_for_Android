@@ -4,6 +4,7 @@ import android.app.AlertDialog
 import android.content.*
 import android.graphics.Color
 import android.os.Bundle
+import android.text.InputType
 import android.view.MotionEvent
 import android.view.MotionEvent.ACTION_DOWN
 import android.view.View
@@ -878,6 +879,21 @@ class BattleActivity : AppCompatActivity() {
                 .show()
         }
 
+        fun changeSearchNum() {
+            val maxSearchNum = 20
+            val editText = EditText(this)
+            editText.hint = "最大${maxSearchNum}まで"
+            editText.inputType = InputType.TYPE_CLASS_NUMBER
+            AlertDialog.Builder(this)
+                .setView(editText)
+                .setPositiveButton("OK") { _, _ ->
+                    val searchNumOrNull = editText.text.toString().toInt()
+                    searchNum = min(searchNumOrNull, maxSearchNum)
+                    showSnackbar("探索量を${searchNum}に変更しました")
+                }
+                .show()
+        }
+
         if (mode != CONSIDERATION) {
             AlertDialog.Builder(this)
                 .setTitle("メニュー")
@@ -896,6 +912,7 @@ class BattleActivity : AppCompatActivity() {
                 .setItems(itemsInConsiderationMode) { _, which ->
                     when (which) {
                         MenuInConsiderationMode.BACK_TO_TOP.ordinal -> backToTop()
+                        MenuInConsiderationMode.CHANGE_SEARCH_NUM.ordinal -> changeSearchNum()
                         MenuInConsiderationMode.SAVE_KIFU.ordinal -> saveKifu()
                         MenuInConsiderationMode.INPUT_SFEN.ordinal -> inputSfen()
                         MenuInConsiderationMode.OUTPUT_SFEN.ordinal -> outputSfen()

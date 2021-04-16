@@ -193,6 +193,7 @@ class Search(context: Context, val randomTurn: Int) {
     var cacheMove: Move = NULL_MOVE
     var preTurn: Int = -1
     var preHash: Long = -1
+    var preSearchNum: Int = -1
 
     init {
         // assetファイルからパスを取得する関数
@@ -219,13 +220,14 @@ class Search(context: Context, val randomTurn: Int) {
     }
 
     fun search(pos: Position, searchNum: Int): Move {
-        if (pos.turnNumber == preTurn && pos.hashValue == preHash) {
+        if (pos.turnNumber == preTurn && pos.hashValue == preHash && preSearchNum == searchNum) {
             return cacheMove
         }
 
         // キャッシュのための情報更新
         preTurn = pos.turnNumber
         preHash = pos.hashValue
+        preSearchNum = searchNum
 
         // 合法手だけマスクしたいので取得
         val moveList = pos.generateAllMoves()
