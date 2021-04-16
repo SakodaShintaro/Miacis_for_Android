@@ -82,8 +82,15 @@ class BattleActivity : AppCompatActivity() {
 
         //探索回数の設定
         val searchNumOrNull = intent?.extras?.get(KEY_SEARCH_NUM)
+        val sharedPref = getPreferences(Context.MODE_PRIVATE)
         if (searchNumOrNull != null) {
             searchNum = searchNumOrNull as Int
+            with(sharedPref.edit()) {
+                putInt(KEY_SEARCH_NUM, searchNum)
+                apply()
+            }
+        } else {
+            searchNum = sharedPref.getInt(KEY_SEARCH_NUM, 0)
         }
 
         //マス画像の初期化
@@ -155,8 +162,6 @@ class BattleActivity : AppCompatActivity() {
                 doMove(bestMove)
             }
         }
-
-        val sharedPref = getPreferences(Context.MODE_PRIVATE)
 
         val arrayAdapter = ArrayAdapter(this, R.layout.spinner_item, arrayOf("初期局面"))
         arrayAdapter.setDropDownViewResource(R.layout.spinner_dropdown_item)
@@ -886,7 +891,6 @@ class BattleActivity : AppCompatActivity() {
         }
 
         fun changeSearchNum() {
-            val maxSearchNum = 20
             val editText = EditText(this)
             editText.hint = "最大${maxSearchNum}まで"
             editText.inputType = InputType.TYPE_CLASS_NUMBER
@@ -896,6 +900,11 @@ class BattleActivity : AppCompatActivity() {
                     val searchNumOrNull = editText.text.toString().toInt()
                     searchNum = min(searchNumOrNull, maxSearchNum)
                     showSnackbar("探索量を${searchNum}に変更しました")
+                    val sharedPref = getPreferences(Context.MODE_PRIVATE)
+                    with(sharedPref.edit()) {
+                        putInt(KEY_SEARCH_NUM, searchNum)
+                        apply()
+                    }
                 }
                 .show()
         }

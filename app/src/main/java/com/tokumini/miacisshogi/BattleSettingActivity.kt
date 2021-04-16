@@ -9,6 +9,7 @@ import kotlin.random.Random
 
 const val KEY_RANDOM_TURN = "key_random_turn"
 const val KEY_SEARCH_NUM = "key_search_num"
+const val maxSearchNum = 30
 
 class BattleSettingActivity : AppCompatActivity() {
     private lateinit var binding: ActivityBattleSettingBinding
@@ -26,7 +27,7 @@ class BattleSettingActivity : AppCompatActivity() {
         binding.numPickerRandomTurn.minValue = 0
         binding.numPickerRandomTurn.value = sharedPref.getInt(getString(R.string.random_turn), 0)
 
-        binding.numPickerSearchNum.maxValue = 10
+        binding.numPickerSearchNum.maxValue = maxSearchNum
         binding.numPickerSearchNum.minValue = 0
         binding.numPickerSearchNum.value = sharedPref.getInt(KEY_SEARCH_NUM, 0)
 
