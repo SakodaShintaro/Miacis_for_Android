@@ -421,7 +421,7 @@ class Search(context: Context, val randomTurn: Int) {
         }
 
         //バックアップ
-        val value = hashTable[leafIndex].value
+        val value = hashTable[leafIndex].value.clone()
 
         while (!currActions.empty()) {
             val currIndex = currIndices.peek()
