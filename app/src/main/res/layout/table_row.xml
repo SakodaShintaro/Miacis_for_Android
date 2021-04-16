@@ -7,18 +7,20 @@
         android:id="@+id/rowtext0"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="0"
         android:gravity="center"
-        android:layout_weight="1"
+        android:maxLines="1"
+        android:text="0"
+        android:layout_weight="0.5"
         android:textColor="@color/black" />
 
     <TextView
         android:id="@+id/rowtext1"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
-        android:text="field"
         android:gravity="center"
-        android:layout_weight="1"
+        android:maxLines="1"
+        android:text="field"
+        android:layout_weight="1.5"
         android:textColor="@color/black" />
 
     <TextView
@@ -26,6 +28,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
+        android:maxLines="1"
         android:text="0"
         android:layout_weight="1"
         android:textColor="@color/black" />
@@ -35,6 +38,7 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
+        android:maxLines="1"
         android:text="0"
         android:layout_weight="1"
         android:textColor="@color/black" />
