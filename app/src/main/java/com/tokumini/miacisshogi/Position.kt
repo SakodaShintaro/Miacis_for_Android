@@ -531,7 +531,7 @@ class Position {
     //合法手生成
     fun generateAllMoves(): ArrayList<Move> {
         if (alreadyGeneratedMoves) {
-            return moves
+            return ArrayList(moves)
         }
         moves.clear()
         for (sq in SquareList) {
@@ -586,7 +586,7 @@ class Position {
                 }
             }
         }
-        return moves
+        return ArrayList(moves)
     }
 
     private fun puttablePawnLanceKnight(sq: Square, forbiddenWidth: Int): Boolean {

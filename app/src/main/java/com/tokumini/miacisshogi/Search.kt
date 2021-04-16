@@ -370,7 +370,7 @@ class Search(context: Context, val randomTurn: Int) {
                 break
             }
 
-            if (index != hash_table_.root_index && pos.getFinishStatus() == 0) {
+            if (index != hash_table_.root_index && pos.getFinishStatus() != Position.NOT_FINISHED) {
                 //繰り返しが発生している場合も抜ける
                 break
             }
@@ -392,7 +392,6 @@ class Search(context: Context, val randomTurn: Int) {
         }
 
         if (currIndices.empty()) {
-            println("curr_indices.empty")
             assert(false)
         }
 
@@ -510,7 +509,7 @@ class Search(context: Context, val randomTurn: Int) {
         currNode.value
 
         //ノードを評価
-        if (pos.getFinishStatus() == 1 || pos.turnNumber > draw_turn) {
+        if (pos.getFinishStatus() != Position.NOT_FINISHED || pos.turnNumber > draw_turn) {
             currNode.value = when (pos.getFinishStatus()) {
                 Position.WIN -> onehotDist(MAX_SCORE)
                 Position.DRAW -> onehotDist((MAX_SCORE + MIN_SCORE) / 2)
