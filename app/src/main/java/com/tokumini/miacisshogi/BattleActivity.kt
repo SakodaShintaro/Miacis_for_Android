@@ -260,6 +260,11 @@ class BattleActivity : AppCompatActivity() {
             return true
         }
 
+        // ターンが人間の手番でなかったら無視
+        if (player[pos.color] != HUMAN) {
+            return true
+        }
+
         val pointX = event.x
         val pointY = event.y
 
