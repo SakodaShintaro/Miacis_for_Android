@@ -686,8 +686,8 @@ class BattleActivity : AppCompatActivity() {
             }
             searchMutex.lock()
             val bestMove = searcher.search(currPosition, searchNum)
-            searchMutex.unlock()
             showPolicy(searcher.policy.clone())
+            searchMutex.unlock()
             oneTurnData[currPosition.turnNumber].value = searcher.value.clone()
             when (binding.radioGraphMode.checkedRadioButtonId) {
                 R.id.radio_curr_value -> showValue(searcher.value)
@@ -700,8 +700,8 @@ class BattleActivity : AppCompatActivity() {
     }
 
     private fun showPolicy(policy: Array<Float>) {
-        val moveList = pos.copy().generateAllMoves()
         val rootEntry = searcher.hashTable.rootEntry()
+        val moveList = rootEntry.moves
         val N = if (searchNum == 0) Array(moveList.size) { 0 } else rootEntry.N.clone()
 
         class MoveWithInfo(val move: Move, val policy: Float, val N: Int)
