@@ -660,7 +660,7 @@ class BattleActivity : AppCompatActivity() {
         return withContext(Dispatchers.Default) {
             //posが書き換わっていく可能性があるためコピーを取る
             val currPosition = pos.copy()
-            val bestMove = searcher.search(currPosition)
+            val bestMove = searcher.search(currPosition, 0)
             showPolicy(searcher.policy)
             oneTurnData[currPosition.turnNumber].value = searcher.value.clone()
             when (binding.radioGraphMode.checkedRadioButtonId) {

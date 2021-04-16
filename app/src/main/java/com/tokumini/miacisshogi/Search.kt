@@ -53,7 +53,7 @@ class HashEntry {
 
 class HashTable {
     var root_index: Int = 0
-    var table_ = Array(0) { HashEntry() }
+    var table_ = Array(16) { HashEntry() }
     var used_num_ = 0
     var age_ = 0
 
@@ -214,7 +214,7 @@ class Search(context: Context, val randomTurn: Int) {
         module = Module.load(assetFilePath(context, "shogi_cat_bl10_ch256_cpu.model"))
     }
 
-    fun search(pos: Position): Move {
+    fun search(pos: Position, searchNum: Int): Move {
         if (pos.turnNumber == preTurn && pos.hashValue == preHash) {
             return cacheMove
         }
@@ -234,44 +234,48 @@ class Search(context: Context, val randomTurn: Int) {
         }
 
         // 推論
-        val feature = pos.makeFeature()
-        val tensor = Tensor.fromBlob(feature.toFloatArray(), shape)
-        val output = module.forward(IValue.from(tensor))
-        val tuple = output.toTuple()
-        val rawPolicy = tuple[0].toTensor().dataAsFloatArray
-        val rawValue = tuple[1].toTensor().dataAsFloatArray
+        if (searchNum == 0) {
+            val feature = pos.makeFeature()
+            val tensor = Tensor.fromBlob(feature.toFloatArray(), shape)
+            val output = module.forward(IValue.from(tensor))
+            val tuple = output.toTuple()
+            val rawPolicy = tuple[0].toTensor().dataAsFloatArray
+            val rawValue = tuple[1].toTensor().dataAsFloatArray
 
-        // policyを取得
-        policy = Array(moveList.size) { rawPolicy[moveList[it].toLabel()] }
-        policy = softmax(policy, 1.0f)
+            // policyを取得
+            policy = Array(moveList.size) { rawPolicy[moveList[it].toLabel()] }
+            policy = softmax(policy, 1.0f)
 
-        // valueを取得
-        value = Array(BIN_SIZE) { 0.0f }
-        for (i in 0 until BIN_SIZE) {
-            value[i] = rawValue[i]
-        }
-        value = softmax(value, 1.0f)
-
-        cacheMove = if (pos.turnNumber < randomTurn) {
-            val index = randomChoose(policy)
-            moveList[index]
-        } else {
-            // 最も確率が高いものを取得する
-            var maxScore = -10000.0f
-            var bestMove = NULL_MOVE
-            for (move in moveList) {
-                if (rawPolicy[move.toLabel()] > maxScore) {
-                    maxScore = rawPolicy[move.toLabel()]
-                    bestMove = move
-                }
+            // valueを取得
+            value = Array(BIN_SIZE) { 0.0f }
+            for (i in 0 until BIN_SIZE) {
+                value[i] = rawValue[i]
             }
+            value = softmax(value, 1.0f)
 
-            bestMove
+            cacheMove = if (pos.turnNumber < randomTurn) {
+                val index = randomChoose(policy)
+                moveList[index]
+            } else {
+                // 最も確率が高いものを取得する
+                var maxScore = -10000.0f
+                var bestMove = NULL_MOVE
+                for (move in moveList) {
+                    if (rawPolicy[move.toLabel()] > maxScore) {
+                        maxScore = rawPolicy[move.toLabel()]
+                        bestMove = move
+                    }
+                }
+
+                bestMove
+            }
+        } else {
+            cacheMove = think(pos, searchNum)
         }
         return cacheMove
     }
 
-    fun think(root: Position, nodeLimit: Int): Move {
+    private fun think(root: Position, nodeLimit: Int): Move {
         //古いハッシュを削除
         hash_table_.deleteOldHash(root, true)
 
@@ -288,6 +292,9 @@ class Search(context: Context, val randomTurn: Int) {
         repeat(nodeLimit) {
             oneStepSearch(root)
         }
+
+        value = currNode.value
+        policy = currNode.nn_policy
 
         //行動選択
         val temperature = 0
