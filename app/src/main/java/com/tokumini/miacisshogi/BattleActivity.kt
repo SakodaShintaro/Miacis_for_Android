@@ -50,6 +50,7 @@ class BattleActivity : AppCompatActivity() {
     private val job = Job()
     private val scope = CoroutineScope(Dispatchers.Main + job)
     private val oneTurnData = MutableList(1) { OneTurnData(NULL_MOVE, Array(BIN_SIZE) { 0.0f }) }
+    private var searchNum = 0
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -74,6 +75,12 @@ class BattleActivity : AppCompatActivity() {
                 showInverse = true
             }
             CONSIDERATION -> player = arrayOf(HUMAN, HUMAN)
+        }
+
+        //探索回数の設定
+        val searchNumOrNull = intent?.extras?.get(KEY_SEARCH_NUM)
+        if (searchNumOrNull != null) {
+            searchNum = searchNumOrNull as Int
         }
 
         //マス画像の初期化
@@ -665,7 +672,7 @@ class BattleActivity : AppCompatActivity() {
         return withContext(Dispatchers.Default) {
             //posが書き換わっていく可能性があるためコピーを取る
             val currPosition = pos.copy()
-            val bestMove = searcher.search(currPosition, 0)
+            val bestMove = searcher.search(currPosition, searchNum)
             showPolicy(searcher.policy)
             oneTurnData[currPosition.turnNumber].value = searcher.value.clone()
             when (binding.radioGraphMode.checkedRadioButtonId) {

@@ -8,6 +8,7 @@ import com.tokumini.miacisshogi.databinding.ActivityBattleSettingBinding
 import kotlin.random.Random
 
 const val KEY_RANDOM_TURN = "key_random_turn"
+const val KEY_SEARCH_NUM = "key_search_num"
 
 class BattleSettingActivity : AppCompatActivity() {
     private lateinit var binding: ActivityBattleSettingBinding
@@ -21,9 +22,13 @@ class BattleSettingActivity : AppCompatActivity() {
         val defaultTurnSetting = sharedPref.getInt(getString(R.string.default_turn), R.id.radio_random)
         binding.radioTurn.check(defaultTurnSetting)
 
-        binding.numPicker.maxValue = 512
-        binding.numPicker.minValue = 0
-        binding.numPicker.value = sharedPref.getInt(getString(R.string.random_turn), 0)
+        binding.numPickerRandomTurn.maxValue = 512
+        binding.numPickerRandomTurn.minValue = 0
+        binding.numPickerRandomTurn.value = sharedPref.getInt(getString(R.string.random_turn), 0)
+
+        binding.numPickerSearchNum.maxValue = 10
+        binding.numPickerSearchNum.minValue = 0
+        binding.numPickerSearchNum.value = sharedPref.getInt(KEY_SEARCH_NUM, 0)
 
         binding.buttonBattleStart.setOnClickListener {
             val mode = when (binding.radioTurn.checkedRadioButtonId) {
@@ -36,13 +41,15 @@ class BattleSettingActivity : AppCompatActivity() {
             //設定を保存
             with(sharedPref.edit()) {
                 putInt(getString(R.string.default_turn), binding.radioTurn.checkedRadioButtonId)
-                putInt(getString(R.string.random_turn), binding.numPicker.value)
+                putInt(getString(R.string.random_turn), binding.numPickerRandomTurn.value)
+                putInt(KEY_SEARCH_NUM, binding.numPickerRandomTurn.value)
                 apply()
             }
 
             val intent = Intent(this, BattleActivity::class.java)
             intent.putExtra(KEY_BATTLE_MODE, mode)
-            intent.putExtra(KEY_RANDOM_TURN, binding.numPicker.value)
+            intent.putExtra(KEY_RANDOM_TURN, binding.numPickerRandomTurn.value)
+            intent.putExtra(KEY_SEARCH_NUM, binding.numPickerSearchNum.value)
             startActivity(intent)
         }
     }

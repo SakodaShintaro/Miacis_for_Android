@@ -8,14 +8,14 @@
     tools:context=".MainActivity">
 
     <TextView
-        android:id="@+id/textView"
+        android:id="@+id/textView_title"
         android:layout_width="wrap_content"
         android:layout_height="wrap_content"
         android:text="対局設定"
         android:textColor="@color/black"
         android:textSize="36sp"
         app:layout_constraintTop_toTopOf="parent"
-        app:layout_constraintBottom_toTopOf="@id/textView_Turn"
+        app:layout_constraintBottom_toTopOf="@id/radio_turn"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
 
@@ -27,8 +27,8 @@
         android:textAlignment="center"
         android:textColor="@color/black"
         android:textSize="24sp"
-        app:layout_constraintTop_toBottomOf="@id/textView"
-        app:layout_constraintBottom_toTopOf="@id/textView_random_turn"
+        app:layout_constraintTop_toTopOf="@id/radio_turn"
+        app:layout_constraintBottom_toBottomOf="@id/radio_turn"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toStartOf="@id/radio_turn" />
 
@@ -37,8 +37,8 @@
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:orientation="vertical"
-        app:layout_constraintTop_toBottomOf="@+id/textView"
-        app:layout_constraintBottom_toTopOf="@id/textView_random_turn"
+        app:layout_constraintTop_toBottomOf="@+id/textView_title"
+        app:layout_constraintBottom_toTopOf="@id/numPicker_random_turn"
         app:layout_constraintStart_toEndOf="@id/textView_Turn"
         app:layout_constraintEnd_toEndOf="parent">
 
@@ -69,17 +69,40 @@
         android:textAlignment="center"
         android:textColor="@color/black"
         android:textSize="24sp"
-        app:layout_constraintTop_toBottomOf="@id/textView_Turn"
-        app:layout_constraintBottom_toTopOf="@+id/button_battle_start"
+        app:layout_constraintTop_toTopOf="@id/numPicker_random_turn"
+        app:layout_constraintBottom_toBottomOf="@+id/numPicker_random_turn"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintEnd_toStartOf="@+id/numPicker_random_turn" />
+
+    <NumberPicker
+        android:id="@+id/numPicker_random_turn"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:layout_gravity="center"
+        app:layout_constraintTop_toBottomOf="@id/radio_turn"
+        app:layout_constraintBottom_toTopOf="@+id/numPicker_search_num"
+        app:layout_constraintStart_toStartOf="@+id/radio_turn"
+        app:layout_constraintEnd_toEndOf="parent" />
+
+    <TextView
+        android:id="@+id/textView_search_num"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:text="CPUの探索回数"
+        android:textAlignment="center"
+        android:textColor="@color/black"
+        android:textSize="24sp"
+        app:layout_constraintTop_toTopOf="@id/numPicker_search_num"
+        app:layout_constraintBottom_toBottomOf="@+id/numPicker_search_num"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="@+id/textView_Turn" />
 
     <NumberPicker
-        android:id="@+id/numPicker"
+        android:id="@+id/numPicker_search_num"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:layout_gravity="center"
-        app:layout_constraintTop_toBottomOf="@id/textView_Turn"
+        app:layout_constraintTop_toBottomOf="@id/numPicker_random_turn"
         app:layout_constraintBottom_toTopOf="@+id/button_battle_start"
         app:layout_constraintStart_toStartOf="@+id/radio_turn"
         app:layout_constraintEnd_toEndOf="parent" />
@@ -92,7 +115,7 @@
         android:layout_marginEnd="32dp"
         android:text="対局開始"
         android:textSize="32sp"
-        app:layout_constraintTop_toBottomOf="@+id/textView_random_turn"
+        app:layout_constraintTop_toBottomOf="@+id/numPicker_search_num"
         app:layout_constraintBottom_toBottomOf="parent"
         app:layout_constraintStart_toStartOf="parent"
         app:layout_constraintEnd_toEndOf="parent" />
