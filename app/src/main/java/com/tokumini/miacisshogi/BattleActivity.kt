@@ -708,10 +708,12 @@ class BattleActivity : AppCompatActivity() {
         val rootEntry = searcher.hashTable.rootEntry()
         val moveList = rootEntry.moves
         val N = if (searchNum == 0) Array(moveList.size) { 0 } else rootEntry.N.clone()
+        val q = if (searchNum == 0) Array(moveList.size) { 0.0f } else Array(moveList.size) { searcher.hashTable.expQfromNext(rootEntry, it) }
+        val color = if (rootEntry.turn_number % 2 == 0) BLACK else WHITE
 
-        class MoveWithInfo(val move: Move, val policy: Float, val N: Int)
+        class MoveWithInfo(val move: Move, val policy: Float, val N: Int, val q: Float)
 
-        val list = List(moveList.size) { MoveWithInfo(moveList[it], policy[it], N[it]) }
+        val list = List(moveList.size) { MoveWithInfo(moveList[it], policy[it], N[it], q[it]) }
         val sortedList = list.sortedBy { -it.policy }
         val tableLayout = binding.tableLayout
         tableLayout.post {
@@ -725,16 +727,20 @@ class BattleActivity : AppCompatActivity() {
             labelRow.findViewById<TextView>(R.id.rowtext1).text = "指し手"
             labelRow.findViewById<TextView>(R.id.rowtext2).text = "方策確率"
             labelRow.findViewById<TextView>(R.id.rowtext3).text = "探索回数"
+            labelRow.findViewById<TextView>(R.id.rowtext4).text = "評価値"
             tableLayout.addView(labelRow, TableLayout.LayoutParams())
 
             //各指し手
             for (i in sortedList.indices) {
+                val info = sortedList[i]
                 val tableRow = layoutInflater.inflate(R.layout.table_row, null) as TableRow
                 tableRow.findViewById<TextView>(R.id.rowtext0).text = (i + 1).toString()
-                tableRow.findViewById<TextView>(R.id.rowtext1).text = sortedList[i].move.toPrettyStr()
-                tableRow.findViewById<TextView>(R.id.rowtext2).text =
-                    "%5.1f%%".format((sortedList[i].policy * 100))
-                tableRow.findViewById<TextView>(R.id.rowtext3).text = sortedList[i].N.toString()
+                tableRow.findViewById<TextView>(R.id.rowtext1).text = info.move.toPrettyStr()
+                tableRow.findViewById<TextView>(R.id.rowtext2).text = "%5.1f%%".format((info.policy * 100))
+                tableRow.findViewById<TextView>(R.id.rowtext3).text = info.N.toString()
+
+                val v = if (color == BLACK) info.q else -info.q
+                tableRow.findViewById<TextView>(R.id.rowtext4).text = if (info.N == 0) "None" else "%.3f".format(v)
                 tableLayout.addView(tableRow, TableLayout.LayoutParams())
             }
         }

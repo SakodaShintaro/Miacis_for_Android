@@ -19,7 +19,7 @@
         android:layout_height="wrap_content"
         android:gravity="center"
         android:maxLines="1"
-        android:text="field"
+        android:text="▲３三角成(77)"
         android:layout_weight="1.5"
         android:textColor="@color/black" />
 
@@ -35,6 +35,16 @@
 
     <TextView
         android:id="@+id/rowtext3"
+        android:layout_width="0dp"
+        android:layout_height="wrap_content"
+        android:gravity="center"
+        android:maxLines="1"
+        android:text="0"
+        android:layout_weight="1"
+        android:textColor="@color/black" />
+
+    <TextView
+        android:id="@+id/rowtext4"
         android:layout_width="0dp"
         android:layout_height="wrap_content"
         android:gravity="center"
