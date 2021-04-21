@@ -691,11 +691,12 @@ class BattleActivity : AppCompatActivity() {
             }
             searchMutex.lock()
             val bestMove = searcher.search(currPosition, searchNum)
-            showPolicy(searcher.policy.clone())
+            val rootEntry = searcher.hashTable.rootEntry()
+            showPolicy(rootEntry.policy.clone())
             searchMutex.unlock()
-            oneTurnData[currPosition.turnNumber].value = searcher.value.clone()
+            oneTurnData[currPosition.turnNumber].value = rootEntry.value.clone()
             when (binding.radioGraphMode.checkedRadioButtonId) {
-                R.id.radio_curr_value -> showValue(searcher.value)
+                R.id.radio_curr_value -> showValue(rootEntry.value)
                 R.id.radio_value_history -> showValueHistory()
             }
             binding.textViewThinkResultCover.text = ""

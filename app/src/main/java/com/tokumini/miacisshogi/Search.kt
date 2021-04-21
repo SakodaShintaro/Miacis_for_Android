@@ -181,8 +181,6 @@ class Search(context: Context, private val randomTurn: Int) {
     private val drawTurn = 512
     private val shape = longArrayOf(1, 42, 9, 9)
     private val C_PUCT = 2.5f
-    var policy: Array<Float> = Array(POLICY_DIM) { 0.0f }
-    var value: Array<Float> = Array(BIN_SIZE) { 0.0f }
 
     init {
         // assetファイルからパスを取得する関数
@@ -217,10 +215,6 @@ class Search(context: Context, private val randomTurn: Int) {
         hashTable.rootIndex = expand(root)
         val rootEntry = hashTable.rootEntry()
 
-        //参照なのでこのタイミングで設定して良い
-        value = rootEntry.value
-        policy = rootEntry.policy
-
         //合法手が0だったら投了
         if (rootEntry.moves.isEmpty()) {
             return NULL_MOVE
@@ -235,11 +229,11 @@ class Search(context: Context, private val randomTurn: Int) {
         if (searchNum == 0) {
             //Policyをもとに選択
             if (root.turnNumber <= randomTurn) {
-                val index = randomChoose(policy)
+                val index = randomChoose(rootEntry.policy)
                 return rootEntry.moves[index]
             } else {
                 // 最も確率が高いものを取得する
-                val bestIndex = argmax(policy)
+                val bestIndex = argmax(rootEntry.policy)
                 return rootEntry.moves[bestIndex]
             }
         } else {
