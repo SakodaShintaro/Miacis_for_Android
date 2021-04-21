@@ -692,21 +692,22 @@ class BattleActivity : AppCompatActivity() {
             searchMutex.lock()
             val bestMove = searcher.search(currPosition, searchNum)
             val rootEntry = searcher.hashTable.rootEntry()
-            showPolicy(rootEntry.policy.clone())
-            searchMutex.unlock()
+            showPolicy()
             oneTurnData[currPosition.turnNumber].value = rootEntry.value.clone()
             when (binding.radioGraphMode.checkedRadioButtonId) {
-                R.id.radio_curr_value -> showValue(rootEntry.value)
+                R.id.radio_curr_value -> showValue()
                 R.id.radio_value_history -> showValueHistory()
             }
+            searchMutex.unlock()
             binding.textViewThinkResultCover.text = ""
             binding.textViewThinkResultCover.setBackgroundColor(backGroundTransparent)
             bestMove
         }
     }
 
-    private fun showPolicy(policy: Array<Float>) {
+    private fun showPolicy() {
         val rootEntry = searcher.hashTable.rootEntry()
+        val policy = rootEntry.policy
         val moveList = rootEntry.moves
         val searchNum = if (searchNum == 0) Array(moveList.size) { 0 } else rootEntry.searchNum.clone()
         val q = if (this.searchNum == 0) Array(moveList.size) { 0.0f } else Array(moveList.size) { searcher.hashTable.valueExpectation(rootEntry, it) }
@@ -747,8 +748,9 @@ class BattleActivity : AppCompatActivity() {
         }
     }
 
-    private fun showValue(value: Array<Float>) {
-        val currValue = value.clone()
+    private fun showValue() {
+        val rootEntry = searcher.hashTable.rootEntry()
+        val currValue = rootEntry.value.clone()
 
         //対応するxの値を作成
         val x = Array(BIN_SIZE) { MIN_SCORE + VALUE_WIDTH * (it + 0.5f) }
