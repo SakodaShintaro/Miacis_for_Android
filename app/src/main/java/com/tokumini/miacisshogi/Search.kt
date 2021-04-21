@@ -182,7 +182,7 @@ class HashTable {
     }
 }
 
-class Search(context: Context, val randomTurn: Int) {
+class Search(context: Context, private val randomTurn: Int) {
     private val module: Module
     var hashTable = HashTable()
     private val drawTurn = 512
@@ -219,32 +219,17 @@ class Search(context: Context, val randomTurn: Int) {
         module = Module.load(assetFilePath(context, "shogi_cat_bl10_ch256_cpu.model"))
     }
 
-    fun search(pos: Position, searchNum: Int): Move {
-        if (pos.turnNumber == preTurn && pos.hashValue == preHash && preSearchNum == searchNum) {
+    fun search(root: Position, searchNum: Int): Move {
+        if (root.turnNumber == preTurn && root.hashValue == preHash && preSearchNum == searchNum) {
             return cacheMove
         }
 
         // キャッシュのための情報更新
-        preTurn = pos.turnNumber
-        preHash = pos.hashValue
+        preTurn = root.turnNumber
+        preHash = root.hashValue
         preSearchNum = searchNum
 
-        // 合法手だけマスクしたいので取得
-        val moveList = pos.generateAllMoves()
-
-        // 合法手がなかったら投了
-        if (moveList.isEmpty()) {
-            value = Array(BIN_SIZE) { 0.0f }
-            value[0] = 1.0f
-            return NULL_MOVE
-        }
-
         // 推論
-        cacheMove = think(pos, searchNum)
-        return cacheMove
-    }
-
-    private fun think(root: Position, nodeLimit: Int): Move {
         //古いハッシュを削除
         hashTable.deleteOldHash(root, true)
 
@@ -258,7 +243,7 @@ class Search(context: Context, val randomTurn: Int) {
         }
 
         //探索を実行
-        repeat(nodeLimit) {
+        repeat(searchNum) {
             oneStepSearch(root)
         }
 
@@ -266,9 +251,10 @@ class Search(context: Context, val randomTurn: Int) {
         policy = rootEntry.nn_policy
 
         //行動選択
-        if (nodeLimit == 0) {
+        cacheMove =
+        if (searchNum == 0) {
             //Policyをもとに選択
-            return if (root.turnNumber <= randomTurn) {
+            if (root.turnNumber <= randomTurn) {
                 val index = randomChoose(policy)
                 rootEntry.moves[index]
             } else {
@@ -302,7 +288,7 @@ class Search(context: Context, val randomTurn: Int) {
                     distribution = softmax(Q, temperature / 1000.0f)
                 }
 
-                return rootEntry.moves[randomChoose(distribution)]
+                rootEntry.moves[randomChoose(distribution)]
             } else {
                 //探索回数最大の手を選択
                 var bestIndex = -1
@@ -313,9 +299,11 @@ class Search(context: Context, val randomTurn: Int) {
                         bestNum = rootEntry.N[i]
                     }
                 }
-                return rootEntry.moves[bestIndex]
+                rootEntry.moves[bestIndex]
             }
         }
+
+        return cacheMove
     }
 
     private fun randomChoose(x: Array<Float>): Int {
