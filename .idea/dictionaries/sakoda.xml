@@ -2,15 +2,20 @@
   <dictionary name="sakoda">
     <words>
       <w>argmax</w>
+      <w>barchart</w>
       <w>kifu</w>
+      <w>lnsgkgsnl</w>
       <w>logit</w>
       <w>miacis</w>
       <w>miacisshogi</w>
       <w>onehot</w>
+      <w>ppppppppp</w>
       <w>promotive</w>
       <w>sfen</w>
       <w>shogi</w>
+      <w>snackbar</w>
       <w>softmax</w>
+      <w>sqid</w>
       <w>tokumini</w>
     </words>
   </dictionary>

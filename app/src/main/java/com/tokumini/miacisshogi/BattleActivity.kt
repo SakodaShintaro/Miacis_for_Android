@@ -71,11 +71,15 @@ class BattleActivity : AppCompatActivity() {
         //ターンの制御
         mode = intent?.extras?.get(KEY_BATTLE_MODE) as Int
         when (mode) {
-            HUMAN_TURN_BLACK -> player = arrayOf(HUMAN, MIACIS)
+            HUMAN_TURN_BLACK -> {
+                player = arrayOf(HUMAN, MIACIS)
+                showSnackbar("あなたは先手です")
+            }
             HUMAN_TURN_WHITE -> {
                 player = arrayOf(MIACIS, HUMAN)
                 binding.board.setImageResource(R.drawable.board2)
                 showInverse = true
+                showSnackbar("あなたは後手です")
             }
             CONSIDERATION -> player = arrayOf(HUMAN, HUMAN)
         }
