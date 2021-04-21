@@ -183,10 +183,6 @@ class Search(context: Context, private val randomTurn: Int) {
     private val C_PUCT = 2.5f
     var policy: Array<Float> = Array(POLICY_DIM) { 0.0f }
     var value: Array<Float> = Array(BIN_SIZE) { 0.0f }
-    var cacheMove: Move = NULL_MOVE
-    var preTurn: Int = -1
-    var preHash: Long = -1
-    var preSearchNum: Int = -1
 
     init {
         // assetファイルからパスを取得する関数
@@ -213,15 +209,6 @@ class Search(context: Context, private val randomTurn: Int) {
     }
 
     fun search(root: Position, searchNum: Int): Move {
-        if (root.turnNumber == preTurn && root.hashValue == preHash && preSearchNum == searchNum) {
-            return cacheMove
-        }
-
-        // キャッシュのための情報更新
-        preTurn = root.turnNumber
-        preHash = root.hashValue
-        preSearchNum = searchNum
-
         // 推論
         //古いハッシュを削除
         hashTable.deleteOldHash(root)
@@ -244,12 +231,11 @@ class Search(context: Context, private val randomTurn: Int) {
         policy = rootEntry.nn_policy
 
         //行動選択
-        cacheMove =
         if (searchNum == 0) {
             //Policyをもとに選択
             if (root.turnNumber <= randomTurn) {
                 val index = randomChoose(policy)
-                rootEntry.moves[index]
+                return rootEntry.moves[index]
             } else {
                 // 最も確率が高いものを取得する
                 var maxScore = -10000.0f
@@ -260,7 +246,7 @@ class Search(context: Context, private val randomTurn: Int) {
                         bestMove = rootEntry.moves[i]
                     }
                 }
-                bestMove
+                return bestMove
             }
         } else {
             //探索結果をもとに選択
@@ -281,7 +267,7 @@ class Search(context: Context, private val randomTurn: Int) {
                     distribution = softmax(Q, temperature / 1000.0f)
                 }
 
-                rootEntry.moves[randomChoose(distribution)]
+                return rootEntry.moves[randomChoose(distribution)]
             } else {
                 //探索回数最大の手を選択
                 var bestIndex = -1
@@ -292,11 +278,9 @@ class Search(context: Context, private val randomTurn: Int) {
                         bestNum = rootEntry.N[i]
                     }
                 }
-                rootEntry.moves[bestIndex]
+                return rootEntry.moves[bestIndex]
             }
         }
-
-        return cacheMove
     }
 
     private fun randomChoose(x: Array<Float>): Int {

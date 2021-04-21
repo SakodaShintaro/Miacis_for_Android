@@ -685,7 +685,7 @@ class BattleActivity : AppCompatActivity() {
         return withContext(Dispatchers.Default) {
             //posが書き換わっていく可能性があるためコピーを取る
             val currPosition = pos.copy()
-            if (searchNum > 0) {
+            if (searchNum > 1) {
                 binding.textViewThinkResultCover.text = "思考中..."
                 binding.textViewThinkResultCover.setBackgroundColor(Color.rgb(255, 255, 255))
             }
