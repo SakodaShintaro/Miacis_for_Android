@@ -228,14 +228,8 @@ class Search(context: Context, private val randomTurn: Int) {
         //行動選択
         if (searchNum == 0) {
             //Policyをもとに選択
-            if (root.turnNumber <= randomTurn) {
-                val index = randomChoose(rootEntry.policy)
-                return rootEntry.moves[index]
-            } else {
-                // 最も確率が高いものを取得する
-                val bestIndex = argmax(rootEntry.policy)
-                return rootEntry.moves[bestIndex]
-            }
+            val index = if (root.turnNumber <= randomTurn) randomChoose(rootEntry.policy) else argmax(rootEntry.policy)
+            return rootEntry.moves[index]
         } else {
             //探索結果をもとに選択
             val temperature = 0
