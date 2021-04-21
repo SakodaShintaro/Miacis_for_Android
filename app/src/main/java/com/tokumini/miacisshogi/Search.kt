@@ -61,46 +61,39 @@ class HashTable {
         return table_[root_index]
     }
 
-    fun saveUsedHash(pos: Position, index: Int) {
+    private fun saveUsedHash(pos: Position, index: Int) {
         //エントリの世代を合わせれば情報を持ち越すことができる
         table_[index].age = age_
         used_num_++
 
         //再帰的に子ノードを探索していく
-        val curr_node = table_[index]
+        val currNode = table_[index]
 
-        val child_indices = curr_node.child_indices
-        for (i in curr_node.moves.indices) {
-            if (child_indices[i] != NOT_EXPANDED && table_[child_indices[i]].age != age_) {
-                pos.doMove(curr_node.moves[i])
-                saveUsedHash(pos, child_indices[i])
+        val childIndices = currNode.child_indices
+        for (i in currNode.moves.indices) {
+            if (childIndices[i] != NOT_EXPANDED && table_[childIndices[i]].age != age_) {
+                pos.doMove(currNode.moves[i])
+                saveUsedHash(pos, childIndices[i])
                 pos.undo()
             }
         }
     }
 
-    fun deleteOldHash(root: Position, leaveRoot: Boolean) {
+    fun deleteOldHash(root: Position) {
         //次のルート局面に相当するノード以下の部分木だけを残すためにインデックスを取得
-        val next_root_index = findSameHashIndex(root)
+        val nextRootIndex = findSameHashIndex(root)
 
         //置換表全体を消去
         used_num_ = 0
         age_++
 
-        if (next_root_index == table_.size) {
+        if (nextRootIndex == table_.size) {
             //そもそも存在しないならここで終了
             return
         }
 
-        //ルート以下をsave
-        saveUsedHash(root, next_root_index)
-
-        //強化学習のデータ生成中ではノイズを入れる関係で次のルート局面だけは消去したいので選べるようにしてある
-        if (!leaveRoot) {
-            //root_indexのところは初期化
-            table_[next_root_index].age = age_ - 1
-            used_num_--
-        }
+        //ルート以下を再帰的にsave
+        saveUsedHash(root, nextRootIndex)
     }
 
     operator fun get(index: Int): HashEntry {
@@ -231,7 +224,7 @@ class Search(context: Context, private val randomTurn: Int) {
 
         // 推論
         //古いハッシュを削除
-        hashTable.deleteOldHash(root, true)
+        hashTable.deleteOldHash(root)
 
         //ルートノードの展開
         hashTable.root_index = expand(root)
