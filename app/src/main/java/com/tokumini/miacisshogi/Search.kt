@@ -240,44 +240,7 @@ class Search(context: Context, val randomTurn: Int) {
         }
 
         // 推論
-        if (searchNum == 0) {
-            val feature = pos.makeFeature()
-            val tensor = Tensor.fromBlob(feature.toFloatArray(), shape)
-            val output = module.forward(IValue.from(tensor))
-            val tuple = output.toTuple()
-            val rawPolicy = tuple[0].toTensor().dataAsFloatArray
-            val rawValue = tuple[1].toTensor().dataAsFloatArray
-
-            // policyを取得
-            policy = Array(moveList.size) { rawPolicy[moveList[it].toLabel()] }
-            policy = softmax(policy, 1.0f)
-
-            // valueを取得
-            value = Array(BIN_SIZE) { 0.0f }
-            for (i in 0 until BIN_SIZE) {
-                value[i] = rawValue[i]
-            }
-            value = softmax(value, 1.0f)
-
-            cacheMove = if (pos.turnNumber < randomTurn) {
-                val index = randomChoose(policy)
-                moveList[index]
-            } else {
-                // 最も確率が高いものを取得する
-                var maxScore = -10000.0f
-                var bestMove = NULL_MOVE
-                for (move in moveList) {
-                    if (rawPolicy[move.toLabel()] > maxScore) {
-                        maxScore = rawPolicy[move.toLabel()]
-                        bestMove = move
-                    }
-                }
-
-                bestMove
-            }
-        } else {
-            cacheMove = think(pos, searchNum)
-        }
+        cacheMove = think(pos, searchNum)
         return cacheMove
     }
 
@@ -287,10 +250,10 @@ class Search(context: Context, val randomTurn: Int) {
 
         //ルートノードの展開
         hashTable.root_index = expand(root)
-        val currNode = hashTable[hashTable.root_index]
+        val rootEntry = hashTable.rootEntry()
 
         //合法手が0だったら投了
-        if (currNode.moves.isEmpty()) {
+        if (rootEntry.moves.isEmpty()) {
             return NULL_MOVE
         }
 
@@ -299,39 +262,59 @@ class Search(context: Context, val randomTurn: Int) {
             oneStepSearch(root)
         }
 
-        value = currNode.value
-        policy = currNode.nn_policy
+        value = rootEntry.value
+        policy = rootEntry.nn_policy
 
         //行動選択
-        val temperature = 0
-        if (root.turnNumber <= randomTurn) {
-            var distribution = Array(currNode.moves.size) { 0.0f }
-            if (temperature == 0) {
-                //探索回数を正規化した分布に従って行動選択
-                for (i in currNode.moves.indices) {
-                    distribution[i] = currNode.N[i].toFloat() / currNode.sum_N
-                }
+        if (nodeLimit == 0) {
+            //Policyをもとに選択
+            return if (root.turnNumber <= randomTurn) {
+                val index = randomChoose(policy)
+                rootEntry.moves[index]
             } else {
-                //価値のソフトマックス分布に従って行動選択
-                val Q = Array(currNode.moves.size) { 0.0f }
-                for (i in currNode.moves.indices) {
-                    Q[i] = hashTable.expQfromNext(currNode, i)
+                // 最も確率が高いものを取得する
+                var maxScore = -10000.0f
+                var bestMove = NULL_MOVE
+                for (i in rootEntry.moves.indices) {
+                    if (policy[i] > maxScore) {
+                        maxScore = policy[i]
+                        bestMove = rootEntry.moves[i]
+                    }
                 }
-                distribution = softmax(Q, temperature / 1000.0f)
+                bestMove
             }
-
-            return currNode.moves[randomChoose(distribution)]
         } else {
-            //探索回数最大の手を選択
-            var bestIndex = -1
-            var bestNum = 0
-            for (i in currNode.N.indices) {
-                if (currNode.N[i] > bestNum) {
-                    bestIndex = i
-                    bestNum = currNode.N[i]
+            //探索結果をもとに選択
+            val temperature = 0
+            if (root.turnNumber <= randomTurn) {
+                var distribution = Array(rootEntry.moves.size) { 0.0f }
+                if (temperature == 0) {
+                    //探索回数を正規化した分布に従って行動選択
+                    for (i in rootEntry.moves.indices) {
+                        distribution[i] = rootEntry.N[i].toFloat() / rootEntry.sum_N
+                    }
+                } else {
+                    //価値のソフトマックス分布に従って行動選択
+                    val Q = Array(rootEntry.moves.size) { 0.0f }
+                    for (i in rootEntry.moves.indices) {
+                        Q[i] = hashTable.expQfromNext(rootEntry, i)
+                    }
+                    distribution = softmax(Q, temperature / 1000.0f)
                 }
+
+                return rootEntry.moves[randomChoose(distribution)]
+            } else {
+                //探索回数最大の手を選択
+                var bestIndex = -1
+                var bestNum = 0
+                for (i in rootEntry.N.indices) {
+                    if (rootEntry.N[i] > bestNum) {
+                        bestIndex = i
+                        bestNum = rootEntry.N[i]
+                    }
+                }
+                return rootEntry.moves[bestIndex]
             }
-            return currNode.moves[bestIndex]
         }
     }
 
