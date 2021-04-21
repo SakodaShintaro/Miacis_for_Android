@@ -217,6 +217,10 @@ class Search(context: Context, private val randomTurn: Int) {
         hashTable.rootIndex = expand(root)
         val rootEntry = hashTable.rootEntry()
 
+        //参照なのでこのタイミングで設定して良い
+        value = rootEntry.value
+        policy = rootEntry.policy
+
         //合法手が0だったら投了
         if (rootEntry.moves.isEmpty()) {
             return NULL_MOVE
@@ -226,9 +230,6 @@ class Search(context: Context, private val randomTurn: Int) {
         repeat(searchNum) {
             oneStepSearch(root)
         }
-
-        value = rootEntry.value
-        policy = rootEntry.policy
 
         //行動選択
         if (searchNum == 0) {
@@ -438,6 +439,7 @@ class Search(context: Context, private val randomTurn: Int) {
 
         //ノードを評価
         if (pos.getFinishStatus() != Position.NOT_FINISHED || pos.turnNumber > drawTurn) {
+            println("finish status = ${pos.getFinishStatus()}")
             currNode.value = when (pos.getFinishStatus()) {
                 Position.WIN -> onehotDist(MAX_SCORE)
                 Position.DRAW -> onehotDist((MAX_SCORE + MIN_SCORE) / 2)
