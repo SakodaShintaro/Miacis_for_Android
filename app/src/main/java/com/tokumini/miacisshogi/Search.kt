@@ -252,19 +252,13 @@ class Search(context: Context, private val randomTurn: Int) {
             //探索結果をもとに選択
             val temperature = 0
             if (root.turnNumber <= randomTurn) {
-                var distribution = Array(rootEntry.moves.size) { 0.0f }
-                if (temperature == 0) {
+                val distribution = if (temperature == 0) {
                     //探索回数を正規化した分布に従って行動選択
-                    for (i in rootEntry.moves.indices) {
-                        distribution[i] = rootEntry.searchNum[i].toFloat() / rootEntry.sumOfSearchNum
-                    }
+                    Array(rootEntry.moves.size) { rootEntry.searchNum[it].toFloat() / rootEntry.sumOfSearchNum }
                 } else {
                     //価値のソフトマックス分布に従って行動選択
-                    val q = Array(rootEntry.moves.size) { 0.0f }
-                    for (i in rootEntry.moves.indices) {
-                        q[i] = hashTable.valueExpectation(rootEntry, i)
-                    }
-                    distribution = softmax(q, temperature / 1000.0f)
+                    val q = Array(rootEntry.moves.size) { hashTable.valueExpectation(rootEntry, it) }
+                    softmax(q, temperature / 1000.0f)
                 }
 
                 return rootEntry.moves[randomChoose(distribution)]
