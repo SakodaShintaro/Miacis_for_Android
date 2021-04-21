@@ -42,7 +42,6 @@ class HashEntry {
     var moves = ArrayList<Move>()
     var searchNum = Array(0) { 0 }
     var sumOfSearchNum = 0
-    var evaled = false
     var childIndices = Array(0) { 0 }
     var policy = Array(0) { 0.0f }
     var value = Array(0) { 0.0f }
@@ -459,9 +458,6 @@ class Search(context: Context, private val randomTurn: Int) {
         currNode.childIndices = Array(currNode.moves.size) { NOT_EXPANDED }
         currNode.searchNum = Array(currNode.moves.size) { 0 }
         currNode.sumOfSearchNum = 0
-        currNode.evaled = false
-        currNode.policy
-        currNode.value
 
         //ノードを評価
         if (pos.getFinishStatus() != Position.NOT_FINISHED || pos.turnNumber > drawTurn) {
@@ -471,7 +467,6 @@ class Search(context: Context, private val randomTurn: Int) {
                 Position.LOSE -> onehotDist(MIN_SCORE)
                 else -> onehotDist(-1.0f)
             }
-            currNode.evaled = true
         } else {
             //計算
             val thisFeature = pos.makeFeature()
@@ -493,9 +488,7 @@ class Search(context: Context, private val randomTurn: Int) {
             for (i in currNode.value.indices) {
                 currNode.value[i] = value.dataAsFloatArray[i]
             }
-
             currNode.value = softmax(currNode.value, 1.0f)
-            currNode.evaled = true
         }
 
         return index
