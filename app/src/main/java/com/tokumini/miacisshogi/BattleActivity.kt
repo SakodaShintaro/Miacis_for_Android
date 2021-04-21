@@ -209,7 +209,7 @@ class BattleActivity : AppCompatActivity() {
                 apply()
             }
 
-            if (autoThink) {
+            if (mode == CONSIDERATION && autoThink) {
                 scope.launch { think() }
             }
         }
@@ -228,7 +228,7 @@ class BattleActivity : AppCompatActivity() {
                 putInt(getString(R.string.radio_graph_mode), binding.radioGraphMode.checkedRadioButtonId)
                 apply()
             }
-            if (autoThink) {
+            if (mode == CONSIDERATION && autoThink) {
                 scope.launch { think() }
             }
         }
