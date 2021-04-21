@@ -238,15 +238,8 @@ class Search(context: Context, private val randomTurn: Int) {
                 return rootEntry.moves[index]
             } else {
                 // 最も確率が高いものを取得する
-                var maxScore = -10000.0f
-                var bestMove = NULL_MOVE
-                for (i in rootEntry.moves.indices) {
-                    if (policy[i] > maxScore) {
-                        maxScore = policy[i]
-                        bestMove = rootEntry.moves[i]
-                    }
-                }
-                return bestMove
+                val bestIndex = argmax(policy)
+                return rootEntry.moves[bestIndex]
             }
         } else {
             //探索結果をもとに選択
@@ -264,17 +257,14 @@ class Search(context: Context, private val randomTurn: Int) {
                 return rootEntry.moves[randomChoose(distribution)]
             } else {
                 //探索回数最大の手を選択
-                var bestIndex = -1
-                var bestNum = 0
-                for (i in rootEntry.searchNum.indices) {
-                    if (rootEntry.searchNum[i] > bestNum) {
-                        bestIndex = i
-                        bestNum = rootEntry.searchNum[i]
-                    }
-                }
+                val bestIndex = argmax(rootEntry.searchNum)
                 return rootEntry.moves[bestIndex]
             }
         }
+    }
+
+    private fun <T : Comparable<T>> argmax(i: Array<T>): Int {
+        return i.withIndex().maxByOrNull { it.value }?.index!!
     }
 
     private fun randomChoose(x: Array<Float>): Int {
@@ -393,14 +383,7 @@ class Search(context: Context, private val randomTurn: Int) {
     }
 
     private fun selectMaxUcbChild(node: HashEntry): Int {
-        var bestNum = -1
-        var bestIndex = -1
-        for (i in 0 until node.moves.size) {
-            if (node.searchNum[i] > bestNum) {
-                bestNum = node.searchNum[i]
-                bestIndex = i
-            }
-        }
+        val bestIndex = argmax(node.searchNum)
         val bestValue = expOfValueDist(hashTable.valueDistribution(node, bestIndex))
         val bestValueIndex = min(valueToIndex(bestValue) + 1, BIN_SIZE - 1)
         val reversedBestValueIndex = BIN_SIZE - bestValueIndex
