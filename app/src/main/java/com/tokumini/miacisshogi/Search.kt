@@ -473,15 +473,14 @@ class Search(context: Context, private val randomTurn: Int) {
             val tensor = Tensor.fromBlob(thisFeature.toFloatArray(), shape)
             val output = module.forward(IValue.from(tensor))
             val tuple = output.toTuple()
-            val policy = tuple[0].toTensor()
-            val value = tuple[1].toTensor()
-            val scores = policy.dataAsFloatArray
+            val policyLogit = tuple[0].toTensor().dataAsFloatArray
+            val valueLogit = tuple[1].toTensor().dataAsFloatArray
 
             //ルートノードへ書き込み
-            currNode.policy = Array(currNode.moves.size) { scores[currNode.moves[it].toLabel()] }
+            currNode.policy = Array(currNode.moves.size) { policyLogit[currNode.moves[it].toLabel()] }
             currNode.policy = softmax(currNode.policy, 1.0f)
 
-            currNode.value = Array(BIN_SIZE) { value.dataAsFloatArray[it] }
+            currNode.value = Array(BIN_SIZE) { valueLogit[it] }
             currNode.value = softmax(currNode.value, 1.0f)
         }
 
