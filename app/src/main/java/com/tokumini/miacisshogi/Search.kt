@@ -478,16 +478,10 @@ class Search(context: Context, private val randomTurn: Int) {
             val scores = policy.dataAsFloatArray
 
             //ルートノードへ書き込み
-            currNode.policy = Array(currNode.moves.size) { 0.0f }
-            for (i in currNode.policy.indices) {
-                currNode.policy[i] = scores[currNode.moves[i].toLabel()]
-            }
+            currNode.policy = Array(currNode.moves.size) { scores[currNode.moves[it].toLabel()] }
             currNode.policy = softmax(currNode.policy, 1.0f)
 
-            currNode.value = Array(BIN_SIZE) { 0.0f }
-            for (i in currNode.value.indices) {
-                currNode.value[i] = value.dataAsFloatArray[i]
-            }
+            currNode.value = Array(BIN_SIZE) { value.dataAsFloatArray[it] }
             currNode.value = softmax(currNode.value, 1.0f)
         }
 
