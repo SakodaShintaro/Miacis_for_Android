@@ -707,13 +707,13 @@ class BattleActivity : AppCompatActivity() {
     private fun showPolicy(policy: Array<Float>) {
         val rootEntry = searcher.hashTable.rootEntry()
         val moveList = rootEntry.moves
-        val N = if (searchNum == 0) Array(moveList.size) { 0 } else rootEntry.N.clone()
-        val q = if (searchNum == 0) Array(moveList.size) { 0.0f } else Array(moveList.size) { searcher.hashTable.expQfromNext(rootEntry, it) }
-        val color = if (rootEntry.turn_number % 2 == 0) BLACK else WHITE
+        val searchNum = if (searchNum == 0) Array(moveList.size) { 0 } else rootEntry.searchNum.clone()
+        val q = if (this.searchNum == 0) Array(moveList.size) { 0.0f } else Array(moveList.size) { searcher.hashTable.valueExpectation(rootEntry, it) }
+        val color = if (rootEntry.turnNumber % 2 == 0) BLACK else WHITE
 
-        class MoveWithInfo(val move: Move, val policy: Float, val N: Int, val q: Float)
+        class MoveWithInfo(val move: Move, val policy: Float, val searchNum: Int, val q: Float)
 
-        val list = List(moveList.size) { MoveWithInfo(moveList[it], policy[it], N[it], q[it]) }
+        val list = List(moveList.size) { MoveWithInfo(moveList[it], policy[it], searchNum[it], q[it]) }
         val sortedList = list.sortedBy { -it.policy }
         val tableLayout = binding.tableLayout
         tableLayout.post {
@@ -737,10 +737,10 @@ class BattleActivity : AppCompatActivity() {
                 tableRow.findViewById<TextView>(R.id.rowtext0).text = (i + 1).toString()
                 tableRow.findViewById<TextView>(R.id.rowtext1).text = info.move.toPrettyStr()
                 tableRow.findViewById<TextView>(R.id.rowtext2).text = "%5.1f%%".format((info.policy * 100))
-                tableRow.findViewById<TextView>(R.id.rowtext3).text = info.N.toString()
+                tableRow.findViewById<TextView>(R.id.rowtext3).text = info.searchNum.toString()
 
                 val v = if (color == BLACK) info.q else -info.q
-                tableRow.findViewById<TextView>(R.id.rowtext4).text = if (info.N == 0) "None" else "%.3f".format(v)
+                tableRow.findViewById<TextView>(R.id.rowtext4).text = if (info.searchNum == 0) "None" else "%.3f".format(v)
                 tableLayout.addView(tableRow, TableLayout.LayoutParams())
             }
         }

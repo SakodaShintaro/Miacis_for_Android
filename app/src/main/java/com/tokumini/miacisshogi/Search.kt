@@ -40,38 +40,38 @@ fun expOfValueDist(dist: Array<Float>): Float {
 
 class HashEntry {
     var moves = ArrayList<Move>()
-    var N = Array(0) { 0 }
-    var sum_N = 0
+    var searchNum = Array(0) { 0 }
+    var sumOfSearchNum = 0
     var evaled = false
-    var child_indices = Array(0) { 0 }
-    var nn_policy = Array(0) { 0.0f }
+    var childIndices = Array(0) { 0 }
+    var policy = Array(0) { 0.0f }
     var value = Array(0) { 0.0f }
     var age = 0
     var hash = 0.toLong()
-    var turn_number = 0
+    var turnNumber = 0
 }
 
 class HashTable {
-    var root_index: Int = 0
-    var table_ = Array(256) { HashEntry() }
-    var used_num_ = 0
-    var age_ = 0
+    var rootIndex: Int = 0
+    var table = Array(256) { HashEntry() }
+    var usedNum = 0
+    var age = 0
 
     fun rootEntry(): HashEntry {
-        return table_[root_index]
+        return table[rootIndex]
     }
 
     private fun saveUsedHash(pos: Position, index: Int) {
         //エントリの世代を合わせれば情報を持ち越すことができる
-        table_[index].age = age_
-        used_num_++
+        table[index].age = age
+        usedNum++
 
         //再帰的に子ノードを探索していく
-        val currNode = table_[index]
+        val currNode = table[index]
 
-        val childIndices = currNode.child_indices
+        val childIndices = currNode.childIndices
         for (i in currNode.moves.indices) {
-            if (childIndices[i] != NOT_EXPANDED && table_[childIndices[i]].age != age_) {
+            if (childIndices[i] != NOT_EXPANDED && table[childIndices[i]].age != age) {
                 pos.doMove(currNode.moves[i])
                 saveUsedHash(pos, childIndices[i])
                 pos.undo()
@@ -84,10 +84,10 @@ class HashTable {
         val nextRootIndex = findSameHashIndex(root)
 
         //置換表全体を消去
-        used_num_ = 0
-        age_++
+        usedNum = 0
+        age++
 
-        if (nextRootIndex == table_.size) {
+        if (nextRootIndex == table.size) {
             //そもそも存在しないならここで終了
             return
         }
@@ -97,21 +97,22 @@ class HashTable {
     }
 
     operator fun get(index: Int): HashEntry {
-        return table_[index]
+        return table[index]
     }
 
-    fun QfromNextValue(node: HashEntry, i: Int): Array<Float> {
+    //entryにおけるi番目の指し手についてのvalue分布を返す
+    fun valueDistribution(node: HashEntry, i: Int): Array<Float> {
         //展開されていない場合は基本的にMIN_SCOREで扱うが、探索回数が0でないときは詰み探索がそこへ詰みありと言っているということなのでMAX_SCOREを返す
-        if (node.child_indices[i] == NOT_EXPANDED) {
-            return if (node.N[i] == 0) onehotDist(MIN_SCORE) else onehotDist(MAX_SCORE)
+        if (node.childIndices[i] == NOT_EXPANDED) {
+            return if (node.searchNum[i] == 0) onehotDist(MIN_SCORE) else onehotDist(MAX_SCORE)
         }
-        val v = table_[node.child_indices[i]].value.clone()
+        val v = table[node.childIndices[i]].value.clone()
         v.reverse()
         return v
     }
 
-    fun expQfromNext(node: HashEntry, i: Int): Float {
-        return expOfValueDist(QfromNextValue(node, i))
+    fun valueExpectation(node: HashEntry, i: Int): Float {
+        return expOfValueDist(valueDistribution(node, i))
     }
 
     fun findSameHashIndex(pos: Position): Int {
@@ -119,26 +120,26 @@ class HashTable {
         val key = hashToIndex(hash)
         var i = key
         while (true) {
-            if (table_[i].age != age_) {
+            if (table[i].age != age) {
                 //根本的に世代が異なるなら同じものはないのでsize()を返す
-                return table_.size
-            } else if (table_[i].hash == hash && table_[i].turn_number == pos.turnNumber) {
+                return table.size
+            } else if (table[i].hash == hash && table[i].turnNumber == pos.turnNumber) {
                 //完全に一致したのでここが記録されていたエントリ
                 return i
             }
 
             i++
-            if (i >= table_.size) {
+            if (i >= table.size) {
                 i = 0
             }
             if (i == key) {
-                return table_.size
+                return table.size
             }
         }
     }
 
     fun size(): Int {
-        return table_.size
+        return table.size
     }
 
     fun searchEmptyIndex(pos: Position): Int {
@@ -146,32 +147,32 @@ class HashTable {
         val key = hashToIndex(hash)
         var i = key
         while (true) {
-            if (table_[i].age != age_) {
+            if (table[i].age != age) {
                 //世代が違うならここを上書きして良い
-                table_[i].hash = hash
-                table_[i].turn_number = pos.turnNumber
-                table_[i].age = age_
-                used_num_++
+                table[i].hash = hash
+                table[i].turnNumber = pos.turnNumber
+                table[i].age = age
+                usedNum++
                 return i
             }
 
             i++
 
             //たぶんmodを取るより分岐の方が速かったはず
-            if (i >= table_.size) {
+            if (i >= table.size) {
                 i = 0
             }
 
             //一周したのなら空きがなかったということなのでsize()を返す
             if (i == key) {
-                return table_.size
+                return table.size
             }
         }
     }
 
     //局面のハッシュ値から置換表におけるキーへ変換する。この処理が最適かは不明
     private fun hashToIndex(hash: Long): Int {
-        return (hash and -0x1 xor (hash shr 32 and -0x1) and (table_.size - 1).toLong()).toInt()
+        return (hash and -0x1 xor (hash shr 32 and -0x1) and (table.size - 1).toLong()).toInt()
     }
 }
 
@@ -214,7 +215,7 @@ class Search(context: Context, private val randomTurn: Int) {
         hashTable.deleteOldHash(root)
 
         //ルートノードの展開
-        hashTable.root_index = expand(root)
+        hashTable.rootIndex = expand(root)
         val rootEntry = hashTable.rootEntry()
 
         //合法手が0だったら投了
@@ -228,7 +229,7 @@ class Search(context: Context, private val randomTurn: Int) {
         }
 
         value = rootEntry.value
-        policy = rootEntry.nn_policy
+        policy = rootEntry.policy
 
         //行動選択
         if (searchNum == 0) {
@@ -256,15 +257,15 @@ class Search(context: Context, private val randomTurn: Int) {
                 if (temperature == 0) {
                     //探索回数を正規化した分布に従って行動選択
                     for (i in rootEntry.moves.indices) {
-                        distribution[i] = rootEntry.N[i].toFloat() / rootEntry.sum_N
+                        distribution[i] = rootEntry.searchNum[i].toFloat() / rootEntry.sumOfSearchNum
                     }
                 } else {
                     //価値のソフトマックス分布に従って行動選択
-                    val Q = Array(rootEntry.moves.size) { 0.0f }
+                    val q = Array(rootEntry.moves.size) { 0.0f }
                     for (i in rootEntry.moves.indices) {
-                        Q[i] = hashTable.expQfromNext(rootEntry, i)
+                        q[i] = hashTable.valueExpectation(rootEntry, i)
                     }
-                    distribution = softmax(Q, temperature / 1000.0f)
+                    distribution = softmax(q, temperature / 1000.0f)
                 }
 
                 return rootEntry.moves[randomChoose(distribution)]
@@ -272,10 +273,10 @@ class Search(context: Context, private val randomTurn: Int) {
                 //探索回数最大の手を選択
                 var bestIndex = -1
                 var bestNum = 0
-                for (i in rootEntry.N.indices) {
-                    if (rootEntry.N[i] > bestNum) {
+                for (i in rootEntry.searchNum.indices) {
+                    if (rootEntry.searchNum[i] > bestNum) {
                         bestIndex = i
-                        bestNum = rootEntry.N[i]
+                        bestNum = rootEntry.searchNum[i]
                     }
                 }
                 return rootEntry.moves[bestIndex]
@@ -315,7 +316,7 @@ class Search(context: Context, private val randomTurn: Int) {
         val currIndices = Stack<Int>()
         val currActions = Stack<Int>()
 
-        var index = hashTable.root_index
+        var index = hashTable.rootIndex
 
         //未展開の局面に至るまで遷移を繰り返す
         while (index != NOT_EXPANDED) {
@@ -324,7 +325,7 @@ class Search(context: Context, private val randomTurn: Int) {
                 break
             }
 
-            if (index != hashTable.root_index && pos.getFinishStatus() != Position.NOT_FINISHED) {
+            if (index != hashTable.rootIndex && pos.getFinishStatus() != Position.NOT_FINISHED) {
                 //繰り返しが発生している場合も抜ける
                 break
             }
@@ -342,7 +343,7 @@ class Search(context: Context, private val randomTurn: Int) {
             pos.doMove(hashTable[index].moves[action])
 
             //index更新
-            index = hashTable[index].child_indices[action]
+            index = hashTable[index].childIndices[action]
         }
 
         if (currIndices.empty()) {
@@ -362,7 +363,7 @@ class Search(context: Context, private val randomTurn: Int) {
             //別に止める必要はないので進行
         } else {
             //葉の直前ノードを更新
-            hashTable[index].child_indices[action] = leafIndex
+            hashTable[index].childIndices[action] = leafIndex
         }
 
         //局面を戻す
@@ -386,12 +387,12 @@ class Search(context: Context, private val randomTurn: Int) {
             // 探索結果の反映
             val node = hashTable[currIndex]
             //探索回数の更新
-            node.N[currAction]++
-            node.sum_N++
+            node.searchNum[currAction]++
+            node.sumOfSearchNum++
 
             //価値の更新
             val currV = node.value
-            val alpha = 1.0f / (node.sum_N + 1)
+            val alpha = 1.0f / (node.sumOfSearchNum + 1)
             for (i in 0 until BIN_SIZE) {
                 node.value[i] += alpha * (value[i] - currV[i])
             }
@@ -402,30 +403,30 @@ class Search(context: Context, private val randomTurn: Int) {
         var bestNum = -1
         var bestIndex = -1
         for (i in 0 until node.moves.size) {
-            if (node.N[i] > bestNum) {
-                bestNum = node.N[i]
+            if (node.searchNum[i] > bestNum) {
+                bestNum = node.searchNum[i]
                 bestIndex = i
             }
         }
-        val bestValue = expOfValueDist(hashTable.QfromNextValue(node, bestIndex))
+        val bestValue = expOfValueDist(hashTable.valueDistribution(node, bestIndex))
         val bestValueIndex = min(valueToIndex(bestValue) + 1, BIN_SIZE - 1)
         val reversedBestValueIndex = BIN_SIZE - bestValueIndex
         var maxIndex = -1
         var maxValue = -100000f
 
-        val sum = node.sum_N
+        val sum = node.sumOfSearchNum
 
         for (i in node.moves.indices) {
-            val U = sqrt((sum + 1).toFloat()) / (node.N[i] + 1)
-            var P = 0.0f
-            if (node.child_indices[i] == NOT_EXPANDED) {
-                P = 0.0f
+            val u = sqrt((sum + 1).toFloat()) / (node.searchNum[i] + 1)
+            var p = 0.0f
+            if (node.childIndices[i] == NOT_EXPANDED) {
+                p = 0.0f
             } else {
                 for (j in 0 until reversedBestValueIndex) {
-                    P += hashTable[node.child_indices[i]].value[j]
+                    p += hashTable[node.childIndices[i]].value[j]
                 }
             }
-            val ucb = C_PUCT * node.nn_policy[i] * U + P
+            val ucb = C_PUCT * node.policy[i] * u + p
             if (ucb > maxValue) {
                 maxValue = ucb
                 maxIndex = i
@@ -455,11 +456,11 @@ class Search(context: Context, private val randomTurn: Int) {
 
         // 候補手の展開
         currNode.moves = pos.generateAllMoves()
-        currNode.child_indices = Array(currNode.moves.size) { NOT_EXPANDED }
-        currNode.N = Array(currNode.moves.size) { 0 }
-        currNode.sum_N = 0
+        currNode.childIndices = Array(currNode.moves.size) { NOT_EXPANDED }
+        currNode.searchNum = Array(currNode.moves.size) { 0 }
+        currNode.sumOfSearchNum = 0
         currNode.evaled = false
-        currNode.nn_policy
+        currNode.policy
         currNode.value
 
         //ノードを評価
@@ -482,11 +483,11 @@ class Search(context: Context, private val randomTurn: Int) {
             val scores = policy.dataAsFloatArray
 
             //ルートノードへ書き込み
-            currNode.nn_policy = Array(currNode.moves.size) { 0.0f }
-            for (i in currNode.nn_policy.indices) {
-                currNode.nn_policy[i] = scores[currNode.moves[i].toLabel()]
+            currNode.policy = Array(currNode.moves.size) { 0.0f }
+            for (i in currNode.policy.indices) {
+                currNode.policy[i] = scores[currNode.moves[i].toLabel()]
             }
-            currNode.nn_policy = softmax(currNode.nn_policy, 1.0f)
+            currNode.policy = softmax(currNode.policy, 1.0f)
 
             currNode.value = Array(BIN_SIZE) { 0.0f }
             for (i in currNode.value.indices) {
